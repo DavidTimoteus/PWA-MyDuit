@@ -1,5 +1,7 @@
 import { signOut } from 'firebase/auth'
 import { useState } from 'react'
+import TransaksiView from '../features/transaksi/TransaksiView.jsx'
+import InstallButton from './InstallButton.jsx'
 import { getFirebase } from '../lib/firebase.js'
 
 const TABS = [
@@ -63,6 +65,10 @@ export default function Shell({ user }) {
           ))}
         </nav>
 
+        <div className="px-3 pb-2">
+          <InstallButton variant="sidebar" />
+        </div>
+
         <div className="border-t border-slate-100 p-4">
           <div className="flex items-center gap-3">
             <Avatar user={user} />
@@ -95,6 +101,7 @@ export default function Shell({ user }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <InstallButton variant="chip" />
             <Avatar user={user} size="h-9 w-9 text-xs" />
             <button
               onClick={keluar}
@@ -106,17 +113,21 @@ export default function Shell({ user }) {
           </div>
         </header>
 
-        {/* Placeholder modul aktif */}
-        <section className="mx-auto mt-6 max-w-3xl px-5">
-          <h2 className="text-2xl font-extrabold tracking-tight text-slate-800">{aktif.label}</h2>
-          <div className="mt-4 flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/60 px-6 py-16 text-center">
-            <span className="material-symbols-outlined mb-3 text-5xl text-primary/40">{aktif.icon}</span>
-            <p className="text-sm font-bold text-slate-700">Modul {aktif.label} menyusul di {aktif.fase}.</p>
-            <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
-              Fondasi offline-first (Auth + Firestore persistence) sudah siap — konten modul dibangun bertahap sesuai roadmap.
-            </p>
-          </div>
-        </section>
+        {/* Konten modul aktif */}
+        {tab === 'transaksi' ? (
+          <TransaksiView user={user} />
+        ) : (
+          <section className="mx-auto mt-6 max-w-3xl px-5">
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-800">{aktif.label}</h2>
+            <div className="mt-4 flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/60 px-6 py-16 text-center">
+              <span className="material-symbols-outlined mb-3 text-5xl text-primary/40">{aktif.icon}</span>
+              <p className="text-sm font-bold text-slate-700">Modul {aktif.label} menyusul di {aktif.fase}.</p>
+              <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
+                Fondasi offline-first (Auth + Firestore persistence) sudah siap — konten modul dibangun bertahap sesuai roadmap.
+              </p>
+            </div>
+          </section>
+        )}
       </main>
 
       {/* ===== BOTTOM NAV MOBILE ===== */}
