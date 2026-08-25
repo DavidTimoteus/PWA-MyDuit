@@ -7,6 +7,12 @@ const PESAN_ERROR = {
   'auth/cancelled-popup-request': 'Jendela login ditutup sebelum selesai.',
   'auth/popup-blocked': 'Popup diblokir browser — izinkan popup lalu coba lagi.',
   'auth/network-request-failed': 'Koneksi internet bermasalah. Coba lagi.',
+  'auth/configuration-not-found':
+    'Metode login Google belum diaktifkan di Firebase Console (Authentication → Sign-in method).',
+  'auth/operation-not-allowed':
+    'Metode login Google belum diaktifkan di Firebase Console (Authentication → Sign-in method).',
+  'auth/unauthorized-domain':
+    'Domain ini belum diizinkan. Tambahkan di Firebase Console → Authentication → Settings → Authorized domains.',
 }
 
 function GoogleIcon() {
