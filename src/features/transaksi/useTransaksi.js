@@ -1,11 +1,6 @@
-import { collection, getDocs, onSnapshot, orderBy, query, where } from 'firebase/firestore'
+import { getDocs, onSnapshot } from 'firebase/firestore'
 import { useEffect, useRef, useState } from 'react'
-import {
-  buildTransQuery,
-  docKeTransaksi,
-  seedKategoriJikaKosong,
-} from '../../lib/db.js'
-import { getFirebase } from '../../lib/firebase.js'
+import { buildTransQuery, docKeTransaksi } from '../../lib/db.js'
 
 const PAGE_SIZE = 50
 
@@ -62,43 +57,4 @@ export function useTransaksi(uid, { jenis, range }) {
   }
 
   return { docs, loading, loadingMore, hasMore, error, muatLagi, pageSize: PAGE_SIZE }
-}
-
-// Langganan daftar akun & kategori (deleted == false). Kategori di-seed otomatis
-// sekali bila masih kosong (login pertama).
-export function useAkunKategori(uid) {
-  const [akunList, setAkunList] = useState([])
-  const [kategoriList, setKategoriList] = useState([])
-  const [siap, setSiap] = useState(false)
-
-  useEffect(() => {
-    if (!uid) return
-    const { db } = getFirebase()
-    const unsubs = []
-
-    // Seed kategori default sekali (diabaikan bila offline & database masih kosong).
-    seedKategoriJikaKosong(uid).catch(() => {})
-
-    unsubs.push(
-      onSnapshot(
-        query(collection(db, 'users', uid, 'akun'), where('deleted', '==', false)),
-        (snap) => {
-          setAkunList(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-          setSiap(true)
-        },
-      ),
-    )
-    unsubs.push(
-      onSnapshot(
-        query(collection(db, 'users', uid, 'kategori'), where('deleted', '==', false), orderBy('nama', 'asc')),
-        (snap) => {
-          setKategoriList(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-          setSiap(true)
-        },
-      ),
-    )
-    return () => unsubs.forEach((u) => u())
-  }, [uid])
-
-  return { akunList, kategoriList, siap }
 }

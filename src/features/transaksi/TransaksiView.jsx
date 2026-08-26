@@ -3,7 +3,8 @@ import { formatRupiah, rangeForFilter, tanggalLabel } from '../../lib/format.js'
 import { hapusTransaksi } from '../../lib/db.js'
 import FormTransaksiModal from './FormTransaksiModal.jsx'
 import { ChipAkunBaru, TransaksiRow } from './TransaksiRow.jsx'
-import { useAkunKategori, useTransaksi } from './useTransaksi.js'
+import { useTransaksi } from './useTransaksi.js'
+import { useAkunKategori } from '../../lib/useAkunKategori.js'
 
 const CHIPS = [
   { id: 'hari', label: 'Hari Ini' },
@@ -36,7 +37,7 @@ export default function TransaksiView({ user }) {
     [chip, rentang.start, rentang.end],
   )
   const { docs, loading, loadingMore, hasMore, error, muatLagi } = useTransaksi(uid, { jenis, range })
-  const { akunList } = useAkunKategori(uid)
+  const { akunList, kategoriList } = useAkunKategori(uid)
 
   const tampil = useMemo(() => {
     const kw = keyword.trim().toLowerCase()

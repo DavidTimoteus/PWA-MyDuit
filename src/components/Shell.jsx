@@ -1,6 +1,8 @@
 import { signOut } from 'firebase/auth'
 import { useState } from 'react'
 import TransaksiView from '../features/transaksi/TransaksiView.jsx'
+import BudgetView from '../features/budget/BudgetView.jsx'
+import UtangView from '../features/utang/UtangView.jsx'
 import InstallButton from './InstallButton.jsx'
 import { getFirebase } from '../lib/firebase.js'
 
@@ -116,6 +118,10 @@ export default function Shell({ user }) {
         {/* Konten modul aktif */}
         {tab === 'transaksi' ? (
           <TransaksiView user={user} />
+        ) : tab === 'budget' ? (
+          <BudgetView user={user} />
+        ) : tab === 'utang' ? (
+          <UtangView user={user} />
         ) : (
           <section className="mx-auto mt-6 max-w-3xl px-5">
             <h2 className="text-2xl font-extrabold tracking-tight text-slate-800">{aktif.label}</h2>

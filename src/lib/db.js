@@ -70,8 +70,19 @@ export async function tambahAkun(uid, { nama, saldoAwal = 0, tipe = 'Rekening Ut
     deleted: false,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+    ...(Number(saldoAwal) > 0
+      ? { mutasiTerakhir: { delta: Number(saldoAwal), keterangan: 'Saldo awal', at: serverTimestamp() } }
+      : {}),
   })
   return ref.id
+}
+
+export async function updateAkun(uid, id, { nama, tipe }) {
+  await updateDoc(akunRef(uid, id), { nama, tipe, updatedAt: serverTimestamp() })
+}
+
+export async function hapusAkun(uid, id) {
+  await updateDoc(akunRef(uid, id), { deleted: true, updatedAt: serverTimestamp() })
 }
 
 // ===== TRANSAKSI CRUD (offline-first) =====
@@ -97,6 +108,7 @@ export async function simpanTransaksi(uid, data) {
   await updateDoc(akunRef(uid, data.akunId), {
     saldo: increment(deltaSaldo(trans)),
     updatedAt: serverTimestamp(),
+    mutasiTerakhir: { delta: deltaSaldo(trans), keterangan: `Transaksi ${trans.kategoriNama}`, at: serverTimestamp() },
   })
   return ref.id
 }
@@ -118,11 +130,13 @@ export async function updateTransaksi(uid, lama, data) {
     await updateDoc(akunRef(uid, lama.akunId), {
       saldo: increment(-deltaSaldo(lama)),
       updatedAt: serverTimestamp(),
+      mutasiTerakhir: { delta: -deltaSaldo(lama), keterangan: 'Koreksi edit transaksi', at: serverTimestamp() },
     })
   }
   await updateDoc(akunRef(uid, baru.akunId), {
     saldo: increment(deltaSaldo(baru)),
     updatedAt: serverTimestamp(),
+    mutasiTerakhir: { delta: deltaSaldo(baru), keterangan: `Transaksi ${baru.kategoriNama}`, at: serverTimestamp() },
   })
 }
 
@@ -132,6 +146,7 @@ export async function hapusTransaksi(uid, trans) {
     await updateDoc(akunRef(uid, trans.akunId), {
       saldo: increment(-deltaSaldo(trans)),
       updatedAt: serverTimestamp(),
+      mutasiTerakhir: { delta: -deltaSaldo(trans), keterangan: `Hapus transaksi ${trans.kategoriNama}`, at: serverTimestamp() },
     })
   }
 }
@@ -157,4 +172,125 @@ export function buildTransQuery(uid, { jenis, range, pageSize, cursor }) {
 export function docKeTransaksi(d) {
   const data = d.data()
   return { id: d.id, ...data }
+}
+
+// ===== BUDGET (Fase 3) =====
+export function budgetRef(uid, id) {
+  const { db } = getFirebase()
+  return doc(db, 'users', uid, 'budget', id)
+}
+
+export async function simpanBudget(uid, { id, kategoriId, kategoriNama, limitNominal, bulan, tahun }) {
+  const data = {
+    kategoriId,
+    kategoriNama,
+    limitNominal: Number(limitNominal),
+    bulan,
+    tahun,
+  }
+  if (id) {
+    await updateDoc(budgetRef(uid, id), { ...data, updatedAt: serverTimestamp() })
+    return id
+  }
+  const ref = await addDoc(userCol(uid, 'budget'), {
+    ...data,
+    deleted: false,
+    createdAt: serverTimestamp(),
+  })
+  return ref.id
+}
+
+export async function hapusBudget(uid, id) {
+  await updateDoc(budgetRef(uid, id), { deleted: true, updatedAt: serverTimestamp() })
+}
+
+// ===== UTANG & CICILAN (Fase 3) =====
+export function utangRef(uid, id) {
+  const { db } = getFirebase()
+  return doc(db, 'users', uid, 'utang', id)
+}
+
+export async function simpanUtang(uid, { id, namaPihak, deskripsi, total, tipe, cicilanPerBulan, tglJatuhTempo, sisaLama, totalLama }) {
+  const data = {
+    namaPihak,
+    deskripsi: deskripsi ?? '',
+    total: Number(total),
+    tipe,
+    cicilanPerBulan: tipe === 'Cicilan' ? Number(cicilanPerBulan) || 0 : 0,
+    tglJatuhTempo,
+  }
+  if (id) {
+    // Total berubah -> sisa bergeser sebanyak selisih (jumlah terbayar tetap).
+    const selisih = data.total - (Number(totalLama) || 0)
+    const sisaBaru = Math.max(0, (Number(sisaLama) || 0) + selisih)
+    await updateDoc(utangRef(uid, id), {
+      ...data,
+      sisa: sisaBaru,
+      status: sisaBaru <= 0 ? 'Lunas' : 'Belum Lunas',
+      updatedAt: serverTimestamp(),
+    })
+    return id
+  }
+  const ref = await addDoc(userCol(uid, 'utang'), {
+    ...data,
+    sisa: data.total,
+    status: 'Belum Lunas',
+    deleted: false,
+    createdAt: serverTimestamp(),
+  })
+  return ref.id
+}
+
+export async function hapusUtang(uid, id) {
+  await updateDoc(utangRef(uid, id), { deleted: true, updatedAt: serverTimestamp() })
+}
+
+// Cari kategori by nama; buat bila belum ada (untuk 'Pembayaran').
+export async function ambilAtauBuatKategori(uid, nama, jenis = 'Pengeluaran') {
+  const snap = await getDocs(
+    query(userCol(uid, 'kategori'), where('nama', '==', nama), where('deleted', '==', false), fbLimit(1)),
+  )
+  if (!snap.empty) return snap.docs[0].id
+  const ref = await addDoc(userCol(uid, 'kategori'), { nama, jenis, deleted: false, createdAt: serverTimestamp() })
+  return ref.id
+}
+
+// Bayar utang/cicilan: catat pembayaran + transaksi pengeluaran + kurangi sisa + saldo akun.
+export async function bayarUtang(uid, { utang, jumlah, tanggal, akun }) {
+  const katId = await ambilAtauBuatKategori(uid, 'Pembayaran', 'Pengeluaran')
+  const ket = `Bayar ${utang.tipe === 'Cicilan' ? 'cicilan' : 'utang'} ${utang.namaPihak}`
+  const sisaBaru = Math.max(0, (Number(utang.sisa) || 0) - jumlah)
+
+  await addDoc(userCol(uid, 'pembayaranUtang'), {
+    utangId: utang.id,
+    utangNama: utang.namaPihak,
+    jumlah,
+    tanggal,
+    akunId: akun.id,
+    akunNama: akun.nama,
+    deleted: false,
+    createdAt: serverTimestamp(),
+  })
+  await addDoc(userCol(uid, 'transaksi'), {
+    jumlah,
+    jenis: 'pengeluaran',
+    kategoriId: katId,
+    kategoriNama: 'Pembayaran',
+    akunId: akun.id,
+    akunNama: akun.nama,
+    tanggal,
+    catatan: ket,
+    deleted: false,
+    createdAt: serverTimestamp(),
+  })
+  await updateDoc(utangRef(uid, utang.id), {
+    sisa: sisaBaru,
+    status: sisaBaru <= 0 ? 'Lunas' : 'Belum Lunas',
+    updatedAt: serverTimestamp(),
+  })
+  await updateDoc(akunRef(uid, akun.id), {
+    saldo: increment(-jumlah),
+    updatedAt: serverTimestamp(),
+    mutasiTerakhir: { delta: -jumlah, keterangan: ket, at: serverTimestamp() },
+  })
 }
