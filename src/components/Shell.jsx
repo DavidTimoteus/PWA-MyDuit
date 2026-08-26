@@ -1,8 +1,9 @@
 import { signOut } from 'firebase/auth'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TransaksiView from '../features/transaksi/TransaksiView.jsx'
 import BudgetView from '../features/budget/BudgetView.jsx'
 import UtangView from '../features/utang/UtangView.jsx'
+import StatistikView from '../features/statistik/StatistikView.jsx'
 import InstallButton from './InstallButton.jsx'
 import { getFirebase } from '../lib/firebase.js'
 
@@ -27,7 +28,19 @@ function Avatar({ user, size = 'h-9 w-9 text-sm' }) {
 
 export default function Shell({ user }) {
   const [tab, setTab] = useState('transaksi')
+  const [online, setOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
   const aktif = TABS.find((t) => t.id === tab)
+
+  useEffect(() => {
+    const on = () => setOnline(true)
+    const off = () => setOnline(false)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', off)
+    return () => {
+      window.removeEventListener('online', on)
+      window.removeEventListener('offline', off)
+    }
+  }, [])
 
   async function keluar() {
     const { auth } = getFirebase()
@@ -91,6 +104,12 @@ export default function Shell({ user }) {
 
       {/* ===== KONTEN UTAMA ===== */}
       <main className="flex-1 pb-24 md:pb-6">
+        {!online && (
+          <div className="sticky top-0 z-10 flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-[11px] font-bold text-amber-900">
+            <span className="material-symbols-outlined text-[14px]">wifi_off</span>
+            Mode offline — perubahan tersimpan di perangkat & otomatis tersinkron saat daring.
+          </div>
+        )}
         {/* Header mobile */}
         <header className="flex items-center justify-between px-5 pt-6 md:hidden">
           <div className="flex items-center gap-3">
@@ -122,6 +141,8 @@ export default function Shell({ user }) {
           <BudgetView user={user} />
         ) : tab === 'utang' ? (
           <UtangView user={user} />
+        ) : tab === 'statistik' ? (
+          <StatistikView user={user} />
         ) : (
           <section className="mx-auto mt-6 max-w-3xl px-5">
             <h2 className="text-2xl font-extrabold tracking-tight text-slate-800">{aktif.label}</h2>
