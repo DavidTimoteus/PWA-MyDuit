@@ -4,6 +4,7 @@ import TransaksiView from '../features/transaksi/TransaksiView.jsx'
 import BudgetView from '../features/budget/BudgetView.jsx'
 import UtangView from '../features/utang/UtangView.jsx'
 import StatistikView from '../features/statistik/StatistikView.jsx'
+import BackupModal from '../features/backup/BackupModal.jsx'
 import InstallButton from './InstallButton.jsx'
 import { getFirebase } from '../lib/firebase.js'
 
@@ -29,6 +30,7 @@ function Avatar({ user, size = 'h-9 w-9 text-sm' }) {
 export default function Shell({ user }) {
   const [tab, setTab] = useState('transaksi')
   const [online, setOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
+  const [backupOpen, setBackupOpen] = useState(false)
   const aktif = TABS.find((t) => t.id === tab)
 
   useEffect(() => {
@@ -99,6 +101,13 @@ export default function Shell({ user }) {
               <span className="material-symbols-outlined text-[18px]">logout</span>
             </button>
           </div>
+          <button
+            onClick={() => setBackupOpen(true)}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-slate-100 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-200"
+          >
+            <span className="material-symbols-outlined text-[16px]">backup</span>
+            Backup & Pulihkan
+          </button>
         </div>
       </aside>
 
@@ -123,6 +132,13 @@ export default function Shell({ user }) {
           </div>
           <div className="flex items-center gap-2">
             <InstallButton variant="chip" />
+            <button
+              onClick={() => setBackupOpen(true)}
+              title="Backup"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500"
+            >
+              <span className="material-symbols-outlined text-[18px]">backup</span>
+            </button>
             <Avatar user={user} size="h-9 w-9 text-xs" />
             <button
               onClick={keluar}
@@ -176,6 +192,8 @@ export default function Shell({ user }) {
           ))}
         </div>
       </nav>
+
+      <BackupModal open={backupOpen} uid={user.uid} onClose={() => setBackupOpen(false)} />
     </div>
   )
 }
