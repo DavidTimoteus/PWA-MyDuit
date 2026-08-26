@@ -30,8 +30,8 @@ export default function InstallButton({ variant = 'sidebar' }) {
 
   const cls =
     variant === 'sidebar'
-      ? 'flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-emerald-50'
-      : 'flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-primary transition-colors active:bg-primary active:text-white'
+      ? 'clay-btn-soft flex w-full items-center gap-3 px-4 py-2.5 text-sm font-bold text-primary transition-all hover:bg-emerald-50'
+      : 'clay-chip flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors active:bg-primary active:text-white'
 
   return (
     <>
@@ -42,14 +42,14 @@ export default function InstallButton({ variant = 'sidebar' }) {
 
       {hint && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm" onClick={() => setHint(false)}>
-          <div className="w-full max-w-xs rounded-[24px] bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="clay-card w-full max-w-xs rounded-[24px] p-5 text-center" onClick={(e) => e.stopPropagation()}>
             <span className="material-symbols-outlined text-4xl text-primary">ios_share</span>
             <p className="mt-2 text-sm font-bold text-slate-800">Pasang MyDuit di iPhone</p>
             <p className="mt-1 text-xs leading-relaxed text-slate-500">
               Tekan ikon <strong>Share</strong> di bawah Safari, lalu pilih{' '}
               <strong>“Add to Home Screen”</strong>.
             </p>
-            <button onClick={() => setHint(false)} className="mt-4 w-full rounded-full bg-primary py-2.5 text-xs font-extrabold text-white shadow hover:bg-primary-dark">
+              <button onClick={() => setHint(false)} className="clay-btn-primary mt-4 w-full py-2.5 text-xs font-extrabold">
               Mengerti
             </button>
           </div>

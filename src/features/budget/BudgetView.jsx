@@ -10,7 +10,7 @@ export default function BudgetView({ user }) {
     <section className="mx-auto max-w-3xl px-5 pb-32 md:pb-10">
       <h2 className="text-2xl font-extrabold tracking-tight text-slate-800">Budget</h2>
 
-      <div className="mt-4 flex rounded-full bg-white p-1 shadow-sm ring-1 ring-slate-200/70">
+      <div className="clay-inset mt-4 flex p-1">
         {[
           { id: 'rekening', label: 'Rekening' },
           { id: 'budget', label: 'Budget' },
@@ -19,7 +19,7 @@ export default function BudgetView({ user }) {
             key={t.id}
             onClick={() => setSub(t.id)}
             className={`flex-1 rounded-full py-2 text-xs font-extrabold transition-all ${
-              sub === t.id ? 'bg-primary text-white shadow' : 'text-slate-500 hover:text-slate-800'
+              sub === t.id ? 'clay-btn-primary' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             {t.label}

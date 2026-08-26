@@ -91,15 +91,15 @@ export default function TransaksiView({ user }) {
 
       {/* Ringkasan periode */}
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="clay-card p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Pemasukan</p>
           <p className="mt-0.5 truncate text-sm font-extrabold text-income">{formatRupiah(ringkasan.masuk)}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="clay-card p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Pengeluaran</p>
           <p className="mt-0.5 truncate text-sm font-extrabold text-expense">{formatRupiah(ringkasan.keluar)}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="clay-card p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Selisih</p>
           <p className={`mt-0.5 truncate text-sm font-extrabold ${ringkasan.selisih < 0 ? 'text-expense' : 'text-slate-800'}`}>
             {formatRupiah(ringkasan.selisih)}
@@ -115,7 +115,7 @@ export default function TransaksiView({ user }) {
               key={c.id}
               onClick={() => setChip(c.id)}
               className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
-                chip === c.id ? 'bg-primary text-white shadow' : 'bg-white text-slate-500 ring-1 ring-slate-200/70 hover:text-slate-800'
+                chip === c.id ? 'clay-btn-primary' : 'clay-btn-soft text-slate-500 hover:text-slate-800'
               }`}
             >
               {c.label}
@@ -123,7 +123,7 @@ export default function TransaksiView({ user }) {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 ring-1 ring-slate-200/70">
+          <div className="clay-inset flex items-center gap-1.5 px-3 py-1.5">
             <span className="material-symbols-outlined text-[16px] text-slate-400">search</span>
             <input
               value={keyword}
@@ -132,13 +132,13 @@ export default function TransaksiView({ user }) {
               className="w-40 bg-transparent text-xs font-semibold outline-none placeholder:font-normal placeholder:text-slate-400"
             />
           </div>
-          <div className="flex rounded-full bg-white p-0.5 ring-1 ring-slate-200/70">
+          <div className="clay-inset flex p-0.5">
             {JENIS.map((j) => (
               <button
                 key={j.id}
                 onClick={() => setJenis(j.id)}
                 className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
-                  jenis === j.id ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-800'
+                  jenis === j.id ? 'clay-btn-primary' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 {j.label}
@@ -152,14 +152,14 @@ export default function TransaksiView({ user }) {
               type="date"
               value={rentang.start}
               onChange={(e) => setRentang((r) => ({ ...r, start: e.target.value }))}
-              className="rounded-xl bg-white px-3 py-1.5 ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+              className="clay-field rounded-xl px-3 py-1.5"
             />
             <span>s.d.</span>
             <input
               type="date"
               value={rentang.end}
               onChange={(e) => setRentang((r) => ({ ...r, end: e.target.value }))}
-              className="rounded-xl bg-white px-3 py-1.5 ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+              className="clay-field rounded-xl px-3 py-1.5"
             />
           </div>
         )}
@@ -185,7 +185,7 @@ export default function TransaksiView({ user }) {
           ))}
         </div>
       ) : grup.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center rounded-3xl border border-dashed border-slate-300 bg-white/60 px-6 py-14 text-center">
+          <div className="clay-card-soft mt-4 flex flex-col items-center px-6 py-14 text-center">
           <span className="material-symbols-outlined mb-2 text-5xl text-primary/30">receipt_long</span>
           <p className="text-sm font-bold text-slate-700">Belum ada transaksi di periode ini</p>
           <p className="mt-1 text-xs text-slate-400">Tekan tombol + untuk mencatat yang pertama.</p>
@@ -212,7 +212,7 @@ export default function TransaksiView({ user }) {
             <button
               onClick={muatLagi}
               disabled={loadingMore}
-              className="w-full rounded-full bg-white py-2.5 text-xs font-extrabold text-primary ring-1 ring-slate-200/70 hover:bg-slate-50 disabled:opacity-60"
+              className="clay-btn-soft w-full py-2.5 text-xs font-extrabold text-primary disabled:opacity-60"
             >
               {loadingMore ? 'Memuat…' : 'Muat 50 lagi'}
             </button>
@@ -224,7 +224,7 @@ export default function TransaksiView({ user }) {
       {adaAkun && (
         <button
           onClick={() => setModal({ open: true, mode: 'add', doc: null })}
-          className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary-dark via-primary to-primary-light text-white shadow-xl transition-transform active:scale-95 md:bottom-8 md:right-8"
+          className="clay-fab fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center text-white md:bottom-8 md:right-8"
           title="Catat transaksi"
         >
           <span className="material-symbols-outlined text-[28px]">add</span>
@@ -245,20 +245,20 @@ export default function TransaksiView({ user }) {
       {/* Modal konfirmasi hapus */}
       {hapusTarget && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm" onClick={() => setHapusTarget(null)}>
-          <div className="w-full max-w-xs rounded-[24px] bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="clay-card w-full max-w-xs rounded-[24px] p-5 text-center" onClick={(e) => e.stopPropagation()}>
             <span className="material-symbols-outlined text-4xl text-expense">delete</span>
             <p className="mt-2 text-sm font-bold text-slate-800">Hapus transaksi ini?</p>
             <p className="mt-1 text-xs text-slate-400">
               {hapusTarget.kategoriNama} · Rp{(hapusTarget.jumlah || 0).toLocaleString('id-ID')} — saldo rekening ikut dikembalikan.
             </p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={() => setHapusTarget(null)} className="rounded-full bg-slate-100 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200">
+              <button onClick={() => setHapusTarget(null)} className="clay-btn-soft py-2.5 text-xs font-bold text-slate-600">
                 Batal
               </button>
               <button
                 onClick={konfirmHapus}
                 disabled={hapusLoading}
-                className="rounded-full bg-expense py-2.5 text-xs font-bold text-white shadow hover:brightness-110 disabled:opacity-60"
+                className="clay-btn-danger py-2.5 text-xs font-bold disabled:opacity-60"
               >
                 {hapusLoading ? 'Menghapus…' : 'Hapus'}
               </button>

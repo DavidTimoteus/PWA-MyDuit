@@ -84,17 +84,17 @@ export default function FormTransaksiModal({ uid, open, onClose, akunList, kateg
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={submit}
-        className="w-full max-w-md rounded-t-[28px] bg-white p-5 shadow-2xl md:rounded-[28px]"
+        className="clay-card w-full max-w-md rounded-t-[28px] p-5 md:rounded-[28px]"
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-extrabold text-slate-800">{judul}</h3>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+          <button type="button" onClick={onClose} className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
 
         {/* Toggle jenis */}
-        <div className="mb-3 grid grid-cols-2 gap-1 rounded-full bg-slate-100 p-1">
+        <div className="clay-inset mb-3 grid grid-cols-2 gap-1 p-1">
           {['pengeluaran', 'pemasukan'].map((j) => (
             <button
               key={j}
@@ -106,8 +106,8 @@ export default function FormTransaksiModal({ uid, open, onClose, akunList, kateg
               className={`rounded-full py-2 text-xs font-bold capitalize transition-all ${
                 jenis === j
                   ? j === 'pengeluaran'
-                    ? 'bg-expense text-white shadow'
-                    : 'bg-income text-white shadow'
+                    ? 'clay-btn-danger'
+                    : 'clay-btn-primary'
                   : 'text-slate-500'
               }`}
             >
@@ -118,7 +118,7 @@ export default function FormTransaksiModal({ uid, open, onClose, akunList, kateg
 
         {/* Nominal */}
         <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Nominal</label>
-        <div className="mb-3 flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 ring-1 ring-slate-200/70 focus-within:ring-2 focus-within:ring-primary">
+        <div className="clay-field mb-3 flex items-center gap-2 rounded-2xl px-4 py-3">
           <span className="text-lg font-extrabold text-slate-400">Rp</span>
           <input
             value={jumlah}
@@ -137,7 +137,7 @@ export default function FormTransaksiModal({ uid, open, onClose, akunList, kateg
             <select
               value={kategoriTerpilihAda ? kategoriId : ''}
               onChange={(e) => setKategoriId(e.target.value)}
-              className="w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700"
             >
               <option value="" disabled>Pilih…</option>
               {!kategoriTerpilihAda && kategoriId && <option value={kategoriId}>{'(kategori lama)'}</option>}
@@ -169,7 +169,7 @@ export default function FormTransaksiModal({ uid, open, onClose, akunList, kateg
               type="date"
               value={tanggal}
               onChange={(e) => setTanggal(e.target.value)}
-              className="w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700"
             />
           </div>
           <div>
@@ -178,7 +178,7 @@ export default function FormTransaksiModal({ uid, open, onClose, akunList, kateg
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
               placeholder="opsional"
-              className="w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none ring-1 ring-slate-200/70 placeholder:font-normal placeholder:text-slate-400 focus:ring-2 focus:ring-primary"
+              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 placeholder:font-normal placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -188,7 +188,7 @@ export default function FormTransaksiModal({ uid, open, onClose, akunList, kateg
         <button
           type="submit"
           disabled={saving}
-          className="w-full rounded-full bg-primary py-3 text-sm font-extrabold text-white shadow transition-all hover:bg-primary-dark active:scale-[0.99] disabled:opacity-60"
+          className="clay-btn-primary w-full py-3 text-sm font-extrabold transition-all active:scale-[0.99] disabled:opacity-60"
         >
           {saving ? 'Menyimpan…' : mode === 'edit' ? 'Simpan Perubahan' : 'Simpan'}
         </button>

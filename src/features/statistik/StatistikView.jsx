@@ -12,7 +12,7 @@ function fmt(d) {
 function KategoriCol({ title, items, totalJenis, warna }) {
   const max = Math.max(1, ...items.map((i) => i.total))
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
+    <div className="clay-card p-4">
       <p className={`text-xs font-extrabold uppercase tracking-wide ${warna.text}`}>{title}</p>
       <p className="mb-3 text-sm font-bold text-slate-700">{formatRupiah(totalJenis)}</p>
       {items.length === 0 ? (
@@ -122,13 +122,13 @@ export default function StatistikView({ user }) {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-extrabold tracking-tight text-slate-800">Statistik</h2>
         <div className="flex items-center gap-1">
-          <button onClick={() => geser(-1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/70 hover:bg-slate-50">
+          <button onClick={() => geser(-1)} className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-600 hover:bg-slate-50">
             <span className="material-symbols-outlined text-[18px]">chevron_left</span>
           </button>
           <p className="min-w-[120px] text-center text-xs font-extrabold text-slate-700">
             {NAMA_BULAN[bulan]} {tahun}
           </p>
-          <button onClick={() => geser(1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/70 hover:bg-slate-50">
+          <button onClick={() => geser(1)} className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-600 hover:bg-slate-50">
             <span className="material-symbols-outlined text-[18px]">chevron_right</span>
           </button>
         </div>
@@ -136,22 +136,22 @@ export default function StatistikView({ user }) {
 
       {/* Kartu ringkasan */}
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="clay-card p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Pemasukan</p>
           <p className="mt-0.5 truncate text-sm font-extrabold text-income">{formatRupiah(ringkas.in_)}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="clay-card p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Pengeluaran</p>
           <p className="mt-0.5 truncate text-sm font-extrabold text-expense">{formatRupiah(ringkas.out)}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="clay-card p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Saldo</p>
           <p className={`mt-0.5 truncate text-sm font-extrabold ${ringkas.saldo >= 0 ? 'text-slate-800' : 'text-expense'}`}>{formatRupiah(ringkas.saldo)}</p>
         </div>
       </div>
 
       {/* Arus 6 bulan */}
-      <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+      <div className="clay-card mt-4 p-4">
         <p className="mb-3 text-xs font-extrabold uppercase tracking-wide text-slate-400">Arus Kas 6 Bulan</p>
         <div className="flex items-end justify-between gap-2" style={{ height: 120 }}>
           {arus6.bars.map((b, i) => {

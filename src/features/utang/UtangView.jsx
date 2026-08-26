@@ -50,7 +50,7 @@ function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
   const jatuh = infoJatuhTempo(t.tglJatuhTempo)
 
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
+    <div className="clay-card p-4">
       <div className="flex items-center gap-3">
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${lunas ? 'bg-emerald-50 text-income' : 'bg-red-50 text-expense'}`}>
           <span className="material-symbols-outlined text-[20px]">{lunas ? 'task_alt' : 'account_balance_wallet'}</span>
@@ -68,10 +68,10 @@ function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
           <p className={`truncate text-[11px] ${jatuh.cls}`}>{jatuh.teks}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <button onClick={onEdit} title="Edit" className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+          <button onClick={onEdit} title="Edit" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
             <span className="material-symbols-outlined text-[14px]">edit</span>
           </button>
-          <button onClick={onHapus} title="Hapus" className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white">
+          <button onClick={onHapus} title="Hapus" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full !bg-red-50 text-red-500 hover:!bg-red-500 hover:text-white">
             <span className="material-symbols-outlined text-[14px]">delete</span>
           </button>
         </div>
@@ -97,10 +97,10 @@ function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
           )}
           {!lunas && (
             <>
-              <button onClick={onLunasin} className="rounded-full bg-slate-100 px-3.5 py-2 text-xs font-extrabold text-slate-600 hover:bg-slate-200">
+              <button onClick={onLunasin} className="clay-btn-soft px-3.5 py-2 text-xs font-extrabold text-slate-600">
                 Lunasin
               </button>
-              <button onClick={onBayar} className="rounded-full bg-primary px-4 py-2 text-xs font-extrabold text-white shadow hover:bg-primary-dark">
+              <button onClick={onBayar} className="clay-btn-primary px-4 py-2 text-xs font-extrabold">
                 Bayar
               </button>
             </>
@@ -158,15 +158,15 @@ export default function UtangView({ user }) {
 
       {/* Ringkasan */}
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="clay-card p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Total Sisa</p>
           <p className="mt-0.5 truncate text-sm font-extrabold text-expense">{formatRupiah(ringkasan.totalSisa)}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="clay-card p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Cicilan Aktif</p>
           <p className="mt-0.5 text-sm font-extrabold text-slate-800">{ringkasan.cicilanAktif}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="clay-card p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Lunas</p>
           <p className="mt-0.5 text-sm font-extrabold text-income">{ringkasan.lunasCount}</p>
         </div>
@@ -179,7 +179,7 @@ export default function UtangView({ user }) {
             key={f.id}
             onClick={() => setFilter(f.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
-              filter === f.id ? 'bg-primary text-white shadow' : 'bg-white text-slate-500 ring-1 ring-slate-200/70 hover:text-slate-800'
+              filter === f.id ? 'clay-btn-primary' : 'clay-btn-soft text-slate-500 hover:text-slate-800'
             }`}
           >
             {f.label}
@@ -190,7 +190,7 @@ export default function UtangView({ user }) {
       {/* List */}
       <div className="mt-4 space-y-2">
         {tampil.length === 0 ? (
-          <div className="flex flex-col items-center rounded-3xl border border-dashed border-slate-300 bg-white/60 px-6 py-14 text-center">
+          <div className="clay-card-soft flex flex-col items-center px-6 py-14 text-center">
             <span className="material-symbols-outlined mb-2 text-5xl text-primary/30">payments</span>
             <p className="text-sm font-bold text-slate-700">Belum ada utang/cicilan</p>
             <p className="mt-1 text-xs text-slate-400">Tekan tombol + untuk mencatat yang pertama.</p>
@@ -212,7 +212,7 @@ export default function UtangView({ user }) {
       {/* FAB tambah */}
       <button
         onClick={() => setFormModal({ open: true, edit: null })}
-        className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary-dark via-primary to-primary-light text-white shadow-xl transition-transform active:scale-95 md:bottom-8 md:right-8"
+        className="clay-fab fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center text-white md:bottom-8 md:right-8"
         title="Tambah utang"
       >
         <span className="material-symbols-outlined text-[28px]">add</span>
@@ -235,13 +235,13 @@ export default function UtangView({ user }) {
 
       {hapusTarget && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm" onClick={() => setHapusTarget(null)}>
-          <div className="w-full max-w-xs rounded-[24px] bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="clay-card w-full max-w-xs rounded-[24px] p-5 text-center" onClick={(e) => e.stopPropagation()}>
             <span className="material-symbols-outlined text-4xl text-expense">delete</span>
             <p className="mt-2 text-sm font-bold text-slate-800">Hapus “{hapusTarget.namaPihak}”?</p>
             <p className="mt-1 text-xs text-slate-400">Riwayat pembayaran yang sudah tercatat tetap ada.</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={() => setHapusTarget(null)} className="rounded-full bg-slate-100 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200">Batal</button>
-              <button onClick={konfirmHapus} disabled={hapusLoading} className="rounded-full bg-expense py-2.5 text-xs font-bold text-white shadow hover:brightness-110 disabled:opacity-60">
+              <button onClick={() => setHapusTarget(null)} className="clay-btn-soft py-2.5 text-xs font-bold text-slate-600">Batal</button>
+              <button onClick={konfirmHapus} disabled={hapusLoading} className="clay-btn-danger py-2.5 text-xs font-bold disabled:opacity-60">
                 {hapusLoading ? 'Menghapus…' : 'Hapus'}
               </button>
             </div>

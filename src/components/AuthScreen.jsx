@@ -50,8 +50,8 @@ export default function AuthScreen() {
 
   return (
     <div className="min-h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-primary-dark via-primary to-primary-light">
-      <div className="w-full max-w-sm rounded-[32px] bg-white p-8 text-center shadow-2xl">
-        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-dark via-primary to-primary-light text-4xl font-extrabold text-white shadow-lg">
+      <div className="clay-card w-full max-w-sm rounded-[32px] p-8 text-center">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl clay-hero text-4xl font-extrabold text-white">
           M
         </div>
         <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">MyDuit</h1>
@@ -63,7 +63,7 @@ export default function AuthScreen() {
         <button
           onClick={masuk}
           disabled={loading}
-          className="mt-6 flex w-full items-center justify-center gap-3 rounded-full border border-slate-200 bg-white py-3.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-[0.98] disabled:opacity-60"
+          className="clay-btn mt-6 flex w-full items-center justify-center gap-3 py-3.5 text-sm font-bold text-slate-700 transition-all active:scale-[0.98] disabled:opacity-60"
         >
           {loading ? (
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-primary" />

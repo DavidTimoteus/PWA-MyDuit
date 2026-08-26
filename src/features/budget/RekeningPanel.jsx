@@ -45,10 +45,10 @@ function FormRekeningModal({ open, onClose, uid, edit }) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm md:items-center" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full max-w-sm rounded-t-[28px] bg-white p-5 shadow-2xl md:rounded-[28px]">
+      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="clay-card w-full max-w-sm rounded-t-[28px] p-5 md:rounded-[28px]">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-extrabold text-slate-800">{edit ? 'Edit Rekening' : 'Tambah Rekening'}</h3>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+          <button type="button" onClick={onClose} className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
@@ -57,7 +57,7 @@ function FormRekeningModal({ open, onClose, uid, edit }) {
           value={nama}
           onChange={(e) => setNama(e.target.value)}
           placeholder="mis. Rekening Utama"
-          className="mb-3 w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+          className="clay-field mb-3 w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
         />
         <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Tipe</label>
         <select
@@ -72,7 +72,7 @@ function FormRekeningModal({ open, onClose, uid, edit }) {
         {!edit && (
           <>
             <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Saldo awal</label>
-            <div className="mb-3 flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5 ring-1 ring-slate-200/70 focus-within:ring-2 focus-within:ring-primary">
+            <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
               <span className="text-sm font-bold text-slate-400">Rp</span>
               <input
                 value={saldo}
@@ -85,7 +85,7 @@ function FormRekeningModal({ open, onClose, uid, edit }) {
           </>
         )}
         {error && <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
-        <button disabled={saving} className="w-full rounded-full bg-primary py-3 text-sm font-extrabold text-white shadow hover:bg-primary-dark disabled:opacity-60">
+        <button disabled={saving} className="clay-btn-primary w-full py-3 text-sm font-extrabold disabled:opacity-60">
           {saving ? 'Menyimpan…' : 'Simpan'}
         </button>
       </form>
@@ -123,14 +123,14 @@ export default function RekeningPanel({ uid }) {
       {/* List kartu rekening */}
       <div className="mt-4 space-y-2">
         {akunList.length === 0 ? (
-          <div className="flex flex-col items-center rounded-3xl border border-dashed border-slate-300 bg-white/60 px-6 py-12 text-center">
+          <div className="clay-card-soft flex flex-col items-center px-6 py-12 text-center">
             <span className="material-symbols-outlined mb-2 text-5xl text-primary/30">account_balance_wallet</span>
             <p className="text-sm font-bold text-slate-700">Belum ada rekening</p>
             <p className="mt-1 text-xs text-slate-400">Tekan tombol + untuk menambah.</p>
           </div>
         ) : (
           akunList.map((a) => (
-            <div key={a.id} className="rounded-2xl bg-white p-4 shadow-sm">
+            <div key={a.id} className="clay-card p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-primary">
                   <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
@@ -140,10 +140,10 @@ export default function RekeningPanel({ uid }) {
                   <p className="text-[11px] font-semibold text-slate-400">{a.tipe}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <button onClick={() => setModal({ open: true, edit: a })} title="Edit" className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+                  <button onClick={() => setModal({ open: true, edit: a })} title="Edit" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
                     <span className="material-symbols-outlined text-[14px]">edit</span>
                   </button>
-                  <button onClick={() => setHapusTarget(a)} title="Hapus" className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white">
+                  <button onClick={() => setHapusTarget(a)} title="Hapus" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full !bg-red-50 text-red-500 hover:!bg-red-500 hover:text-white">
                     <span className="material-symbols-outlined text-[14px]">delete</span>
                   </button>
                 </div>
@@ -162,7 +162,7 @@ export default function RekeningPanel({ uid }) {
       {/* FAB tambah */}
       <button
         onClick={() => setModal({ open: true, edit: null })}
-        className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary-dark via-primary to-primary-light text-white shadow-xl transition-transform active:scale-95 md:bottom-8 md:right-8"
+        className="clay-fab fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center text-white md:bottom-8 md:right-8"
         title="Tambah rekening"
       >
         <span className="material-symbols-outlined text-[28px]">add</span>
@@ -177,13 +177,13 @@ export default function RekeningPanel({ uid }) {
 
       {hapusTarget && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm" onClick={() => setHapusTarget(null)}>
-          <div className="w-full max-w-xs rounded-[24px] bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="clay-card w-full max-w-xs rounded-[24px] p-5 text-center" onClick={(e) => e.stopPropagation()}>
             <span className="material-symbols-outlined text-4xl text-expense">delete</span>
             <p className="mt-2 text-sm font-bold text-slate-800">Hapus rekening “{hapusTarget.nama}”?</p>
             <p className="mt-1 text-xs text-slate-400">Riwayat transaksi lama tetap tersimpan.</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={() => setHapusTarget(null)} className="rounded-full bg-slate-100 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200">Batal</button>
-              <button onClick={konfirmHapus} disabled={hapusLoading} className="rounded-full bg-expense py-2.5 text-xs font-bold text-white shadow hover:brightness-110 disabled:opacity-60">
+              <button onClick={() => setHapusTarget(null)} className="clay-btn-soft py-2.5 text-xs font-bold text-slate-600">Batal</button>
+              <button onClick={konfirmHapus} disabled={hapusLoading} className="clay-btn-danger py-2.5 text-xs font-bold disabled:opacity-60">
                 {hapusLoading ? 'Menghapus…' : 'Hapus'}
               </button>
             </div>

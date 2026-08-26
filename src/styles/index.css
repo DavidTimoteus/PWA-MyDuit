@@ -12,6 +12,25 @@
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* ===== CLAYMORPHISM DESIGN SYSTEM (warisan app GAS) ===== */
+:root {
+  --clay-r-card: 22px;
+  --clay-r-card-sm: 18px;
+  --clay-r-button: 18px;
+  --clay-r-chip: 999px;
+  --clay-r-input: 16px;
+  --clay-r-icon: 20px;
+
+  /* H = warna brand LAMA, didarken ~15%, sbg channel RGB shadow */
+  --clay-h-primary: 38, 90, 67;
+  --clay-h-danger: 195, 53, 53;
+  --clay-h-amber: 208, 134, 9;
+  --clay-h-neutral: 100, 116, 139;
+  --clay-h-blue: 31, 84, 200;
+
+  --clay-bg: #f8faf9;
+}
+
 html,
 body,
 #root {
@@ -20,8 +39,221 @@ body,
 
 body {
   margin: 0;
-  background-color: var(--color-surface);
+  background-color: var(--clay-bg);
   color: #1a1b1e;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+/* ===== RESEP DASAR 3-LAPIS SHADOW ===== */
+.clay {
+  --clay-h: var(--clay-h-primary);
+  border-radius: var(--clay-r-card);
+  box-shadow:
+    6px 6px 16px rgba(var(--clay-h), 0.20),
+    -6px -6px 16px rgba(255, 255, 255, 0.75),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.55),
+    inset -3px -3px 7px rgba(var(--clay-h), 0.10);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease;
+}
+
+/* Varian hue — tempel di elemen ber-.clay */
+.clay-key-primary { --clay-h: var(--clay-h-primary); }
+.clay-key-danger  { --clay-h: var(--clay-h-danger); }
+.clay-key-amber   { --clay-h: var(--clay-h-amber); }
+.clay-key-neutral { --clay-h: var(--clay-h-neutral); }
+.clay-key-blue    { --clay-h: var(--clay-h-blue); }
+
+/* Kartu resting (radius lebih kecil dari .clay default) — SELF-CONTAINED */
+.clay-card {
+  --clay-h: var(--clay-h-neutral);
+  border-radius: var(--clay-r-card-sm);
+  background: #ffffff;
+  box-shadow:
+    6px 6px 16px rgba(var(--clay-h), 0.20),
+    -6px -6px 16px rgba(255, 255, 255, 0.75),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.55),
+    inset -3px -3px 7px rgba(var(--clay-h), 0.10);
+}
+.clay-card.clay-key-neutral {
+  background: #ffffff;
+}
+
+/* Lembar/modal (L2) — shadow lebih besar, offset jelas */
+.clay-sheet {
+  --clay-h: var(--clay-h-primary);
+  border-radius: var(--clay-r-card);
+  background: #ffffff;
+  box-shadow:
+    0 14px 34px rgba(var(--clay-h), 0.22),
+    0 2px 8px rgba(var(--clay-h), 0.12),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.55),
+    inset -3px -3px 10px rgba(var(--clay-h), 0.08);
+}
+
+/* Tombol clay — pill rounded dgn hue RGB shadow, raised resting & cekung aktif */
+.clay-btn {
+  --clay-h: var(--clay-h-primary);
+  border-radius: var(--clay-r-button);
+  box-shadow:
+    5px 5px 14px rgba(var(--clay-h), 0.32),
+    -5px -5px 14px rgba(255, 255, 255, 0.5),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.35),
+    inset -3px -3px 7px rgba(var(--clay-h), 0.22);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
+}
+.clay-btn:hover { transform: translateY(-1px); }
+.clay-btn:active {
+  transform: scale(0.96) translateY(0);
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, 0.22),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.3);
+}
+
+/* Tombol isi gradien hijau — ala .clay-btn primary GAS */
+.clay-btn-primary {
+  --clay-h: var(--clay-h-primary);
+  background: linear-gradient(145deg, #40916c 0%, #2d6a4f 55%, #1b4332 100%);
+  color: #fff;
+  border-radius: var(--clay-r-button);
+  box-shadow:
+    5px 5px 14px rgba(var(--clay-h), 0.32),
+    -5px -5px 14px rgba(255, 255, 255, 0.5),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.35),
+    inset -3px -3px 7px rgba(var(--clay-h), 0.22);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.clay-btn-primary:hover { transform: translateY(-1px); }
+.clay-btn-primary:active {
+  transform: scale(0.96) translateY(0);
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, 0.28),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.25);
+}
+
+/* Tombol isi gradien merah */
+.clay-btn-danger {
+  --clay-h: var(--clay-h-danger);
+  background: linear-gradient(145deg, #ef5350 0%, #e53e3e 55%, #b71c1c 100%);
+  color: #fff;
+  border-radius: var(--clay-r-button);
+  box-shadow:
+    5px 5px 14px rgba(var(--clay-h), 0.32),
+    -5px -5px 14px rgba(255, 255, 255, 0.5),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.35),
+    inset -3px -3px 7px rgba(var(--clay-h), 0.22);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.clay-btn-danger:hover { transform: translateY(-1px); }
+.clay-btn-danger:active {
+  transform: scale(0.96) translateY(0);
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, 0.28),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.25);
+}
+
+/* Tombol netral (abu) clay — raised resting, cekung aktif */
+.clay-btn-soft,
+.clay-btn-secondary {
+  --clay-h: var(--clay-h-neutral);
+  border-radius: var(--clay-r-button);
+  background: #f8faf9;
+  color: #475569;
+  box-shadow:
+    4px 4px 12px rgba(var(--clay-h), 0.18),
+    -4px -4px 12px rgba(255, 255, 255, 0.6),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 5px rgba(var(--clay-h), 0.10);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.clay-btn-soft:active,
+.clay-btn-secondary:active {
+  transform: scale(0.96);
+  box-shadow:
+    inset 2px 2px 6px rgba(var(--clay-h), 0.25),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.5);
+}
+
+/* Chip pill — shadow halus */
+.clay-chip {
+  --clay-h: var(--clay-h-primary);
+  border-radius: var(--clay-r-chip);
+  background: #f8faf9;
+  box-shadow:
+    3px 3px 9px rgba(var(--clay-h), 0.18),
+    -3px -3px 9px rgba(255, 255, 255, 0.6),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 4px rgba(var(--clay-h), 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.clay-chip:active {
+  transform: scale(0.92);
+  box-shadow:
+    inset 2px 2px 6px rgba(0, 0, 0, 0.2),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.3);
+}
+
+/* FAB — gradien + shadow khas */
+.clay-fab {
+  --clay-h: var(--clay-h-primary);
+  background: linear-gradient(145deg, #40916c 0%, #2d6a4f 55%, #1b4332 100%);
+  color: #fff;
+  border-radius: 999px;
+  border: 4px solid #ffffff;
+  box-shadow:
+    0 12px 22px rgba(var(--clay-h), 0.40),
+    0 4px 10px rgba(var(--clay-h), 0.28),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.35),
+    inset -3px -3px 7px rgba(0, 0, 0, 0.18);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.clay-fab:active {
+  transform: scale(0.94);
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, 0.28),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.25);
+}
+
+/* Ikon tile clay (lingkaran/persegi dgn hue) */
+.clay-icon-tile {
+  --clay-h: var(--clay-h-primary);
+  box-shadow:
+    4px 4px 10px rgba(var(--clay-h), 0.28),
+    -3px -3px 8px rgba(255, 255, 255, 0.55),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 4px rgba(var(--clay-h), 0.15);
+}
+
+/* Input clay (sunk/inset) */
+.clay-field,
+.clay-inset {
+  background: #eef3ef;
+  border-radius: var(--clay-r-input);
+  box-shadow:
+    inset 3px 3px 7px rgba(43, 80, 64, 0.14),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.85);
+  border: none;
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+.clay-field:focus,
+.clay-inset:focus {
+  box-shadow:
+    inset 3px 3px 7px rgba(43, 80, 64, 0.14),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.85),
+    0 0 0 2px rgba(45, 106, 79, 0.30);
+}
+
+/* Warna latar kategori (dipakai hero & kartu) */
+.bg-surfaceContainerLowest { background-color: #ffffff; }
+.bg-surfaceContainerLow { background-color: #f8faf9; }
+.text-textSecondary { color: #64748b; }
+
+/* Animasi masuk lembut */
+@keyframes clayPop {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.clay-pop {
+  animation: clayPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }

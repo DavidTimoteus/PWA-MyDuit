@@ -6,6 +6,7 @@ import UtangView from '../features/utang/UtangView.jsx'
 import StatistikView from '../features/statistik/StatistikView.jsx'
 import BackupModal from '../features/backup/BackupModal.jsx'
 import InstallButton from './InstallButton.jsx'
+import RightPanel from '../features/transaksi/RightPanel.jsx'
 import { getFirebase } from '../lib/firebase.js'
 
 const TABS = [
@@ -50,11 +51,11 @@ export default function Shell({ user }) {
   }
 
   return (
-    <div className="min-h-full md:flex">
+    <div className="min-h-full md:grid md:grid-cols-[232px_1fr_320px] md:h-screen">
       {/* ===== SIDEBAR DESKTOP ===== */}
-      <aside className="hidden md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-r md:border-slate-200/70 md:bg-white">
+      <aside className="hidden md:flex md:h-screen md:shrink-0 md:flex-col md:border-r md:border-white/60 md:bg-[#eef3ef]">
         <div className="flex items-center gap-3 px-5 pb-4 pt-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-dark via-primary to-primary-light text-lg font-extrabold text-white shadow">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl clay-hero text-lg font-extrabold text-white">
             M
           </div>
           <div>
@@ -68,10 +69,10 @@ export default function Shell({ user }) {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-bold transition-colors ${
+              className={`flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-bold transition-all ${
                 tab === t.id
-                  ? 'bg-primary text-white shadow'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  ? 'clay-btn-primary'
+                  : 'text-slate-500 hover:bg-white/70'
               }`}
             >
               <span className={`material-symbols-outlined text-[22px] ${tab === t.id ? '[font-variation-settings:"FILL"_1]' : ''}`}>
@@ -96,14 +97,14 @@ export default function Shell({ user }) {
             <button
               onClick={keluar}
               title="Keluar"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-500 transition-colors hover:bg-red-500 hover:text-white"
+              className="clay-chip flex h-8 w-8 items-center justify-center rounded-full !bg-red-50 text-red-500 transition-colors hover:!bg-red-500 hover:text-white"
             >
               <span className="material-symbols-outlined text-[18px]">logout</span>
             </button>
           </div>
           <button
             onClick={() => setBackupOpen(true)}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-slate-100 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-200"
+            className="clay-btn-soft mt-3 flex w-full items-center justify-center gap-2 py-2 text-xs font-bold"
           >
             <span className="material-symbols-outlined text-[16px]">backup</span>
             Backup & Pulihkan
@@ -122,7 +123,7 @@ export default function Shell({ user }) {
         {/* Header mobile */}
         <header className="flex items-center justify-between px-5 pt-6 md:hidden">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-dark via-primary to-primary-light text-lg font-extrabold text-white shadow">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl clay-hero text-lg font-extrabold text-white">
               M
             </div>
             <div>
@@ -135,7 +136,7 @@ export default function Shell({ user }) {
             <button
               onClick={() => setBackupOpen(true)}
               title="Backup"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500"
+              className="clay-chip flex h-9 w-9 items-center justify-center rounded-full text-slate-500"
             >
               <span className="material-symbols-outlined text-[18px]">backup</span>
             </button>
@@ -143,7 +144,7 @@ export default function Shell({ user }) {
             <button
               onClick={keluar}
               title="Keluar"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-500 transition-colors active:bg-red-500 active:text-white"
+              className="clay-chip flex h-9 w-9 items-center justify-center rounded-full !bg-red-50 text-red-500 transition-colors hover:!bg-red-500 hover:text-white active:!bg-red-500 active:text-white"
             >
               <span className="material-symbols-outlined text-[18px]">logout</span>
             </button>
@@ -162,7 +163,7 @@ export default function Shell({ user }) {
         ) : (
           <section className="mx-auto mt-6 max-w-3xl px-5">
             <h2 className="text-2xl font-extrabold tracking-tight text-slate-800">{aktif.label}</h2>
-            <div className="mt-4 flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/60 px-6 py-16 text-center">
+              <div className="clay-card-soft mt-4 flex flex-col items-center justify-center px-6 py-16 text-center">
               <span className="material-symbols-outlined mb-3 text-5xl text-primary/40">{aktif.icon}</span>
               <p className="text-sm font-bold text-slate-700">Modul {aktif.label} menyusul di {aktif.fase}.</p>
               <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
@@ -174,7 +175,7 @@ export default function Shell({ user }) {
       </main>
 
       {/* ===== BOTTOM NAV MOBILE ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-20 clay-nav pb-[env(safe-area-inset-bottom)] md:hidden">
         <div className="grid grid-cols-4">
           {TABS.map((t) => (
             <button
@@ -192,6 +193,8 @@ export default function Shell({ user }) {
           ))}
         </div>
       </nav>
+
+      {tab === 'transaksi' && <RightPanel uid={user.uid} />}
 
       <BackupModal open={backupOpen} uid={user.uid} onClose={() => setBackupOpen(false)} />
     </div>

@@ -40,7 +40,7 @@ export function ChipAkunBaru({ uid }) {
 
   if (selesai) {
     return (
-      <div className="rounded-3xl bg-white p-6 text-center shadow-sm">
+      <div className="clay-card p-6 text-center">
         <span className="material-symbols-outlined text-4xl text-income">check_circle</span>
         <p className="mt-2 text-sm font-bold text-slate-700">Rekening dibuat! Lanjut catat transaksi.</p>
       </div>
@@ -48,7 +48,7 @@ export function ChipAkunBaru({ uid }) {
   }
 
   return (
-    <div className="rounded-3xl bg-white p-6 shadow-sm">
+    <div className="clay-card p-6">
       <h3 className="text-base font-extrabold text-slate-800">Buat rekening pertama</h3>
       <p className="mt-1 text-xs leading-relaxed text-slate-400">
         Rekening adalah sumber dana transaksi (mis. Rekening Utama, E-Wallet, Tabungan).
@@ -58,9 +58,9 @@ export function ChipAkunBaru({ uid }) {
           value={nama}
           onChange={(e) => setNama(e.target.value)}
           placeholder="Nama rekening"
-          className="w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+          className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
         />
-        <div className="flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5 ring-1 ring-slate-200/70 focus-within:ring-2 focus-within:ring-primary">
+        <div className="clay-field flex items-center gap-2 rounded-xl px-3 py-2.5">
           <span className="text-sm font-bold text-slate-400">Rp</span>
           <input
             value={saldo}
@@ -72,7 +72,7 @@ export function ChipAkunBaru({ uid }) {
         </div>
         <button
           disabled={saving || !nama.trim()}
-          className="w-full rounded-full bg-primary py-2.5 text-sm font-extrabold text-white shadow hover:bg-primary-dark disabled:opacity-60"
+          className="clay-btn-primary w-full py-2.5 text-sm font-extrabold disabled:opacity-60"
         >
           {saving ? 'Membuat…' : 'Buat Rekening'}
         </button>
@@ -85,7 +85,7 @@ export function ChipAkunBaru({ uid }) {
 export function TransaksiRow({ trans, onEdit, onSalin, onHapus }) {
   const masuk = trans.jenis === 'pemasukan'
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm">
+    <div className="clay-card flex items-center gap-3 p-3">
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${warnaKategori(trans.kategoriNama)}`}>
         {(trans.kategoriNama || '?').charAt(0).toUpperCase()}
       </div>
@@ -102,13 +102,13 @@ export function TransaksiRow({ trans, onEdit, onSalin, onHapus }) {
         <p className="text-[10px] font-semibold text-slate-400">{tanggalPendek(trans.tanggal)}</p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        <button onClick={onEdit} title="Edit" className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+        <button onClick={onEdit} title="Edit" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
           <span className="material-symbols-outlined text-[14px]">edit</span>
         </button>
-        <button onClick={onSalin} title="Salin" className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+        <button onClick={onSalin} title="Salin" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
           <span className="material-symbols-outlined text-[14px]">content_copy</span>
         </button>
-        <button onClick={onHapus} title="Hapus" className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white">
+        <button onClick={onHapus} title="Hapus" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full !bg-red-50 text-red-500 hover:!bg-red-500 hover:text-white">
           <span className="material-symbols-outlined text-[14px]">delete</span>
         </button>
       </div>

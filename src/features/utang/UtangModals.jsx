@@ -62,10 +62,10 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm md:items-center" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full max-w-sm rounded-t-[28px] bg-white p-5 shadow-2xl md:rounded-[28px]">
+      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="clay-card w-full max-w-sm rounded-t-[28px] p-5 md:rounded-[28px]">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-extrabold text-slate-800">{edit ? 'Edit Utang' : 'Tambah Utang'}</h3>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+          <button type="button" onClick={onClose} className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
@@ -77,7 +77,7 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
               value={namaPihak}
               onChange={(e) => setNamaPihak(e.target.value)}
               placeholder="mis. Kredit Motor"
-              className="w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
             />
           </div>
           <div>
@@ -85,7 +85,7 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
             <select
               value={tipe}
               onChange={(e) => setTipe(e.target.value)}
-              className="w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
             >
               <option>Utang</option>
               <option>Cicilan</option>
@@ -94,7 +94,7 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
         </div>
 
         <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Total</label>
-        <div className="mb-3 flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5 ring-1 ring-slate-200/70 focus-within:ring-2 focus-within:ring-primary">
+        <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
           <span className="text-sm font-bold text-slate-400">Rp</span>
           <input
             value={total}
@@ -108,7 +108,7 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
         {tipe === 'Cicilan' && (
           <>
             <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Cicilan per bulan</label>
-            <div className="mb-3 flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5 ring-1 ring-slate-200/70 focus-within:ring-2 focus-within:ring-primary">
+            <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
               <span className="text-sm font-bold text-slate-400">Rp</span>
               <input
                 value={cicilan}
@@ -134,11 +134,11 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
           value={deskripsi}
           onChange={(e) => setDeskripsi(e.target.value)}
           placeholder="opsional"
-          className="mb-4 w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold outline-none ring-1 ring-slate-200/70 placeholder:font-normal placeholder:text-slate-400 focus:ring-2 focus:ring-primary"
+          className="clay-field mb-4 w-full rounded-xl px-3 py-2.5 text-sm font-semibold placeholder:font-normal placeholder:text-slate-400"
         />
 
         {error && <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
-        <button disabled={saving} className="w-full rounded-full bg-primary py-3 text-sm font-extrabold text-white shadow hover:bg-primary-dark disabled:opacity-60">
+        <button disabled={saving} className="clay-btn-primary w-full py-3 text-sm font-extrabold disabled:opacity-60">
           {saving ? 'Menyimpan…' : 'Simpan'}
         </button>
       </form>
@@ -189,10 +189,10 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm md:items-center" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full max-w-sm rounded-t-[28px] bg-white p-5 shadow-2xl md:rounded-[28px]">
+      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="clay-card w-full max-w-sm rounded-t-[28px] p-5 md:rounded-[28px]">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-extrabold text-slate-800">{lunasin ? 'Lunasin' : 'Bayar'} — {utang.namaPihak}</h3>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+          <button type="button" onClick={onClose} className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
@@ -202,7 +202,7 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
         </p>
 
         <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Nominal bayar</label>
-        <div className="mb-3 flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5 ring-1 ring-slate-200/70 focus-within:ring-2 focus-within:ring-primary">
+        <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
           <span className="text-sm font-bold text-slate-400">Rp</span>
           <input
             value={jumlah}
@@ -220,7 +220,7 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
               type="date"
               value={tanggal}
               onChange={(e) => setTanggal(e.target.value)}
-              className="w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
             />
           </div>
           <div>
@@ -228,7 +228,7 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
             <select
               value={akunId}
               onChange={(e) => setAkunId(e.target.value)}
-              className="w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
+              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
             >
               {akunList.map((a) => (
                 <option key={a.id} value={a.id}>{a.nama}</option>
@@ -238,7 +238,7 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
         </div>
 
         {n > 0 && (
-          <p className="mb-3 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-bold text-primary">
+          <p className="clay-chip mb-3 px-3 py-2 text-[11px] font-bold text-primary">
             Sisa setelah bayar: Rp{sisaBaru.toLocaleString('id-ID')}{sisaBaru === 0 ? ' — LUNAS ✓' : ''}
           </p>
         )}
@@ -249,14 +249,14 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
             <button
               type="button"
               onClick={() => setJumlah((utang.sisa || 0).toLocaleString('id-ID'))}
-              className="rounded-full bg-slate-100 py-3 text-xs font-extrabold text-slate-600 hover:bg-slate-200"
+              className="clay-btn-soft py-3 text-xs font-extrabold text-slate-600"
             >
               Lunasin ({formatRibuanInput(String(utang.sisa || 0)) ? `Rp${(utang.sisa || 0).toLocaleString('id-ID')}` : 'Rp0'})
             </button>
           )}
           <button
             disabled={saving}
-            className={`col-span-1 rounded-full py-3 text-sm font-extrabold text-white shadow transition-all hover:brightness-110 disabled:opacity-60 ${lunasin ? 'col-span-2 bg-primary' : 'bg-primary'}`}
+            className={`clay-btn-primary col-span-1 py-3 text-sm font-extrabold transition-all disabled:opacity-60 ${lunasin ? 'col-span-2' : ''}`}
           >
             {saving ? 'Menyimpan…' : lunasin ? 'Lunasin Sekarang' : 'Bayar'}
           </button>
