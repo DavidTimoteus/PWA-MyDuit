@@ -15,6 +15,13 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
+// ID database Firestore. SDK default menyambung ke '(default)'; kalau database
+// di Firebase Console dibuat dengan nama lain (mis. 'myduit001'), WAJIB diisi di
+// .env.local lewat VITE_FIREBASE_DATABASE_ID — kalau tidak, semua operasi tulis
+// menggantung menunggu ack dari database yang tidak ada ("Database '(default)'
+// not found") dan data hanya tersimpan di cache lokal (hilang saat refresh).
+const DATABASE_ID = import.meta.env.VITE_FIREBASE_DATABASE_ID || '(default)'
+
 export function isFirebaseConfigured() {
   return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId)
 }
@@ -34,9 +41,11 @@ export function getFirebase() {
     }
     app = initializeApp(firebaseConfig)
     auth = getAuth(app)
-    db = initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-    })
+    db = initializeFirestore(
+      app,
+      { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) },
+      DATABASE_ID,
+    )
   }
   return { app, auth, db }
 }

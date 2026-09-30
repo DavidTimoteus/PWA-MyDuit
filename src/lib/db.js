@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteField,
   getDocs,
   increment,
   limit as fbLimit,
@@ -48,15 +49,35 @@ export const KATEGORI_DEFAULT = {
 }
 
 export async function seedKategoriJikaKosong(uid) {
-  const snap = await getDocs(query(userCol(uid, 'kategori'), fbLimit(1)))
-  if (!snap.empty) return false
-  const batch = writeBatch(getFirebase().db)
+  // ANTI-DUPLIKAT: hook ini terpasang di beberapa komponen yang mount bersamaan
+  // (TransaksiView + RightPanel + Budget) — check-then-insert murni berisiko
+  // TOCTOU (semua melihat "kosong" lalu men-seed berkali-kali). Karena Firestore
+  // tidak punya unique constraint: (1) hanya buat nama yang MEMANG belum ada
+  // (upsert per-nama, aman dipanggil ulang), (2) marker meta agar kebanyakan
+  // pemanggilan berikutnya skip tanpa baca besar.
+  const markerRef = doc(userCol(uid, 'meta'), 'seedKategori')
+  const marker = await getDocs(query(userCol(uid, 'meta'), fbLimit(1)))
+  const metaDoc = marker.docs.find((d) => d.id === 'seedKategori')
+  const existing = new Set()
+  const katSnap = await getDocs(userCol(uid, 'kategori'))
+  katSnap.docs.forEach((d) => existing.add((d.data().nama ?? '').toLowerCase()))
+  if (metaDoc && existing.size > 0) return false
+
+  const missing = []
   for (const jenis of Object.keys(KATEGORI_DEFAULT)) {
     for (const nama of KATEGORI_DEFAULT[jenis]) {
-      const ref = doc(userCol(uid, 'kategori'))
-      batch.set(ref, { nama, jenis, deleted: false, createdAt: serverTimestamp() })
+      if (!existing.has(nama.toLowerCase())) missing.push({ nama, jenis })
     }
   }
+  if (missing.length === 0) {
+    if (!metaDoc) await setDoc(markerRef, { done: true, at: serverTimestamp() })
+    return false
+  }
+  const batch = writeBatch(getFirebase().db)
+  for (const { nama, jenis } of missing) {
+    batch.set(doc(userCol(uid, 'kategori')), { nama, jenis, deleted: false, createdAt: serverTimestamp() })
+  }
+  batch.set(markerRef, { done: true, at: serverTimestamp() })
   await batch.commit()
   return true
 }
@@ -86,30 +107,38 @@ export async function hapusAkun(uid, id) {
 }
 
 // ===== TRANSAKSI CRUD (offline-first) =====
+// KONTRAK DATA (ternormalisasi — anti redundansi):
+//   transaksi = { jumlah, jenis, kategoriId→kategori, akunId?→akun,
+//                 dariId?/keId? (khusus pindah saldo), tanggal, catatan, deleted, createdAt }
+// Nama kategori/akun TIDAK disimpan di transaksi — selalu di-resolve saat read
+// dari snapshot kategori/akun (sudah live di app via useAkunKategori, 0 extra read).
+// Dokumen lama yang masih punya kategoriNama/akunNama tetap terbaca (fallback),
+// dan dibersihkan sekali oleh migrasiNormalisasi().
 // Catatan desain: saldo akun diupdate via increment() — mutation ini masuk antrean
 // offline Firestore sama seperti penulisan dokumen, jadi catat saat offline tetap
-// konsisten saat online. (Trade-off v1: bukan transaksi atomik lintas dokumen;
-// rekonsiliasi via mutasiLog menyusul di Fase 3.)
+// konsisten saat online. (Trade-off v1: bukan transaksi atomik lintas dokumen.)
 
 export async function simpanTransaksi(uid, data) {
   const trans = {
     jumlah: Number(data.jumlah),
     jenis: data.jenis,
     kategoriId: data.kategoriId,
-    kategoriNama: data.kategoriNama ?? '',
     akunId: data.akunId,
-    akunNama: data.akunNama ?? '',
     tanggal: data.tanggal,
     catatan: data.catatan ?? '',
     deleted: false,
     createdAt: serverTimestamp(),
   }
-  const ref = await addDoc(userCol(uid, 'transaksi'), trans)
-  await updateDoc(akunRef(uid, data.akunId), {
+  const { db } = getFirebase()
+  const batch = writeBatch(db)
+  const ref = doc(userCol(uid, 'transaksi'))
+  batch.set(ref, trans)
+  batch.update(akunRef(uid, data.akunId), {
     saldo: increment(deltaSaldo(trans)),
     updatedAt: serverTimestamp(),
-    mutasiTerakhir: { delta: deltaSaldo(trans), keterangan: `Transaksi ${trans.kategoriNama}`, at: serverTimestamp() },
+    mutasiTerakhir: { delta: deltaSaldo(trans), keterangan: `Transaksi ${data.kategoriNama ?? ''}`.trim(), at: serverTimestamp() },
   })
+  await batch.commit()
   return ref.id
 }
 
@@ -118,37 +147,96 @@ export async function updateTransaksi(uid, lama, data) {
     jumlah: Number(data.jumlah),
     jenis: data.jenis,
     kategoriId: data.kategoriId,
-    kategoriNama: data.kategoriNama ?? '',
     akunId: data.akunId,
-    akunNama: data.akunNama ?? '',
     tanggal: data.tanggal,
     catatan: data.catatan ?? '',
   }
-  await updateDoc(transaksiRef(uid, lama.id), baru)
-  // Kembalikan efek saldo lama, terapkan efek baru (bisa beda akun).
+  const { db } = getFirebase()
+  const batch = writeBatch(db)
+  batch.update(transaksiRef(uid, lama.id), baru)
   if (lama.akunId) {
-    await updateDoc(akunRef(uid, lama.akunId), {
+    batch.update(akunRef(uid, lama.akunId), {
       saldo: increment(-deltaSaldo(lama)),
       updatedAt: serverTimestamp(),
       mutasiTerakhir: { delta: -deltaSaldo(lama), keterangan: 'Koreksi edit transaksi', at: serverTimestamp() },
     })
   }
-  await updateDoc(akunRef(uid, baru.akunId), {
+  batch.update(akunRef(uid, baru.akunId), {
     saldo: increment(deltaSaldo(baru)),
     updatedAt: serverTimestamp(),
-    mutasiTerakhir: { delta: deltaSaldo(baru), keterangan: `Transaksi ${baru.kategoriNama}`, at: serverTimestamp() },
+    mutasiTerakhir: { delta: deltaSaldo(baru), keterangan: `Transaksi ${data.kategoriNama ?? ''}`.trim(), at: serverTimestamp() },
   })
+  await batch.commit()
 }
 
 export async function hapusTransaksi(uid, trans) {
-  await updateDoc(transaksiRef(uid, trans.id), { deleted: true })
+  const { db } = getFirebase()
+  const batch = writeBatch(db)
+  batch.update(transaksiRef(uid, trans.id), { deleted: true })
   if (trans.akunId) {
-    await updateDoc(akunRef(uid, trans.akunId), {
+    batch.update(akunRef(uid, trans.akunId), {
       saldo: increment(-deltaSaldo(trans)),
       updatedAt: serverTimestamp(),
       mutasiTerakhir: { delta: -deltaSaldo(trans), keterangan: `Hapus transaksi ${trans.kategoriNama}`, at: serverTimestamp() },
     })
   }
+  await batch.commit()
+}
+
+// ===== PINDAH SALDO (transfer antar rekening) =====
+// 1 dokumen transaksi jenis 'pindah saldo' (tanpa +/- pada nominal) + saldo
+// sumber dikurangi & tujuan ditambah. dariId/keId disimpan utk pembatalan.
+export async function pindahSaldo(uid, { dariId, dariNama, keId, keNama, jumlah, tanggal, catatan }) {
+  const jumlahInt = Number(jumlah)
+  const { db } = getFirebase()
+  const batch = writeBatch(db)
+  const ref = doc(userCol(uid, 'transaksi'))
+  batch.set(ref, {
+    jumlah: jumlahInt,
+    jenis: 'pindah saldo',
+    kategoriId: '',
+    akunId: dariId,
+    dariId,
+    keId,
+    tanggal,
+    catatan: catatan ?? '',
+    deleted: false,
+    createdAt: serverTimestamp(),
+  })
+  batch.update(akunRef(uid, dariId), {
+    saldo: increment(-jumlahInt),
+    updatedAt: serverTimestamp(),
+    mutasiTerakhir: { delta: -jumlahInt, keterangan: `Pindah saldo ke ${keNama}`, at: serverTimestamp() },
+  })
+  batch.update(akunRef(uid, keId), {
+    saldo: increment(jumlahInt),
+    updatedAt: serverTimestamp(),
+    mutasiTerakhir: { delta: jumlahInt, keterangan: `Pindah saldo dari ${dariNama}`, at: serverTimestamp() },
+  })
+  await batch.commit()
+  return ref.id
+}
+
+// Kembalikan efek pindah saldo (hapus): sumber +jumlah, tujuan -jumlah.
+export async function hapusPindahSaldo(uid, trans) {
+  const { db } = getFirebase()
+  const batch = writeBatch(db)
+  batch.update(transaksiRef(uid, trans.id), { deleted: true })
+  if (trans.dariId) {
+    batch.update(akunRef(uid, trans.dariId), {
+      saldo: increment(trans.jumlah),
+      updatedAt: serverTimestamp(),
+      mutasiTerakhir: { delta: trans.jumlah, keterangan: 'Batal pindah saldo', at: serverTimestamp() },
+    })
+  }
+  if (trans.keId) {
+    batch.update(akunRef(uid, trans.keId), {
+      saldo: increment(-trans.jumlah),
+      updatedAt: serverTimestamp(),
+      mutasiTerakhir: { delta: -trans.jumlah, keterangan: 'Batal pindah saldo', at: serverTimestamp() },
+    })
+  }
+  await batch.commit()
 }
 
 // ===== QUERY RIWAYAT =====
@@ -174,6 +262,114 @@ export function docKeTransaksi(d) {
   return { id: d.id, ...data }
 }
 
+// ===== RESOLVE NAMA SAAT READ (anti redundansi) =====
+// Nama kategori/akun tidak lagi disimpan per transaksi; di-resolve dari map
+// snapshot akun/kategori yang memang sudah live di app. Dokumen legacy yang
+// masih menyimpan nama tetap terbaca apa adanya (fallback, tanpa migrasi paksa).
+export function enrichTransaksi(docs, akunById, kategoriById) {
+  return docs.map((t) => {
+    if (t.jenis === 'pindah saldo') {
+      const derived =
+        akunById[t.dariId]?.nama && akunById[t.keId]?.nama
+          ? `${akunById[t.dariId].nama} ${String.fromCharCode(0x2192)} ${akunById[t.keId].nama}`
+          : ''
+      return {
+        ...t,
+        kategoriNama: t.kategoriNama ?? kategoriById[t.kategoriId] ?? 'Pindah Saldo',
+        akunNama: t.akunNama ?? derived,
+      }
+    }
+    return {
+      ...t,
+      kategoriNama: t.kategoriNama ?? kategoriById[t.kategoriId] ?? '(tanpa kategori)',
+      akunNama: t.akunNama ?? akunById[t.akunId]?.nama ?? '',
+    }
+  })
+}
+
+// ===== MIGRASI SEKALI-JALAN: buang nama redundan, backfill kategoriId =====
+// Untuk semua dokumen lama: (1) kategoriId kosong tapi ada nama -> buat/temukan
+// kategori resmi; (2) hapus field kategoriNama/akunNama/utangNama via deleteField.
+// Idempoten — dokumen bersih dilewati. Dipanggil sekali per user setelah login.
+export async function migrasiNormalisasi(uid) {
+  const { db } = getFirebase()
+  const patches = []
+
+  // 0) Dedupe kategori lama (nama sama, hasil race seeding) — simpan yang terlama,
+  //    sisanya soft-delete. Tanpa ini dropdown menampilkan nama berulang.
+  const semuaKat = await getDocs(userCol(uid, 'kategori'))
+  const grupKat = {}
+  semuaKat.docs.forEach((d) => {
+    const v = d.data()
+    if (v.deleted) return
+    const key = (v.nama ?? '').toLowerCase()
+    ;(grupKat[key] ??= []).push({ id: d.id, createdAt: v.createdAt?.toMillis?.() ?? 0 })
+  })
+  Object.values(grupKat).forEach((grup) => {
+    if (grup.length < 2) return
+    grup.sort((a, b) => a.createdAt - b.createdAt)
+    grup.slice(1).forEach((d) => patches.push({ ref: doc(db, 'users', uid, 'kategori', d.id), data: { deleted: true } }))
+  })
+
+  // Kategori & akun map (cukup sekali baca)
+  const katSnap = await getDocs(userCol(uid, 'kategori'))
+  const katByName = {}
+  katSnap.docs.forEach((d) => {
+    const v = d.data()
+    katByName[(v.nama ?? '').toLowerCase()] = d.id
+  })
+  async function ensureKategori(nama, jenis) {
+    const key = (nama ?? '').toLowerCase()
+    if (katByName[key]) return katByName[key]
+    const id = await ambilAtauBuatKategori(uid, nama, jenis)
+    katByName[key] = id
+    return id
+  }
+
+  // 1) transaksi
+  const txSnap = await getDocs(userCol(uid, 'transaksi'))
+  for (const d of txSnap.docs) {
+    const v = d.data()
+    const punyaNama = 'kategoriNama' in v || 'akunNama' in v
+    const butuhKat = !v.kategoriId && !!v.kategoriNama && v.jenis !== 'pindah saldo'
+    if (!punyaNama && !butuhKat) continue
+    const patch = {}
+    if (butuhKat)
+      patch.kategoriId = await ensureKategori(v.kategoriNama, v.jenis === 'pemasukan' ? 'pemasukan' : 'pengeluaran')
+    if ('kategoriNama' in v) patch.kategoriNama = deleteField()
+    if ('akunNama' in v) patch.akunNama = deleteField()
+    patches.push({ ref: transaksiRef(uid, d.id), data: patch })
+  }
+
+  // 2) budget (kategoriNama redundan)
+  const budSnap = await getDocs(userCol(uid, 'budget'))
+  for (const d of budSnap.docs) {
+    const v = d.data()
+    if (!('kategoriNama' in v)) continue
+    const patch = { kategoriNama: deleteField() }
+    if (!v.kategoriId && v.kategoriNama) patch.kategoriId = await ensureKategori(v.kategoriNama, 'pengeluaran')
+    patches.push({ ref: budgetRef(uid, d.id), data: patch })
+  }
+
+  // 3) pembayaranUtang (utangNama/akunNama redundan)
+  const bayarSnap = await getDocs(userCol(uid, 'pembayaranUtang'))
+  for (const d of bayarSnap.docs) {
+    const v = d.data()
+    if (!('utangNama' in v) && !('akunNama' in v)) continue
+    const patch = {}
+    if ('utangNama' in v) patch.utangNama = deleteField()
+    if ('akunNama' in v) patch.akunNama = deleteField()
+    patches.push({ ref: doc(db, 'users', uid, 'pembayaranUtang', d.id), data: patch })
+  }
+
+  for (let i = 0; i < patches.length; i += 400) {
+    const b = writeBatch(db)
+    patches.slice(i, i + 400).forEach((p) => b.set(p.ref, p.data, { merge: true }))
+    await b.commit()
+  }
+  return patches.length
+}
+
 // ===== BUDGET (Fase 3) =====
 export function budgetRef(uid, id) {
   const { db } = getFirebase()
@@ -183,7 +379,6 @@ export function budgetRef(uid, id) {
 export async function simpanBudget(uid, { id, kategoriId, kategoriNama, limitNominal, bulan, tahun }) {
   const data = {
     kategoriId,
-    kategoriNama,
     limitNominal: Number(limitNominal),
     bulan,
     tahun,
@@ -263,11 +458,9 @@ export async function bayarUtang(uid, { utang, jumlah, tanggal, akun }) {
 
   await addDoc(userCol(uid, 'pembayaranUtang'), {
     utangId: utang.id,
-    utangNama: utang.namaPihak,
     jumlah,
     tanggal,
     akunId: akun.id,
-    akunNama: akun.nama,
     deleted: false,
     createdAt: serverTimestamp(),
   })
@@ -275,9 +468,7 @@ export async function bayarUtang(uid, { utang, jumlah, tanggal, akun }) {
     jumlah,
     jenis: 'pengeluaran',
     kategoriId: katId,
-    kategoriNama: 'Pembayaran',
     akunId: akun.id,
-    akunNama: akun.nama,
     tanggal,
     catatan: ket,
     deleted: false,

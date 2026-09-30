@@ -1,107 +1,167 @@
 import { useMemo } from 'react'
-import { formatRupiah, isoHariIni, tanggalPendek } from '../../lib/format.js'
+import { isoHariIni, formatNominal, simbolUang } from '../../lib/format.js'
 import { useAkunKategori } from '../../lib/useAkunKategori.js'
+import { enrichTransaksi } from '../../lib/db.js'
 import { useTransaksi } from '../transaksi/useTransaksi.js'
 
-const WARNA_KATEGORI = [
-  'bg-emerald-100 text-emerald-700',
-  'bg-sky-100 text-sky-700',
-  'bg-amber-100 text-amber-700',
-  'bg-violet-100 text-violet-700',
-  'bg-rose-100 text-rose-700',
-  'bg-teal-100 text-teal-700',
-  'bg-orange-100 text-orange-700',
-  'bg-indigo-100 text-indigo-700',
-]
+const rp = (n) => `${simbolUang()} ${formatNominal(n)}`
 
-function warnaKategori(nama) {
-  let h = 0
-  for (const c of String(nama)) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return WARNA_KATEGORI[h % WARNA_KATEGORI.length]
+// Bulan berjalan: yyyy-mm-01 .. yyyy-mm-akhir
+function rangeBulanIni() {
+  const now = new Date()
+  const awal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  const akhir = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  const akhirIso = `${akhir.getFullYear()}-${String(akhir.getMonth() + 1).padStart(2, '0')}-${String(akhir.getDate()).padStart(2, '0')}`
+  return { start: awal, end: akhirIso }
 }
 
+// Panel kanan "Ringkasan" — markup persis GAS #asideGroupTransaksi:
+// Total Saldo (gradient hijau) · Pengeluaran Hari Ini · Top Kategori (badge jenis)
+// · Aksi Cepat 3 tombol gradient penuh (Pemasukan/Pengeluaran/Pindah Saldo).
 export default function RightPanel({ uid }) {
-  const { akunList } = useAkunKategori(uid)
-  const { docs: transaksiHariIni } = useTransaksi(uid, { range: { start: isoHariIni(), end: isoHariIni() }, jenis: 'pengeluaran' })
+  const { akunList, kategoriList } = useAkunKategori(uid)
+  const bulan = useMemo(rangeBulanIni, [])
+  const { docs: transBulan } = useTransaksi(uid, { range: bulan, jenis: 'semua' })
+  const { docs: transHariIni } = useTransaksi(uid, {
+    range: { start: isoHariIni(), end: isoHariIni() },
+    jenis: 'pengeluaran',
+  })
+
+  const akunById = useMemo(() => Object.fromEntries(akunList.map((a) => [a.id, a])), [akunList])
+  const katById = useMemo(() => Object.fromEntries(kategoriList.map((k) => [k.id, k.nama])), [kategoriList])
+  const bulanEnriched = useMemo(() => enrichTransaksi(transBulan, akunById, katById), [transBulan, akunById, katById])
 
   const totalSaldo = useMemo(() => akunList.reduce((s, a) => s + (Number(a.saldo) || 0), 0), [akunList])
 
-  const pengeluaranHariIni = useMemo(() => transaksiHariIni.reduce((s, t) => s + (t.jumlah || 0), 0), [transaksiHariIni])
+  const arusBulan = useMemo(() => {
+    let masuk = 0
+    let keluar = 0
+    for (const t of bulanEnriched) {
+      if (t.jenis === 'pemasukan') masuk += t.jumlah || 0
+      else if (t.jenis === 'pengeluaran') keluar += t.jumlah || 0
+    }
+    return masuk - keluar
+  }, [bulanEnriched])
 
+  const pengeluaranHariIni = useMemo(
+    () => transHariIni.reduce((s, t) => s + (t.jumlah || 0), 0),
+    [transHariIni],
+  )
+
+  // Top kategori bulan ini — kategori dgn total terbesar di antara KEDUA jenis
+  // (badge menunjukkan jenisnya, persis perilaku GAS summaryTopCategory*).
   const topKategori = useMemo(() => {
     const map = {}
-    for (const t of transaksiHariIni) {
-      const k = t.kategoriNama || 'Lainnya'
-      map[k] = (map[k] || 0) + (t.jumlah || 0)
+    for (const t of bulanEnriched) {
+      if (t.jenis !== 'pemasukan' && t.jenis !== 'pengeluaran') continue
+      const key = `${t.jenis}||${t.kategoriNama || 'Lainnya'}`
+      map[key] = (map[key] || 0) + (t.jumlah || 0)
     }
-    return Object.entries(map)
-      .map(([nama, total]) => ({ nama, total }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 3)
-  }, [transaksiHariIni])
+    const terbaik = Object.entries(map).sort((a, b) => b[1] - a[1])[0]
+    if (!terbaik) return null
+    const [jenis, nama] = terbaik[0].split('||')
+    return { jenis, nama, total: terbaik[1] }
+  }, [bulanEnriched])
+
+  function aksi(type) {
+    window.dispatchEvent(new CustomEvent('myduit:aksi-cepat', { detail: { type } }))
+  }
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-80 lg:shrink-0 lg:px-2">
-      <div className="clay clay-card clay-key-primary bg-white flex flex-col h-full rounded-[28px] p-4 lg:p-5">
-        {/* Ringkasan */}
-        <div className="space-y-4">
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Ringkasan</h3>
-
-          <div className="clay clay-card clay-key-neutral bg-white rounded-[18px] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Total Semua Saldo</p>
-            <p className="mt-1 font-mono font-extrabold text-xl text-slate-800">{formatRupiah(totalSaldo)}</p>
-            <p className="mt-1 text-[10px] font-semibold text-slate-500">{akunList.length} rekening</p>
-          </div>
-
-          <div className="clay clay-card clay-key-danger bg-white rounded-[18px] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Pengeluaran Hari Ini</p>
-            <p className="mt-1 font-mono font-extrabold text-xl text-expense">{formatRupiah(pengeluaranHariIni)}</p>
-            {pengeluaranHariIni === 0 && <p className="mt-1 text-[10px] font-semibold text-slate-400">Belum ada catatan hari ini</p>}
-          </div>
-
-          <div className="clay clay-card clay-key-blue bg-white rounded-[18px] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Kategori Teratas Hari Ini</p>
-            {topKategori.length === 0 ? (
-              <p className="mt-1 text-sm font-semibold text-slate-400">—</p>
-            ) : (
-              <div className="mt-2 space-y-2">
-                {topKategori.map((k, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${warnaKategori(k.nama)}`}>
-                      {k.nama.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-sm font-bold text-slate-800">{k.nama}</p>
-                      <p className="text-[10px] font-semibold text-slate-500">{formatRupiah(k.total)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+    <aside className="hidden lg:flex lg:h-full lg:w-[350px] lg:min-w-[350px] lg:max-w-[350px] lg:shrink-0 lg:grow-0 lg:flex-col lg:overflow-hidden lg:p-4 lg:pl-2">
+      <div className="clay clay-key-primary flex h-full flex-col overflow-hidden rounded-[28px] bg-surfaceContainerLowest p-5 w-full min-w-0">
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between px-1 pb-3">
+          <h2 className="text-base font-extrabold tracking-tight text-slate-800">Ringkasan</h2>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('myduit:export-pdf'))}
+            aria-label="Export PDF"
+            title="Export PDF"
+            className="pdf-action-btn clay-key-danger"
+          >
+            <span className="material-symbols-outlined icon-md">picture_as_pdf</span>
+          </button>
         </div>
+        <div className="mb-3 h-px shrink-0 bg-slate-200/70"></div>
 
-        <div className="h-px bg-slate-200/70 my-4"></div>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col gap-2">
+            {/* Total Saldo */}
+            <div className="clay clay-card clay-key-primary flex flex-col gap-0.5 rounded-[18px] bg-gradient-to-br from-primary to-emerald-700 p-4 text-white">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined icon-sm opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
+                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-90">Total Saldo</p>
+              </div>
+              <p className="mt-0.5 font-mono text-xl font-extrabold tracking-tight">{rp(totalSaldo)}</p>
+              <p className="mt-0.5 flex items-center gap-1 text-[10px] font-medium opacity-80">
+                <span className="material-symbols-outlined icon-2xs">trending_up</span>
+                {arusBulan < 0 ? '−' : '+'}{simbolUang()}{formatNominal(Math.abs(arusBulan))} bulan ini
+              </p>
+            </div>
 
-        {/* Aksi Cepat */}
-        <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Aksi Cepat</h3>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <button className="clay clay-btn clay-key-primary flex flex-col items-center gap-1 px-3 py-4 rounded-[18px] bg-gradient-to-br from-primary to-emerald-700 text-white text-[11px] font-semibold transition-all">
-            <span className="material-symbols-outlined text-[22px]">add_circle</span>
-            Pemasukan
-          </button>
-          <button className="clay clay-btn clay-key-danger flex flex-col items-center gap-1 px-3 py-4 rounded-[18px] bg-gradient-to-br from-red-500 to-red-700 text-white text-[11px] font-semibold transition-all">
-            <span className="material-symbols-outlined text-[22px]">remove_circle</span>
-            Pengeluaran
-          </button>
-          <button className="clay clay-btn clay-key-blue flex flex-col items-center gap-1 px-3 py-4 rounded-[18px] bg-gradient-to-br from-blue-500 to-blue-700 text-white text-[11px] font-semibold transition-all">
-            <span className="material-symbols-outlined text-[22px]">swap_horiz</span>
-            Pindah Saldo
-          </button>
-          <button className="clay clay-btn clay-key-neutral flex flex-col items-center gap-1 px-3 py-4 rounded-[18px] bg-white text-slate-700 text-[11px] font-semibold transition-all">
-            <span className="material-symbols-outlined text-[22px]">receipt_long</span>
-            Scan Struk
-          </button>
+            {/* Pengeluaran Hari Ini */}
+            <div className="clay clay-card clay-key-danger flex flex-col gap-0.5 rounded-[18px] bg-surfaceContainerLowest p-4">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined icon-sm text-expense" style={{ fontVariationSettings: "'FILL' 1" }}>today</span>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Pengeluaran Hari Ini</p>
+              </div>
+              <p className="mt-0.5 font-mono text-lg font-extrabold tracking-tight text-expense">{rp(pengeluaranHariIni)}</p>
+              <p className="text-[10px] font-medium text-textSecondary">{transHariIni.length} transaksi · Hari ini</p>
+            </div>
+
+            {/* Top Kategori */}
+            <div className="clay clay-card clay-key-primary flex flex-col gap-0.5 rounded-[18px] bg-surfaceContainerLowest p-4">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined icon-sm text-emerald-600" style={{ fontVariationSettings: "'FILL' 1" }}>category</span>
+                <p className="flex-1 truncate text-[10px] font-semibold uppercase tracking-wider text-slate-500">Top Kategori</p>
+                {topKategori && (
+                  <span
+                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                      topKategori.jenis === 'pemasukan' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+                    }`}
+                  >
+                    {topKategori.jenis === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'}
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 truncate text-base font-extrabold tracking-tight text-slate-800">
+                {topKategori ? topKategori.nama : '-'}
+              </p>
+              <p className={`font-mono text-sm font-extrabold tracking-tight ${topKategori?.jenis === 'pengeluaran' ? 'text-expense' : 'text-emerald-600'}`}>
+                {rp(topKategori ? topKategori.total : 0)}
+              </p>
+            </div>
+          </div>
+
+          <div className="my-3 h-px shrink-0 bg-slate-200/70"></div>
+
+          {/* Aksi Cepat */}
+          <div className="shrink-0">
+            <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Aksi Cepat</p>
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={() => aksi('pemasukan')}
+                className="clay-btn clay-key-primary btn-lg w-full bg-gradient-to-br from-primary to-emerald-700 text-white"
+              >
+                <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
+                Tambah Pemasukan
+              </button>
+              <button
+                onClick={() => aksi('pengeluaran')}
+                className="clay-btn clay-key-danger btn-lg w-full bg-gradient-to-br from-red-500 to-red-700 text-white"
+              >
+                <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>remove_circle</span>
+                Tambah Pengeluaran
+              </button>
+              <button
+                onClick={() => aksi('pindah-saldo')}
+                className="clay-btn clay-key-blue btn-lg w-full bg-gradient-to-br from-blue-500 to-blue-700 text-white"
+              >
+                <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>swap_horiz</span>
+                Pindah Saldo
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </aside>

@@ -63,7 +63,7 @@ export default function AuthScreen() {
         <button
           onClick={masuk}
           disabled={loading}
-          className="clay-btn mt-6 flex w-full items-center justify-center gap-3 py-3.5 text-sm font-bold text-slate-700 transition-all active:scale-[0.98] disabled:opacity-60"
+          className="clay-btn btn-lg mt-6 flex w-full items-center justify-center gap-3 text-sm font-bold text-slate-700 transition-all active:scale-[0.98] disabled:opacity-60"
         >
           {loading ? (
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-primary" />

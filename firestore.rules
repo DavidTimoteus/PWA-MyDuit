@@ -1,14 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Semua data MyDuit berada di bawah dokumen user masing-masing.
-    // User hanya boleh membaca/menulis datanya sendiri.
+    // Isolasi data per-user: setiap pengguna hanya memiliki akses penuh (baca/tulis)
+    // pada dokumen yang berada di dalam sub-koleksi users/{uid}/... miliknya sendiri.
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
-    }
-    // Tolak sisanya secara eksplisit (default memang deny).
-    match /{document=**} {
-      allow read, write: if false;
     }
   }
 }

@@ -1,0 +1,104 @@
+import { useState } from 'react'
+import { formatRibuanInput, parseNominal, simbolUang } from '../../lib/format.js'
+import { simpanBudget } from '../../lib/db.js'
+import { ClaySelect } from '../../components/clay-ui.jsx'
+
+// Modal Tambah / Edit Budget — markup persis GAS #modalBudget
+// (clay-sheet clay-key-blue max-w-md, ikon savings biru, header dengan title + close,
+// form kategori combobox + bulan/tahun + limit nominal, tombol Simpan biru).
+export default function FormBudgetModal({ open, onClose, uid, kategoriList, existing, edit, bulan, tahun }) {
+  const [kategoriId, setKategoriId] = useState('')
+  const [limit, setLimit] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  // Isi ulang tiap kali modal dibuka
+  const kunci = open ? open + (edit?.id ?? '') : 'tutup'
+  const [kunciLama, setKunciLama] = useState(kunci)
+  if (kunci !== kunciLama) {
+    setKunciLama(kunci)
+    setKategoriId(edit?.kategoriId ?? '')
+    setLimit(formatRibuanInput(String(edit?.limitNominal ?? '')))
+    setError('')
+  }
+
+  if (!open) return null
+  const opsi = kategoriList.filter((k) => k.jenis === 'pengeluaran')
+  const dipakaiKategori = new Set(existing.filter((b) => b.id !== edit?.id).map((b) => b.kategoriId))
+
+  async function submit(e) {
+    e.preventDefault()
+    const kat = opsi.find((k) => k.id === kategoriId)
+    const n = parseNominal(limit)
+    if (!kat) return setError('Pilih kategori dulu.')
+    if (n <= 0) return setError('Limit harus lebih dari nol.')
+
+    const idSnap = edit?.id
+    const kategoriIdSnap = kat.id
+    const kategoriNamaSnap = kat.nama
+
+    // OPTIMISTIC: tutup modal sekarang, commit Firestore di background.
+    setError('')
+    setSaving(false)
+    onClose()
+
+    ;(async () => {
+      try {
+        await simpanBudget(uid, {
+          id: idSnap,
+          kategoriId: kategoriIdSnap,
+          kategoriNama: kategoriNamaSnap,
+          limitNominal: n,
+          bulan,
+          tahun,
+        })
+      } catch (e2) {
+        console.warn('[budget-simpan] gagal:', e2?.message ?? e2)
+        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: 'Gagal menyimpan budget.' } }))
+      }
+    })()
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" onClick={onClose}>
+      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="clay-sheet clay-key-blue w-full max-w-sm rounded-[24px] p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-base font-extrabold text-slate-800">
+            <span className="material-symbols-outlined text-blue-700">savings</span>
+            {edit ? 'Edit Budget' : 'Tambah Budget'}
+          </h3>
+          <button type="button" onClick={onClose} aria-label="Tutup" className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100">
+            <span className="material-symbols-outlined icon-md">close</span>
+          </button>
+        </div>
+        <p className="mb-3 rounded-[10px] bg-blue-50 px-3 py-2 text-[11px] font-bold text-blue-700">
+          Periode: {bulan !== undefined ? new Date(2000, bulan).toLocaleString('id-ID', { month: 'long' }) : 'Bulan'} {tahun}
+        </p>
+        <label className="mb-0.5 block text-[11px] font-semibold text-textSecondary">Kategori pengeluaran</label>
+        <ClaySelect
+          value={kategoriId}
+          onChange={setKategoriId}
+          placeholder="Pilih kategori…"
+          className="mb-3"
+          options={[{ value: '', label: 'Pilih…', disabled: true }, ...opsi.map((k) => ({ value: k.id, label: k.nama + (dipakaiKategori.has(k.id) ? ' (sudah ada)' : ''), disabled: dipakaiKategori.has(k.id) }))]}
+        />
+        <label className="mb-0.5 block text-[11px] font-semibold text-textSecondary">Limit per bulan</label>
+        <div className="clay-field mb-4 flex items-center gap-2 rounded-xl px-3 py-2.5">
+          <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
+          <input
+            value={limit}
+            onChange={(e) => setLimit(formatRibuanInput(e.target.value))}
+            inputMode="numeric"
+            placeholder="0"
+            className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400"
+          />
+        </div>
+        {error && <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
+        <button disabled={saving} className="clay-btn clay-key-blue btn-lg w-full bg-blue-700 text-sm font-extrabold text-white transition-colors hover:bg-blue-800 disabled:opacity-60">
+          <span className="material-symbols-outlined icon-sm">save</span>
+          {saving ? 'Menyimpan…' : 'Simpan'}
+        </button>
+      </form>
+    </div>
+  )
+}

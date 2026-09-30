@@ -1,127 +1,195 @@
-import { useState } from 'react'
-import { formatRupiah, parseNominal } from '../../lib/format.js'
-import { hapusAkun, tambahAkun, updateAkun } from '../../lib/db.js'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { formatRupiah } from '../../lib/format.js'
+import { hapusAkun } from '../../lib/db.js'
 import { useAkunKategori } from '../../lib/useAkunKategori.js'
+import { useTransaksi } from '../transaksi/useTransaksi.js'
+import FormRekeningModal from './FormRekeningModal.jsx'
 
-const TIPE_AKUN = ['Rekening Utama', 'Tabungan', 'E-Wallet', 'Lainnya']
+// Sub-tab Rekening: hero Total Saldo + pagination card-stack + daftar rekening.
+// Paritas dengan GAS ViewBudget.html #budgetRekeningPanel + #rekeningPaginationControls.
+const PER_HALAMAN_MOBILE = 1   // mobile: 1 card/halaman (geser vertikal)
+const PER_HALAMAN_DESKTOP = 2 // desktop: 2 cards/halaman (pager)
 
-function FormRekeningModal({ open, onClose, uid, edit }) {
-  const [nama, setNama] = useState('')
-  const [tipe, setTipe] = useState(TIPE_AKUN[0])
-  const [saldo, setSaldo] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+function rangeBulanIni() {
+  const d = new Date()
+  const awal = new Date(d.getFullYear(), d.getMonth(), 1)
+  const akhir = new Date(d.getFullYear(), d.getMonth() + 1, 0)
+  const f = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`
+  return { start: f(awal), end: f(akhir) }
+}
 
-  // Isi ulang tiap kali modal dibuka
-  const kunci = open ? open + (edit?.id ?? '') : 'tutup'
-  const [kunciLama, setKunciLama] = useState(kunci)
-  if (kunci !== kunciLama) {
-    setKunciLama(kunci)
-    setNama(edit?.nama ?? '')
-    setTipe(edit?.tipe ?? TIPE_AKUN[0])
-    setSaldo('')
-    setError('')
-  }
+function inisialTipe(tipe) {
+  if (!tipe) return '?'
+  const parts = tipe.split(/[\s/]+/).filter(Boolean)
+  return parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : tipe.substring(0, 2).toUpperCase()
+}
 
-  if (!open) return null
+// dd/MM/yyyy HH:mm (persis GAS). Firestore Timestamp punya .toDate(); serverTimestamp offline = null → skip.
+function tanggalJam(at) {
+  const d = at?.toDate ? at.toDate() : (at ? new Date(at) : null)
+  if (!d || isNaN(d)) return ''
+  const p = (n) => String(n).padStart(2, '0')
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
 
-  async function submit(e) {
-    e.preventDefault()
-    if (!nama.trim()) return setError('Nama rekening wajib diisi.')
-    setSaving(true)
-    try {
-      if (edit) {
-        await updateAkun(uid, edit.id, { nama: nama.trim(), tipe })
-      } else {
-        await tambahAkun(uid, { nama: nama.trim(), tipe, saldoAwal: parseNominal(saldo) })
-      }
-      onClose()
-    } catch (e2) {
-      setError(e2?.message ?? 'Gagal menyimpan.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm md:items-center" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="clay-card w-full max-w-sm rounded-t-[28px] p-5 md:rounded-[28px]">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-extrabold text-slate-800">{edit ? 'Edit Rekening' : 'Tambah Rekening'}</h3>
-          <button type="button" onClick={onClose} className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
-            <span className="material-symbols-outlined text-[18px]">close</span>
-          </button>
-        </div>
-        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Nama</label>
-        <input
-          value={nama}
-          onChange={(e) => setNama(e.target.value)}
-          placeholder="mis. Rekening Utama"
-          className="clay-field mb-3 w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
-        />
-        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Tipe</label>
-        <select
-          value={tipe}
-          onChange={(e) => setTipe(e.target.value)}
-          className="mb-3 w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
-        >
-          {TIPE_AKUN.map((t) => (
-            <option key={t}>{t}</option>
-          ))}
-        </select>
-        {!edit && (
-          <>
-            <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Saldo awal</label>
-            <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
-              <span className="text-sm font-bold text-slate-400">Rp</span>
-              <input
-                value={saldo}
-                onChange={(e) => setSaldo(e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'))}
-                inputMode="numeric"
-                placeholder="0"
-                className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400"
-              />
-            </div>
-          </>
-        )}
-        {error && <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
-        <button disabled={saving} className="clay-btn-primary w-full py-3 text-sm font-extrabold disabled:opacity-60">
-          {saving ? 'Menyimpan…' : 'Simpan'}
-        </button>
-      </form>
-    </div>
-  )
+// { teks, warna } untuk box "Perubahan Terakhir" (mengikuti getLogWarna_ GAS).
+function logMutasi(m) {
+  const delta = Number(m?.delta) || 0
+  const ket = m?.keterangan || 'Perubahan'
+  const tanda = delta >= 0 ? '+' : '-'
+  const tglJam = tanggalJam(m?.at)
+  const teks = `${tglJam ? tglJam + ' — ' : ''}${ket}: ${tanda}${formatRupiah(Math.abs(delta))}`
+  let warna = 'text-slate-600'
+  if (/pindah/i.test(ket)) warna = 'text-blue-700 font-bold'
+  else if (delta < 0) warna = 'text-red-700 font-bold'
+  else if (delta > 0) warna = 'text-green-700 font-bold'
+  return { teks, warna }
 }
 
 export default function RekeningPanel({ uid }) {
   const { akunList } = useAkunKategori(uid)
+  const rangeBulan = useMemo(rangeBulanIni, [])
+
+  // Arus kas bulan berjalan (untuk hero)
+  const { docs: transBulan } = useTransaksi(uid, { range: rangeBulan, jenis: 'semua' })
+  const arusBulan = useMemo(() => {
+    let masuk = 0, keluar = 0
+    for (const t of transBulan) {
+      if (t.jenis === 'pemasukan') masuk += t.jumlah || 0
+      else if (t.jenis === 'pengeluaran') keluar += t.jumlah || 0
+    }
+    return { masuk, keluar }
+  }, [transBulan])
+
   const [modal, setModal] = useState({ open: false, edit: null })
+
+  // Listen event buka tambah rekening dari FAB bottom nav
+  useEffect(() => {
+    const handler = () => setModal({ open: true, edit: null })
+    window.addEventListener('myduit:buka-tambah-rekening', handler)
+    return () => window.removeEventListener('myduit:buka-tambah-rekening', handler)
+  }, [])
   const [hapusTarget, setHapusTarget] = useState(null)
-  const [hapusLoading, setHapusLoading] = useState(false)
+  const [halaman, setHalaman] = useState(1)
+  const [jumlahPerHalaman, setJumlahPerHalaman] = useState(PER_HALAMAN_MOBILE)
+
+  // Responsive: 1 card/halaman di mobile, 2 di desktop
+  useEffect(() => {
+    function handleResize() {
+      setJumlahPerHalaman(window.innerWidth >= 768 ? PER_HALAMAN_DESKTOP : PER_HALAMAN_MOBILE)
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Listen event global
+  useEffect(() => {
+    function onAdd() {
+      setModal({ open: true, edit: null })
+    }
+    window.addEventListener('myduit:rekening-add', onAdd)
+    return () => window.removeEventListener('myduit:rekening-add', onAdd)
+  }, [])
 
   const total = akunList.reduce((s, a) => s + (Number(a.saldo) || 0), 0)
+  const totalCards = akunList.length
+  const totalHalaman = Math.max(1, Math.ceil(akunList.length / jumlahPerHalaman))
+  const activeIdx = halaman - 1
+
+  // Gesture Touch / Swipe untuk card-stack mobile (persis GAS handleRekeningTouch)
+  const touchStartY = useRef(null)
+  const touchStartX = useRef(null)
+
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = (e) => {
+    if (touchStartY.current === null) return
+    const diffY = e.changedTouches[0].clientY - touchStartY.current
+    const diffX = e.changedTouches[0].clientX - touchStartX.current
+    touchStartY.current = null
+    touchStartX.current = null
+
+    // Swipe ke atas / kiri -> kartu berikutnya
+    if (diffY < -35 || diffX < -35) {
+      setHalaman((h) => (h < totalCards ? h + 1 : 1))
+    }
+    // Swipe ke bawah / kanan -> kartu sebelumnya
+    else if (diffY > 35 || diffX > 35) {
+      setHalaman((h) => (h > 1 ? h - 1 : totalCards))
+    }
+  }
 
   async function konfirmHapus() {
-    setHapusLoading(true)
+    if (!hapusTarget) return
+    const target = hapusTarget
+    setHapusTarget(null)
     try {
-      await hapusAkun(uid, hapusTarget.id)
-      setHapusTarget(null)
-    } finally {
-      setHapusLoading(false)
+      await hapusAkun(uid, target.id)
+    } catch (e) {
+      console.warn('[rekening-hapus] gagal:', e?.message ?? e)
     }
   }
 
   return (
     <div>
-      {/* Hero total saldo */}
-      <div className="rounded-3xl bg-gradient-to-br from-primary-dark via-primary to-primary-light p-5 text-white shadow-lg">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-white/70">Total Semua Saldo</p>
-        <p className="mt-1 text-3xl font-extrabold tracking-tight">{formatRupiah(total)}</p>
-        <p className="mt-0.5 text-xs font-semibold text-white/70">{akunList.length} rekening</p>
+      {/* Hero Total Semua Saldo — gradient biru persis ViewBudget.html #totalSaldoBudget */}
+      <div className="clay clay-key-blue mt-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 p-5 text-white md:flex md:items-center md:justify-between md:gap-6 min-h-[100px] md:min-h-[170px]">
+        <div className="min-w-0">
+          <p className="mb-1 text-xs opacity-90 sm:text-sm">Total Semua Saldo</p>
+          <p className="font-mono mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">{formatRupiah(total)}</p>
+          <div className="flex items-center gap-1.5 text-[11px] opacity-80">
+            <span className="material-symbols-outlined text-[14px]">schedule</span>
+            <span>Terakhir diperbarui: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'numeric', year: 'numeric' })} {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+        </div>
+        {/* Arus kas bulan berjalan — Pemasukan/Pengeluaran */}
+        <div className="mt-3 grid shrink-0 grid-cols-2 gap-x-4 gap-y-1 md:mt-0 md:text-right md:grid-cols-1">
+          <div>
+            <p className="text-[11px] font-medium opacity-80">Pemasukan bulan ini</p>
+            <p className="font-mono text-sm font-bold">{formatRupiah(arusBulan.masuk)}</p>
+          </div>
+          <div>
+            <p className="text-[11px] font-medium opacity-80">Pengeluaran bulan ini</p>
+            <p className="font-mono text-sm font-bold">{formatRupiah(arusBulan.keluar)}</p>
+          </div>
+        </div>
       </div>
 
-      {/* List kartu rekening */}
-      <div className="mt-4 space-y-2">
+      {/* Pager horizontal (pola persis GAS rekeningPaginationControls) */}
+      {totalCards > 1 && (
+        <div className="mt-4 mb-2 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setHalaman((h) => (h > 1 ? h - 1 : totalCards))}
+            aria-label="Halaman sebelumnya"
+            className="clay-pagination-arrow flex h-8 w-9 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <span className="min-w-[84px] text-center text-[11px] font-semibold text-slate-600">Halaman {halaman}/{totalCards}</span>
+          <button
+            type="button"
+            onClick={() => setHalaman((h) => (h < totalCards ? h + 1 : 1))}
+            aria-label="Halaman berikutnya"
+            className="clay-pagination-arrow flex h-8 w-9 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
+      )}
+
+      {/* ===== MOBILE ONLY: CARD-STACK SLIDER (Persis ViewBudget.html GAS #rekeningList) ===== */}
+      <div
+        id="rekeningList"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="relative mt-2 md:hidden"
+        style={{ height: '225px', overflow: 'hidden' }}
+      >
         {akunList.length === 0 ? (
           <div className="clay-card-soft flex flex-col items-center px-6 py-12 text-center">
             <span className="material-symbols-outlined mb-2 text-5xl text-primary/30">account_balance_wallet</span>
@@ -129,44 +197,172 @@ export default function RekeningPanel({ uid }) {
             <p className="mt-1 text-xs text-slate-400">Tekan tombol + untuk menambah.</p>
           </div>
         ) : (
-          akunList.map((a) => (
-            <div key={a.id} className="clay-card p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-primary">
-                  <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-slate-800">{a.nama}</p>
-                  <p className="text-[11px] font-semibold text-slate-400">{a.tipe}</p>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <button onClick={() => setModal({ open: true, edit: a })} title="Edit" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
-                    <span className="material-symbols-outlined text-[14px]">edit</span>
+          akunList.map((a, i) => {
+            let delta = i - activeIdx
+            if (totalCards > 2) {
+              if (delta > totalCards / 2) delta -= totalCards
+              if (delta < -totalCards / 2) delta += totalCards
+            }
+
+            let transform = ''
+            let opacity = 0
+            let zIndex = 1
+            let pointerEvents = 'none'
+
+            if (delta < 0) {
+              transform = 'translateY(-115%) scale(0.96)'
+              opacity = 0
+              zIndex = 10
+            } else if (delta === 0) {
+              transform = 'translateY(0px) scale(1)'
+              opacity = 1
+              zIndex = 30
+              pointerEvents = 'auto'
+            } else if (delta <= 3) {
+              transform = `translateY(${delta * 12}px) scale(${1 - delta * 0.035})`
+              opacity = 1
+              zIndex = 30 - delta
+            } else {
+              transform = `translateY(${3 * 12}px) scale(${1 - 3 * 0.035})`
+              opacity = 0
+              zIndex = 1
+            }
+
+            const negatif = (Number(a.saldo) || 0) < 0
+            const log = a.mutasiTerakhir ? logMutasi(a.mutasiTerakhir) : null
+
+            return (
+              <div
+                key={a.id}
+                className={`rekening-stack-card clay clay-card ${
+                  negatif ? 'clay-key-danger' : 'clay-key-blue'
+                } absolute inset-x-1.5 top-1.5 rounded-[22px] bg-white p-3.5 select-none transition-all duration-300 ease-out`}
+                style={{
+                  transform,
+                  opacity,
+                  zIndex,
+                  pointerEvents,
+                  boxShadow:
+                    delta === 0
+                      ? '0 10px 25px -5px rgba(29, 78, 216, 0.16), 0 8px 10px -6px rgba(29, 78, 216, 0.1)'
+                      : '0 4px 6px -1px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                {/* Header Kartu — Ikon bank kecil bulat biru + nama + badge tipe + aksi */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center shrink-0 shadow-none">
+                      <span className="material-symbols-outlined text-blue-700 text-[14px]">account_balance</span>
+                    </div>
+                    <span className="font-bold text-base text-slate-800 truncate">{a.nama}</span>
+                  </div>
+                  {a.tipe && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium shrink-0 whitespace-nowrap ml-auto">
+                      {a.tipe}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setModal({ open: true, edit: a }) }}
+                    title="Edit rekening"
+                    aria-label="Edit rekening"
+                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">edit</span>
                   </button>
-                  <button onClick={() => setHapusTarget(a)} title="Hapus" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full !bg-red-50 text-red-500 hover:!bg-red-500 hover:text-white">
-                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setHapusTarget(a) }}
+                    title="Hapus rekening"
+                    aria-label="Hapus rekening"
+                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">delete</span>
                   </button>
+                </div>
+
+                {/* Saldo Akhir */}
+                <div className="mb-2">
+                  <p className="text-xs text-slate-400">Saldo Akhir</p>
+                  <p className={`font-mono text-lg font-bold ${negatif ? 'text-expense' : 'text-slate-800'}`}>
+                    {formatRupiah(a.saldo)}
+                  </p>
+                </div>
+
+                {/* Perubahan Terakhir (full width box persis GAS rek-last-change-box) */}
+                <div className="bg-slate-50 rounded-lg px-2.5 py-2">
+                  <p className="text-xs font-semibold text-slate-400 mb-1">Perubahan Terakhir</p>
+                  {log ? (
+                    <>
+                      <p className={`text-xs ${log.warna} font-mono truncate`}>{log.teks}</p>
+                      <p className="text-[10px] text-blue-700/70 mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">touch_app</span>
+                        Geser kartu utk ganti rekening
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-[10px] text-slate-400">Belum ada riwayat</p>
+                  )}
                 </div>
               </div>
-              <p className="mt-2 text-2xl font-extrabold tracking-tight text-slate-800">{formatRupiah(a.saldo)}</p>
-              <p className="mt-0.5 truncate text-[11px] font-semibold text-slate-400">
-                {a.mutasiTerakhir
-                  ? `Perubahan terakhir: ${a.mutasiTerakhir.keterangan} (${a.mutasiTerakhir.delta >= 0 ? '+' : '−'}Rp${Math.abs(a.mutasiTerakhir.delta).toLocaleString('id-ID')})`
-                  : 'Belum ada riwayat'}
-              </p>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
 
-      {/* FAB tambah */}
-      <button
-        onClick={() => setModal({ open: true, edit: null })}
-        className="clay-fab fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center text-white md:bottom-8 md:right-8"
-        title="Tambah rekening"
-      >
-        <span className="material-symbols-outlined text-[28px]">add</span>
-      </button>
+      {/* ===== DESKTOP ONLY: GRID LIST ===== */}
+      <div className="hidden md:grid md:grid-cols-2 gap-3 mt-4">
+        {akunList.map((a) => {
+          const negatif = (Number(a.saldo) || 0) < 0
+          const log = a.mutasiTerakhir ? logMutasi(a.mutasiTerakhir) : null
+          return (
+            <div
+              key={a.id}
+              className={`clay clay-card bg-surfaceContainerLowest p-4 rounded-[22px] transition-all duration-200 ${
+                negatif ? 'clay-key-danger' : 'clay-key-blue'
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-blue-700 text-[16px]">account_balance</span>
+                </div>
+                <p className="font-bold text-base text-slate-800 truncate flex-1">{a.nama}</p>
+                {a.tipe && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium shrink-0">
+                    {a.tipe}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setModal({ open: true, edit: a })}
+                  className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                >
+                  <span className="material-symbols-outlined text-[15px]">edit</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHapusTarget(a)}
+                  className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500"
+                >
+                  <span className="material-symbols-outlined text-[15px]">delete</span>
+                </button>
+              </div>
+              <div className="mb-2">
+                <p className="text-xs text-slate-400">Saldo Akhir</p>
+                <p className={`font-mono text-lg font-bold ${negatif ? 'text-expense' : 'text-slate-800'}`}>
+                  {formatRupiah(a.saldo)}
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-lg px-2.5 py-2">
+                <p className="text-xs font-semibold text-slate-400 mb-0.5">Perubahan Terakhir</p>
+                <p className={`text-xs font-mono truncate ${log ? log.warna : 'text-slate-400'}`}>
+                  {log ? log.teks : 'Belum ada riwayat'}
+                </p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
       <FormRekeningModal
         open={modal.open}
@@ -182,10 +378,8 @@ export default function RekeningPanel({ uid }) {
             <p className="mt-2 text-sm font-bold text-slate-800">Hapus rekening “{hapusTarget.nama}”?</p>
             <p className="mt-1 text-xs text-slate-400">Riwayat transaksi lama tetap tersimpan.</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={() => setHapusTarget(null)} className="clay-btn-soft py-2.5 text-xs font-bold text-slate-600">Batal</button>
-              <button onClick={konfirmHapus} disabled={hapusLoading} className="clay-btn-danger py-2.5 text-xs font-bold disabled:opacity-60">
-                {hapusLoading ? 'Menghapus…' : 'Hapus'}
-              </button>
+              <button onClick={() => setHapusTarget(null)} className="clay-btn-soft btn-md text-xs font-bold text-slate-600">Batal</button>
+              <button onClick={konfirmHapus} className="clay-btn-danger btn-md text-xs font-bold">Hapus</button>
             </div>
           </div>
         </div>

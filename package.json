@@ -7,16 +7,29 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "serve": "node serve-dist.mjs",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "check:format": "node src/lib/format.check.mjs",
+    "fb:login": "firebase login",
+    "fb:rules": "firebase deploy --only firestore:rules",
+    "fb:indexes": "firebase deploy --only firestore:indexes",
+    "fb:firestore": "firebase deploy --only firestore"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "firebase": "^12.18.0",
+    "flatpickr": "^4.6.13",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "xlsx": "file:vendor/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^4.7.0",
+    "firebase-tools": "^15.28.2",
     "tailwindcss": "^4.3.3",
     "vite": "^6.4.3",
     "vite-plugin-pwa": "^1.3.0"

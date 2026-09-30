@@ -1,18 +1,10 @@
+import { useEffect, useState } from 'react'
 import AuthScreen from './components/AuthScreen.jsx'
 import Shell from './components/Shell.jsx'
+import Splash from './components/Splash.jsx'
 import { useAuth } from './features/auth/useAuth.js'
 import { isFirebaseConfigured } from './lib/firebase.js'
-
-function LayarTunggu() {
-  return (
-    <div className="min-h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary-dark via-primary to-primary-light">
-      <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-2xl bg-white/15 text-3xl font-extrabold text-white">
-        M
-      </div>
-      <p className="mt-4 text-xs font-bold uppercase tracking-widest text-white/70">MyDuit</p>
-    </div>
-  )
-}
+import { migrasiNormalisasi } from './lib/db.js'
 
 function LayarSetup(error) {
   return (
@@ -26,15 +18,48 @@ function LayarSetup(error) {
 }
 
 export default function App() {
-  if (!isFirebaseConfigured()) {
-    return (
-      <LayarSetup error="Salin .env.example menjadi .env.local lalu isi nilai Firebase, kemudian jalankan ulang dev server." />
-    )
-  }
-
+  // Selesai = Firebase siap dimuat (selain status 'loading' Auth)
+  const fbReady = isFirebaseConfigured()
   const { status, user, error } = useAuth()
-  if (status === 'loading') return <LayarTunggu />
-  if (status === 'error') return <LayarSetup error={error} />
-  if (!user) return <AuthScreen />
-  return <Shell user={user} />
+  const [splashReady, setSplashReady] = useState(false)
+
+  // Fallback: kalau Firebase tidak terkonfigurasi, splash tampil 1.4s lalu LayarSetup
+  // kalau OK, splash tunggu sampai Auth selesai (user loaded OR error)
+  useEffect(() => {
+    if (!fbReady) {
+      const t = setTimeout(() => setSplashReady(true), 1400)
+      return () => clearTimeout(t)
+    }
+    if (status === 'loading') return
+    const t = setTimeout(() => setSplashReady(true), 1400)
+    return () => clearTimeout(t)
+  }, [fbReady, status])
+
+  // Migrasi anti-redundansi sekali per user (hanya saat splash sudah lewat
+  // supaya tidak memblokir loading utama).
+  useEffect(() => {
+    if (!user?.uid) return
+    const flag = `myduit-migrasi-norm-${user.uid}`
+    if (localStorage.getItem(flag)) return
+    migrasiNormalisasi(user.uid)
+      .then(() => localStorage.setItem(flag, '1'))
+      .catch((e) => console.warn('[migrasi] ditunda:', e?.message ?? e))
+  }, [user?.uid])
+
+  return (
+    <>
+      <Splash ready={splashReady} />
+      {splashReady && (
+        !fbReady ? (
+          <LayarSetup error="Salin .env.example menjadi .env.local lalu isi nilai Firebase, kemudian jalankan ulang dev server." />
+        ) : status === 'error' ? (
+          <LayarSetup error={error} />
+        ) : !user ? (
+          <AuthScreen />
+        ) : (
+          <Shell user={user} />
+        )
+      )}
+    </>
+  )
 }

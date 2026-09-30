@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-  /* Palet claymorphism hijau MyDuit (warisan dari app GAS) */
   --color-primary: #2d6a4f;
   --color-primary-dark: #1b4332;
   --color-primary-light: #40916c;
@@ -12,8 +11,8 @@
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ===== CLAYMORPHISM DESIGN SYSTEM (warisan app GAS) ===== */
 :root {
+  /* Clay radius tokens */
   --clay-r-card: 22px;
   --clay-r-card-sm: 18px;
   --clay-r-button: 18px;
@@ -21,7 +20,7 @@
   --clay-r-input: 16px;
   --clay-r-icon: 20px;
 
-  /* H = warna brand LAMA, didarken ~15%, sbg channel RGB shadow */
+  /* Hue shadows (RGB triples) */
   --clay-h-primary: 38, 90, 67;
   --clay-h-danger: 195, 53, 53;
   --clay-h-amber: 208, 134, 9;
@@ -29,6 +28,16 @@
   --clay-h-blue: 31, 84, 200;
 
   --clay-bg: #f8faf9;
+
+  /* ===== ICON SIZE TOKENS (skala tetap — larang ukuran acak) ===== */
+  --icon-2xs: 12px;
+  --icon-xs: 14px;
+  --icon-sm: 16px;
+  --icon-md: 18px;
+  --icon-lg: 20px;
+  --icon-xl: 24px;
+  --icon-2xl: 28px;
+  --icon-hero: 40px;
 }
 
 html,
@@ -36,6 +45,87 @@ body,
 #root {
   height: 100%;
 }
+
+/* ===== SCROLL HALUS (smooth) ===== */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 24px; /* jangkar (#xxx) tidak kepotong header */
+}
+
+/* Kontainer scroll utama main content (ditandai .main-scroll di Shell).
+   - overflow-y: auto agar bisa scroll saat konten lebih tinggi dari viewport
+   - scroll-behavior: smooth untuk wheel/trackpad
+   - scrollbar-gutter: stable agar layout tidak loncat saat scrollbar muncul/hilang
+   - overscroll-behavior: contain mencegah scroll bocor ke halaman */
+.main-scroll {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===== SCROLLBAR TIPIS & ESTETIK (GAS style — pakai brand color) ===== */
+/* WebKit (Chrome/Edge/Safari) */
+.main-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.main-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 8px;
+}
+.main-scroll::-webkit-scrollbar-thumb {
+  background: rgba(var(--clay-h-primary), 0.25);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s ease;
+}
+.main-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--clay-h-primary), 0.5);
+  background-clip: padding-box;
+}
+.main-scroll::-webkit-scrollbar-thumb:active {
+  background: rgba(var(--clay-h-primary), 0.7);
+  background-clip: padding-box;
+}
+
+/* Firefox */
+.main-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--clay-h-primary), 0.4) transparent;
+}
+
+/* body scrollbar juga diperbaiki (halaman login / fallback mobile) */
+body::-webkit-scrollbar { width: 8px; }
+body::-webkit-scrollbar-thumb {
+  background: rgba(var(--clay-h-primary), 0.3);
+  border-radius: 999px;
+}
+body { scrollbar-width: thin; scrollbar-color: rgba(var(--clay-h-primary), 0.3) transparent; }
+
+/* Material Symbols — sama persis dengan GAS (default FILL 0 / wght 400).
+   opsz TIDAK dipaksa 24: font-optical-sizing:auto membuat sumbu optik mengikuti
+   font-size → ikon kecil (14–20px) terlihat proporsional, tidak "gemuk". */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0;
+  font-optical-sizing: auto;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Kelas ukuran ikon — SATU-SATUNYA cara set ukuran ikon (token, bukan text-[Npx]) */
+.icon-2xs { font-size: var(--icon-2xs); }
+.icon-xs { font-size: var(--icon-xs); }
+.icon-sm { font-size: var(--icon-sm); }
+.icon-md { font-size: var(--icon-md); }
+.icon-lg { font-size: var(--icon-lg); }
+.icon-xl { font-size: var(--icon-xl); }
+.icon-2xl { font-size: var(--icon-2xl); }
+.icon-hero { font-size: var(--icon-hero); }
 
 body {
   margin: 0;
@@ -45,7 +135,146 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ===== RESEP DASAR 3-LAPIS SHADOW ===== */
+/* Global button hover/active — sama persis GAS (ViewCSS.html:461) */
+button {
+  cursor: pointer;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.12s ease, background-color 0.2s ease;
+}
+/* Base ukuran tombol (GAS ViewCSS.html gobal button rule): tinggi pre-set 48px +
+   padding 0 16px supaya CTA tanpa token ukuran TIDAK lonjong kesamping (tinggi
+   mengikuti konten pendek + w-full). Dikalahkan utility Tailwind h-*/w-* (icon
+   chips 32/36px) & token .btn-sm/.btn-md/.btn-lg (spesifisitas class > elemen). */
+button,
+.btn {
+  height: 48px;
+  padding: 0 16px;
+  border: none;
+}
+button:hover {
+  transform: translateY(-1px);
+}
+button:active {
+  transform: scale(0.96);
+}
+
+/* ===== SPLASH SCREEN (loading ala mobile) =====
+   Overlay penuh layar sebelum beranda tampil. Logo clay + nama "MyDuit" + tagline
+   + dot spinner. Dissolve ke beranda dikontrol komponen Splash.jsx:
+   class .splash-screen.is-leaving men-trigger fade-out, lalu elemen dihapus dr DOM. */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #1b4332 0%, #2d6a4f 55%, #40916c 100%);
+  transition: opacity 0.55s ease, visibility 0.55s ease;
+  opacity: 1;
+  visibility: visible;
+}
+.splash-screen.is-leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.splash-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: 24px;
+}
+.splash-logo {
+  width: 76px;
+  height: 76px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 2px 2px 6px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 6px rgba(0, 0, 0, 0.12);
+  animation: splash-logo-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.splash-logo .material-symbols-outlined {
+  font-size: 42px;
+  font-variation-settings: 'FILL' 1, 'wght' 500;
+}
+.splash-title {
+  display: flex;
+  font-weight: 800;
+  font-size: 34px;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.splash-title-letter {
+  display: inline-block;
+  animation: splash-letter-in 0.5s ease-out both;
+}
+.splash-title-letter:nth-child(1) { animation-delay: 0.12s; }
+.splash-title-letter:nth-child(2) { animation-delay: 0.18s; }
+.splash-title-letter:nth-child(3) { animation-delay: 0.24s; }
+.splash-title-letter:nth-child(4) { animation-delay: 0.30s; }
+.splash-title-letter:nth-child(5) { animation-delay: 0.36s; }
+.splash-title-letter:nth-child(6) { animation-delay: 0.42s; }
+.splash-tagline {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.splash-sub {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+  letter-spacing: 0.01em;
+  margin-top: -6px;
+}
+.splash-dots {
+  display: flex;
+  gap: 7px;
+  margin-top: 4px;
+}
+.splash-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  animation: splash-dot-bounce 1.1s ease-in-out infinite;
+}
+.splash-dot:nth-child(2) { animation-delay: 0.12s; }
+.splash-dot:nth-child(3) { animation-delay: 0.24s; }
+.splash-dot:nth-child(4) { animation-delay: 0.36s; }
+.splash-dot:nth-child(5) { animation-delay: 0.48s; }
+.splash-dot:nth-child(6) { animation-delay: 0.60s; }
+
+@keyframes splash-logo-pop {
+  from { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes splash-letter-in {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes splash-dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+  30%           { transform: translateY(-7px); opacity: 1; }
+}
+
+/* ===== MONOSPACE DIGITS (Manrope with tabular nums) ===== */
+.font-mono {
+  font-family: 'Manrope', sans-serif !important;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ===== CLAY BASE ===== */
 .clay {
   --clay-h: var(--clay-h-primary);
   border-radius: var(--clay-r-card);
@@ -57,49 +286,64 @@ body {
   transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease;
 }
 
-/* Varian hue — tempel di elemen ber-.clay */
 .clay-key-primary { --clay-h: var(--clay-h-primary); }
 .clay-key-danger  { --clay-h: var(--clay-h-danger); }
 .clay-key-amber   { --clay-h: var(--clay-h-amber); }
 .clay-key-neutral { --clay-h: var(--clay-h-neutral); }
 .clay-key-blue    { --clay-h: var(--clay-h-blue); }
 
-/* Kartu resting (radius lebih kecil dari .clay default) — SELF-CONTAINED */
+/* ===== CARDS ===== */
+/* PENTING (aturan hue §4 GAS): kelas komponen TIDAK boleh set --clay-h default
+   (declaration-nya menang dari clay-key-* krn urutan stylesheet) — hue wajib
+   lewat fallback var(--clay-h, <default>) supaya clay-key-* selalu menang. */
 .clay-card {
-  --clay-h: var(--clay-h-neutral);
   border-radius: var(--clay-r-card-sm);
-  background: #ffffff;
+  background-color: #ffffff;
   box-shadow:
-    6px 6px 16px rgba(var(--clay-h), 0.20),
+    6px 6px 16px rgba(var(--clay-h, var(--clay-h-neutral)), 0.20),
     -6px -6px 16px rgba(255, 255, 255, 0.75),
     inset 2px 2px 5px rgba(255, 255, 255, 0.55),
-    inset -3px -3px 7px rgba(var(--clay-h), 0.10);
-}
-.clay-card.clay-key-neutral {
-  background: #ffffff;
+    inset -3px -3px 7px rgba(var(--clay-h, var(--clay-h-neutral)), 0.10);
 }
 
-/* Lembar/modal (L2) — shadow lebih besar, offset jelas */
-.clay-sheet {
-  --clay-h: var(--clay-h-primary);
-  border-radius: var(--clay-r-card);
-  background: #ffffff;
+/* Kartu lembut (empty state, info) — setengah kekuatan */
+.clay-card-soft {
+  border-radius: var(--clay-r-card-sm);
+  background-color: #ffffff;
   box-shadow:
-    0 14px 34px rgba(var(--clay-h), 0.22),
-    0 2px 8px rgba(var(--clay-h), 0.12),
-    inset 2px 2px 6px rgba(255, 255, 255, 0.55),
-    inset -3px -3px 10px rgba(var(--clay-h), 0.08);
+    3px 3px 9px rgba(var(--clay-h, var(--clay-h-neutral)), 0.12),
+    -3px -3px 9px rgba(255, 255, 255, 0.6),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.5);
 }
 
-/* Tombol clay — pill rounded dgn hue RGB shadow, raised resting & cekung aktif */
+/* Rekening card (budget) — softer shadow */
+.rek-card-item.clay {
+  box-shadow:
+    4px 4px 12px rgba(var(--clay-h), 0.24),
+    -4px -4px 12px rgba(255, 255, 255, 0.72),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 6px rgba(var(--clay-h), 0.14);
+}
+
+/* ===== SHEET / MODAL ===== */
+.clay-sheet {
+  border-radius: var(--clay-r-card);
+  background-color: #ffffff;
+  box-shadow:
+    0 14px 34px rgba(var(--clay-h, var(--clay-h-primary)), 0.22),
+    0 2px 8px rgba(var(--clay-h, var(--clay-h-primary)), 0.12),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.55),
+    inset -3px -3px 10px rgba(var(--clay-h, var(--clay-h-primary)), 0.08);
+}
+
+/* ===== BUTTONS ===== */
 .clay-btn {
-  --clay-h: var(--clay-h-primary);
   border-radius: var(--clay-r-button);
   box-shadow:
-    5px 5px 14px rgba(var(--clay-h), 0.32),
+    5px 5px 14px rgba(var(--clay-h, var(--clay-h-primary)), 0.32),
     -5px -5px 14px rgba(255, 255, 255, 0.5),
     inset 2px 2px 4px rgba(255, 255, 255, 0.35),
-    inset -3px -3px 7px rgba(var(--clay-h), 0.22);
+    inset -3px -3px 7px rgba(var(--clay-h, var(--clay-h-primary)), 0.22);
   transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
 }
 .clay-btn:hover { transform: translateY(-1px); }
@@ -110,7 +354,6 @@ body {
     inset -3px -3px 8px rgba(255, 255, 255, 0.3);
 }
 
-/* Tombol isi gradien hijau — ala .clay-btn primary GAS */
 .clay-btn-primary {
   --clay-h: var(--clay-h-primary);
   background: linear-gradient(145deg, #40916c 0%, #2d6a4f 55%, #1b4332 100%);
@@ -131,7 +374,6 @@ body {
     inset -3px -3px 8px rgba(255, 255, 255, 0.25);
 }
 
-/* Tombol isi gradien merah */
 .clay-btn-danger {
   --clay-h: var(--clay-h-danger);
   background: linear-gradient(145deg, #ef5350 0%, #e53e3e 55%, #b71c1c 100%);
@@ -152,18 +394,16 @@ body {
     inset -3px -3px 8px rgba(255, 255, 255, 0.25);
 }
 
-/* Tombol netral (abu) clay — raised resting, cekung aktif */
 .clay-btn-soft,
 .clay-btn-secondary {
-  --clay-h: var(--clay-h-neutral);
   border-radius: var(--clay-r-button);
-  background: #f8faf9;
+  background-color: #f8faf9;
   color: #475569;
   box-shadow:
-    4px 4px 12px rgba(var(--clay-h), 0.18),
+    4px 4px 12px rgba(var(--clay-h, var(--clay-h-neutral)), 0.18),
     -4px -4px 12px rgba(255, 255, 255, 0.6),
     inset 2px 2px 4px rgba(255, 255, 255, 0.5),
-    inset -2px -2px 5px rgba(var(--clay-h), 0.10);
+    inset -2px -2px 5px rgba(var(--clay-h, var(--clay-h-neutral)), 0.10);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .clay-btn-soft:active,
@@ -174,16 +414,47 @@ body {
     inset -2px -2px 6px rgba(255, 255, 255, 0.5);
 }
 
-/* Chip pill — shadow halus */
-.clay-chip {
-  --clay-h: var(--clay-h-primary);
-  border-radius: var(--clay-r-chip);
-  background: #f8faf9;
+/* ===== BUTTON CETAK PDF (referensi Image 2) =====
+   Lingkaran putih kecil, ikon merah, shadow lembut. Hit area 36x36px tetap
+   memenuhi target kontrol web; ikon visual 18px agar tidak dominan. */
+.pdf-action-btn {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px !important;
+  background-color: #fff;
+  color: #ef4444;
   box-shadow:
-    3px 3px 9px rgba(var(--clay-h), 0.18),
+    3px 4px 10px rgba(var(--clay-h-danger), 0.16),
+    -3px -3px 8px rgba(255, 255, 255, 0.92),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.75),
+    inset -2px -2px 4px rgba(var(--clay-h-danger), 0.07);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.pdf-action-btn:hover {
+  background-color: #fff7f7;
+  color: #dc2626;
+  transform: translateY(-1px);
+}
+.pdf-action-btn:active {
+  transform: scale(0.92);
+  box-shadow:
+    inset 2px 2px 6px rgba(var(--clay-h-danger), 0.2),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.7);
+}
+
+/* ===== CHIPS ===== */
+.clay-chip {
+  border-radius: var(--clay-r-chip) !important;
+  box-shadow:
+    3px 3px 9px rgba(var(--clay-h, var(--clay-h-primary)), 0.18),
     -3px -3px 9px rgba(255, 255, 255, 0.6),
     inset 1px 1px 3px rgba(255, 255, 255, 0.5),
-    inset -2px -2px 4px rgba(var(--clay-h), 0.12);
+    inset -2px -2px 4px rgba(var(--clay-h, var(--clay-h-primary)), 0.12);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .clay-chip:active {
@@ -193,16 +464,25 @@ body {
     inset -2px -2px 6px rgba(255, 255, 255, 0.3);
 }
 
-/* FAB — gradien + shadow khas */
+/* Filter chips — radius 8px (not full pill) */
+.chip-btn.clay-chip {
+  border-radius: 8px !important;
+}
+
+/* Pill Bulanan | Tahunan (Statistik) — paksa radius pill penuh untuk override
+   utility Tailwind rounded-* yang mungkin menimpa .clay-chip */
+.stat-pill-tab.clay-chip {
+  border-radius: var(--clay-r-chip) !important;
+}
+
+/* ===== FAB ===== */
 .clay-fab {
-  --clay-h: var(--clay-h-primary);
-  background: linear-gradient(145deg, #40916c 0%, #2d6a4f 55%, #1b4332 100%);
   color: #fff;
   border-radius: 999px;
   border: 4px solid #ffffff;
   box-shadow:
-    0 12px 22px rgba(var(--clay-h), 0.40),
-    0 4px 10px rgba(var(--clay-h), 0.28),
+    0 12px 22px rgba(var(--clay-h, var(--clay-h-primary)), 0.40),
+    0 4px 10px rgba(var(--clay-h, var(--clay-h-primary)), 0.28),
     inset 2px 2px 4px rgba(255, 255, 255, 0.35),
     inset -3px -3px 7px rgba(0, 0, 0, 0.18);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
@@ -214,17 +494,91 @@ body {
     inset -3px -3px 8px rgba(255, 255, 255, 0.25);
 }
 
-/* Ikon tile clay (lingkaran/persegi dgn hue) */
-.clay-icon-tile {
-  --clay-h: var(--clay-h-primary);
-  box-shadow:
-    4px 4px 10px rgba(var(--clay-h), 0.28),
-    -3px -3px 8px rgba(255, 255, 255, 0.55),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.35),
-    inset -2px -2px 4px rgba(var(--clay-h), 0.15);
+/* Sub-tab toggle Budget/Statistik (Rekening | Budget atau Bulanan | Tahunan):
+   tombol AKTIF nampak "ditekan" via inset box-shadow (konsep tombol tertekan, pola clay :active).
+   State di-toggle oleh React (mode === 'bulanan' / 'tahunan' / sub-tab aktif), dan
+   efek raised/inset ditransisikan halus supaya pergantian tidak patah-patah. */
+.budget-subtab-btn {
+  transition: box-shadow 0.25s ease, background-color 0.2s ease, color 0.2s ease;
+}
+.budget-subtab-btn:active {
+  transform: scale(0.96);
 }
 
-/* Input clay (sunk/inset) */
+/* ===== NAV BAWAH MOBILE (clay bar mengambang + notch memeluk FAB) ===== */
+.clay-nav {
+  background-color: #ffffff;
+  border-radius: 24px 24px 0 0;
+  box-shadow:
+    0 -10px 28px rgba(var(--clay-h, var(--clay-h-neutral)), 0.18),
+    0 -2px 6px rgba(var(--clay-h, var(--clay-h-neutral)), 0.10),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.7);
+  /* Notch: lubang setengah-lingkaran di tengah-atas tempat FAB "duduk" (pola GAS).
+     Mask memotong SELURUH isi elemen — pasang HANYA di div background kosong,
+     bukan di <nav> yang berisi ikon/FAB. */
+  --notch-r: 40px;
+  -webkit-mask: radial-gradient(circle var(--notch-r) at 50% 0px, transparent 97%, #000 100%);
+  mask: radial-gradient(circle var(--notch-r) at 50% 0px, transparent 97%, #000 100%);
+}
+
+/* Pill neumorphic di belakang tiap ikon nav (aktif = inset, nonaktif = raised) */
+.nav-icon-wrap {
+  --clay-h: var(--clay-h-neutral);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--clay-r-chip);
+  transition: box-shadow 0.25s ease, background-color 0.25s ease;
+}
+.nav-icon-wrap.nav-icon-inactive {
+  background: #ffffff;
+  box-shadow:
+    3px 3px 9px rgba(var(--clay-h), 0.18),
+    -3px -3px 9px rgba(255, 255, 255, 0.6),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 4px rgba(var(--clay-h), 0.12);
+}
+.nav-icon-wrap.nav-icon-active {
+  background: #ffffff;
+  box-shadow:
+    inset 3px 3px 9px rgba(var(--clay-h), 0.22),
+    inset -3px -3px 9px rgba(255, 255, 255, 0.7);
+}
+
+/* ===== BUTTON SIZE TOKENS (konsistensi ukuran — jangan py/px acak) =====
+   sm=36px (aksi sekunder padat) · md=40px (footer modal, aksi cepat)
+   lg=46px (submit utama) */
+.btn-sm,
+.btn-md,
+.btn-lg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.btn-sm { height: 36px; padding: 0 12px; font-size: 12px; font-weight: 600; border-radius: 14px; }
+.btn-md { height: 40px; padding: 0 16px; font-size: 13px; font-weight: 600; border-radius: 16px; }
+.btn-lg { height: 48px; padding: 0 20px; font-size: 14px; font-weight: 700; border-radius: var(--clay-r-button); }
+
+/* ===== FIELD SIZE TOKENS (satu keluarga dgn button) =====
+   md=40px (kontrol padat: search toolbar) / lg=44px (standar input form -
+   target sentuh nyaman 44pt; larang py-2 acak di field) */
+.field-md { height: 40px; padding: 0 12px; font-size: 14px; }
+.field-lg { height: 44px; padding: 0 12px; font-size: 14px; }
+
+/* ===== ICON TILE ===== */
+.clay-icon-tile {
+  box-shadow:
+    4px 4px 10px rgba(var(--clay-h, var(--clay-h-primary)), 0.28),
+    -3px -3px 8px rgba(255, 255, 255, 0.55),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 4px rgba(var(--clay-h, var(--clay-h-primary)), 0.15);
+}
+
+/* ===== INPUT / INSET ===== */
 .clay-field,
 .clay-inset {
   background: #eef3ef;
@@ -244,12 +598,346 @@ body {
     0 0 0 2px rgba(45, 106, 79, 0.30);
 }
 
-/* Warna latar kategori (dipakai hero & kartu) */
+/* ===== RADIO BUTTON (clay raised / inset) ===== */
+.clay-radio {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-sizing: border-box;
+  display: inline-block;
+  flex-shrink: 0;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0 !important;
+  border-radius: 999px;
+  background: var(--color-surface) !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow:
+    3px 3px 5px rgba(var(--clay-h, var(--clay-h-primary)), 0.18),
+    -3px -3px 5px rgba(255, 255, 255, 0.85);
+  position: relative;
+  cursor: pointer;
+  margin: 0;
+  transition: box-shadow 0.3s ease;
+}
+.clay-radio:checked {
+  background: var(--color-surface) !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow:
+    inset 3px 3px 5px rgba(var(--clay-h, var(--clay-h-primary)), 0.3),
+    inset -3px -3px 5px rgba(255, 255, 255, 0.9);
+}
+.clay-radio:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ===== 3D DANGER CARD (hero utang) ===== */
+.card-3d-danger {
+  position: relative;
+  border-radius: 18px;
+  background: linear-gradient(150deg, #EF5350 0%, #e53e3e 45%, #B71C1C 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -5px 10px -2px rgba(80, 5, 5, 0.35),
+    0 14px 24px -10px rgba(150, 20, 20, 0.55),
+    0 4px 10px rgba(100, 15, 15, 0.28);
+  overflow: hidden;
+}
+.card-3d-danger::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+.card-3d-danger::after {
+  content: '';
+  position: absolute;
+  right: -36px;
+  bottom: -36px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 72%);
+  pointer-events: none;
+}
+
+/* ===== UTILITY ===== */
 .bg-surfaceContainerLowest { background-color: #ffffff; }
 .bg-surfaceContainerLow { background-color: #f8faf9; }
 .text-textSecondary { color: #64748b; }
+.hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
 
-/* Animasi masuk lembut */
+/* ===== INPUT CLAY (sumur inset — persis GAS .clay-input) ===== */
+.clay-input {
+  border-radius: var(--clay-r-input) !important;
+  border-color: transparent !important;
+  box-shadow:
+    inset 3px 3px 8px rgba(var(--clay-h-primary), 0.14),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.8);
+  background: var(--color-surface) !important;
+}
+.clay-input:focus {
+  box-shadow:
+    inset 3px 3px 8px rgba(var(--clay-h-primary), 0.2),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.85),
+    0 0 0 3px rgba(45, 106, 79, 0.15);
+}
+
+/* ===== FIELD TANGGAL (flatpickr) bergaya TOMBOL ===== */
+.clay-date-picker-field {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer !important;
+  caret-color: transparent;
+  padding: 0 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+.clay-date-picker-field::placeholder { color: inherit; opacity: 0.55; }
+.clay-date-picker-field--accent { color: var(--color-primary); font-weight: 700; }
+
+/* ===== DROPDOWN / COMBOBOX CLAY (popup custom) ===== */
+.clay-select-trigger .material-symbols-outlined { transition: transform 0.2s ease; }
+.clay-select-trigger.is-open .material-symbols-outlined { transform: rotate(180deg); }
+.clay-select-list {
+  position: fixed;
+  z-index: 10050;
+  max-height: 15rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  border-radius: var(--clay-r-input);
+  background: #f4f7f6;
+  padding: 6px;
+  box-shadow:
+    3px 3px 8px rgba(var(--clay-h-primary), 0.18),
+    -3px -3px 8px rgba(255, 255, 255, 0.7),
+    0 10px 24px rgba(var(--clay-h-primary), 0.16);
+}
+.clay-select-option {
+  padding: 8px 10px;
+  border-radius: calc(var(--clay-r-input) - 6px);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.clay-select-option:hover { background: rgba(var(--clay-h-primary), 0.08); }
+.clay-select-option.is-highlighted {
+  background: rgba(var(--clay-h-primary), 0.14);
+  color: var(--color-primary);
+}
+.clay-select-option.is-selected {
+  background: #d8f3dc;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.clay-select-option.is-empty {
+  color: #94a3b8;
+  cursor: default;
+  font-style: italic;
+}
+.clay-select-option.is-empty:hover { background: transparent; }
+.clay-select-option.is-disabled {
+  color: #a8b3bf;
+  cursor: not-allowed;
+  font-weight: 500;
+}
+.clay-select-option.is-disabled:hover { background: transparent; }
+
+/* ===== KARTU TRANSAKSI (hover angkat di pointer halus; tekan = tint per hue) ===== */
+.tx-card-item {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.15s ease, background-color 0.15s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tx-card-item:hover { transform: translateY(-2px); }
+}
+.tx-card-item:active {
+  transform: translateY(0) scale(0.98);
+  background-color: rgba(var(--clay-h), 0.08) !important;
+}
+
+/* ===== MODE SELEKSI HAPUS MASSAL ===== */
+.bulk-selectable { border: 2px solid transparent; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.bulk-selectable.bulk-selected {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.18);
+}
+.bulk-selectable.bulk-selected .bulk-check { border-color: #1d4ed8; background-color: #1d4ed8; }
+.bulk-check .material-symbols-outlined { display: none; }
+.bulk-selectable.bulk-selected .bulk-check .material-symbols-outlined { display: inline-block; }
+
+/* ===== TOMBOL HAPUS KARTU (clay danger) ===== */
+.delete-btn-action {
+  --clay-h: var(--clay-h-danger);
+  box-shadow:
+    5px 5px 14px rgba(var(--clay-h), 0.4),
+    -5px -5px 14px rgba(255, 255, 255, 0.55),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset -3px -3px 7px rgba(var(--clay-h), 0.3);
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.12s ease, background-color 0.2s ease;
+}
+.delete-btn-action:active {
+  transform: scale(0.88);
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, 0.45),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.3);
+}
+
+/* ===== PANAH PAGINATION CLAY ===== */
+.clay-pagination-arrow {
+  --clay-h: var(--clay-h-neutral);
+  box-shadow:
+    3px 3px 8px rgba(var(--clay-h), 0.18),
+    -3px -3px 8px rgba(255, 255, 255, 0.6),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 4px rgba(var(--clay-h), 0.1) !important;
+  border: none !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.clay-pagination-arrow:active {
+  transform: scale(0.9);
+  box-shadow:
+    inset 2px 2px 6px rgba(0, 0, 0, 0.2),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.3) !important;
+}
+.clay-pagination-arrow:disabled { opacity: 0.35; pointer-events: none; }
+
+/* ===== LOADING SPINNER DOT (Memuat riwayat kas...) ===== */
+.riwayat-dot-spinner {
+  --uib-size: 44px;
+  --uib-speed: 0.9s;
+  --uib-color: rgba(45, 106, 79, 0.55);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--uib-size);
+  width: var(--uib-size);
+}
+.riwayat-dot-spinner__dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+.riwayat-dot-spinner__dot::before {
+  content: '';
+  height: 20%;
+  width: 20%;
+  border-radius: 50%;
+  background-color: var(--uib-color);
+  transform: scale(0);
+  opacity: 0.5;
+  animation: spin0123 calc(var(--uib-speed)) calc(var(--uib-speed) * -0.125) infinite ease-in-out;
+}
+.riwayat-dot-spinner__dot:nth-child(2) { transform: rotate(45deg); }
+.riwayat-dot-spinner__dot:nth-child(2)::before { animation-delay: calc(var(--uib-speed) * -0.25); }
+.riwayat-dot-spinner__dot:nth-child(3) { transform: rotate(90deg); }
+.riwayat-dot-spinner__dot:nth-child(3)::before { animation-delay: calc(var(--uib-speed) * -0.375); }
+.riwayat-dot-spinner__dot:nth-child(4) { transform: rotate(135deg); }
+.riwayat-dot-spinner__dot:nth-child(4)::before { animation-delay: calc(var(--uib-speed) * -0.5); }
+.riwayat-dot-spinner__dot:nth-child(5) { transform: rotate(180deg); }
+.riwayat-dot-spinner__dot:nth-child(5)::before { animation-delay: calc(var(--uib-speed) * -0.625); }
+.riwayat-dot-spinner__dot:nth-child(6) { transform: rotate(225deg); }
+.riwayat-dot-spinner__dot:nth-child(6)::before { animation-delay: calc(var(--uib-speed) * -0.75); }
+.riwayat-dot-spinner__dot:nth-child(7) { transform: rotate(270deg); }
+.riwayat-dot-spinner__dot:nth-child(7)::before { animation-delay: calc(var(--uib-speed) * -0.875); }
+.riwayat-dot-spinner__dot:nth-child(8) { transform: rotate(315deg); }
+.riwayat-dot-spinner__dot:nth-child(8)::before { animation-delay: 0s; }
+@keyframes spin0123 {
+  0%, 100% { transform: scale(0); opacity: 0.5; }
+  50% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== FLATPICKR — tema hijau app (override biru bawaan) ===== */
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange,
+.flatpickr-day.startRange:hover,
+.flatpickr-day.endRange,
+.flatpickr-day.endRange:hover,
+.flatpickr-day.selected.startRange,
+.flatpickr-day.startRange.startRange,
+.flatpickr-day.endRange.endRange {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.flatpickr-day.inRange,
+.flatpickr-day.prevMonthDay.inRange,
+.flatpickr-day.nextMonthDay.inRange {
+  background: #d8f3dc;
+  border-color: #d8f3dc;
+  box-shadow: -5px 0 0 #d8f3dc, 5px 0 0 #d8f3dc;
+}
+.flatpickr-day.today { border-color: var(--color-primary); }
+.flatpickr-day.today:hover,
+.flatpickr-day.today:focus {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.flatpickr-day:hover,
+.flatpickr-day:focus {
+  background: #d8f3dc;
+  border-color: #d8f3dc;
+}
+.flatpickr-day:focus { outline: none; box-shadow: none; }
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg { fill: var(--color-primary); }
+
+/* ===== FAB SPEED-DIAL (Pemasukan / Pindah Saldo / Pengeluaran) ===== */
+.fab-speed-dial {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.fab-dial-btn {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 46px;
+  transform: translate(-50%, 0) scale(0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+}
+.fab-speed-dial.open .fab-dial-btn {
+  transform: translate(calc(-50% + var(--tx)), var(--ty)) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.fab-icon-open { transform: rotate(45deg); }
+
 @keyframes clayPop {
   from { opacity: 0; transform: translateY(10px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }

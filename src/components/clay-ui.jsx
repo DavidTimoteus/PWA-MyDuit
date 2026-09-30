@@ -1,0 +1,286 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import flatpickr from 'flatpickr'
+import 'flatpickr/dist/flatpickr.min.css'
+
+// ===== Popup list fixed (portal ke body) — posisi dihitung dari rect trigger,
+// supaya tidak ke-clip overflow-y-auto modal (pola sama dgn enhanceClaySelect_ GAS).
+function usePopupList(open, triggerRef) {
+  const [pos, setPos] = useState(null)
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return
+    const r = triggerRef.current.getBoundingClientRect()
+    setPos({ left: r.left, top: r.bottom + 6, width: r.width })
+  }, [open, triggerRef])
+  return pos
+}
+
+function useDismiss(open, close, listRef, triggerRef) {
+  useEffect(() => {
+    if (!open) return
+    const onClick = (e) => {
+      if (listRef.current?.contains(e.target) || triggerRef.current?.contains(e.target)) return
+      close()
+    }
+    const onScroll = (e) => {
+      if (listRef.current?.contains(e.target)) return
+      close()
+    }
+    const onKey = (e) => e.key === 'Escape' && close()
+    const onResize = () => close()
+    document.addEventListener('click', onClick)
+    document.addEventListener('scroll', onScroll, true)
+    document.addEventListener('keydown', onKey)
+    window.addEventListener('resize', onResize)
+    return () => {
+      document.removeEventListener('click', onClick)
+      document.removeEventListener('scroll', onScroll, true)
+      document.removeEventListener('keydown', onKey)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [open, close, listRef, triggerRef])
+}
+
+const TRIGGER_BASE =
+  'clay-input field-lg w-full bg-surface text-sm focus:outline-none transition-colors cursor-pointer'
+
+// ===== Dropdown clay — pengganti popup native <select> =====
+export function ClaySelect({ value, onChange, options, placeholder = 'Pilih', className = '' }) {
+  const [open, setOpen] = useState(false)
+  const [hl, setHl] = useState(-1)
+  const triggerRef = useRef(null)
+  const listRef = useRef(null)
+  const pos = usePopupList(open, triggerRef)
+  useDismiss(open, () => setOpen(false), listRef, triggerRef)
+
+  const selected = options.find((o) => o.value === value)
+
+  // Highlight mengikuti arrow key WAJIB di-scroll ke pandangan (block:'nearest',
+  // pola sama dgn updateHighlight_ GAS) — tanpa ini highlight "jalan di tempat"
+  // saat opsi banyak dan user harus scroll manual.
+  useEffect(() => {
+    if (!open || hl < 0) return
+    listRef.current?.children[hl]?.scrollIntoView({ block: 'nearest' })
+  }, [hl, open])
+
+  function openList() {
+    setOpen(true)
+    setHl(options.findIndex((o) => o.value === value))
+  }
+
+  function move(dir) {
+    if (!options.length) return
+    let idx = hl < 0 ? (dir > 0 ? -1 : 0) : hl
+    for (let step = 0; step < options.length; step++) {
+      idx = (idx + dir + options.length) % options.length
+      if (!options[idx].disabled) { setHl(idx); return }
+    }
+  }
+
+  function choose(i) {
+    const opt = options[i]
+    if (!opt || opt.disabled) return
+    onChange(opt.value)
+    setOpen(false)
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        ref={triggerRef}
+        onClick={() => (open ? setOpen(false) : openList())}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault()
+            if (!open) openList()
+            else move(e.key === 'ArrowDown' ? 1 : -1)
+          } else if (e.key === 'Enter' && open) {
+            e.preventDefault()
+            choose(hl)
+          } else if (e.key === 'Tab' && open) setOpen(false)
+        }}
+        className={`${TRIGGER_BASE} clay-select-trigger flex items-center justify-between gap-2 text-left ${className}`}
+      >
+        <span className={`truncate ${selected ? 'font-medium text-slate-800' : 'text-slate-400'}`}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <span className="material-symbols-outlined icon-md text-slate-400 shrink-0">expand_more</span>
+      </button>
+      {open &&
+        pos &&
+        createPortal(
+          <div ref={listRef} role="listbox" className="clay-select-list" style={pos}>
+            {options.length === 0 && <div className="clay-select-option is-empty">Tidak ada pilihan</div>}
+            {options.map((o, i) => (
+              <div
+                key={o.value}
+                role="option"
+                aria-disabled={o.disabled || undefined}
+                className={`clay-select-option ${o.disabled ? 'is-disabled' : ''} ${o.value === value ? 'is-selected' : ''} ${i === hl ? 'is-highlighted' : ''}`}
+                onMouseEnter={() => !o.disabled && setHl(i)}
+                onClick={() => choose(i)}
+              >
+                {o.label}
+              </div>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  )
+}
+
+// ===== Combobox kategori — bebas ketik + saran dari daftar (popup clay) =====
+export function ClayCombobox({ value, onChange, options, placeholder, required, inputProps = {} }) {
+  const [open, setOpen] = useState(false)
+  const [hl, setHl] = useState(-1)
+  const wrapRef = useRef(null)
+  const inputRef = useRef(null)
+  const listRef = useRef(null)
+  const pos = usePopupList(open, wrapRef)
+  useDismiss(open, () => setOpen(false), listRef, wrapRef)
+
+  const kw = String(value ?? '').trim().toLowerCase()
+  const matches = kw ? options.filter((o) => o.label.toLowerCase().includes(kw)) : options
+
+  // Scroll mengikuti highlight keyboard (sama dgn ClaySelect)
+  useEffect(() => {
+    if (!open || hl < 0) return
+    listRef.current?.children[hl]?.scrollIntoView({ block: 'nearest' })
+  }, [hl, open])
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <input
+        ref={inputRef}
+        type="text"
+        value={value ?? ''}
+        required={required}
+        autoComplete="off"
+        placeholder={placeholder}
+        onChange={(e) => {
+          onChange(e.target.value)
+          setOpen(true)
+          setHl(-1)
+        }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault()
+            setOpen(true)
+            setHl((i) => (matches.length ? (i + (e.key === 'ArrowDown' ? 1 : -1) + matches.length) % matches.length : -1))
+          } else if (e.key === 'Enter') {
+            if (open && hl >= 0 && matches[hl]) {
+              e.preventDefault()
+              onChange(matches[hl].label)
+              setOpen(false)
+              inputRef.current?.blur()
+            }
+          } else if (e.key === 'Tab') setOpen(false)
+        }}
+        {...inputProps}
+        className={`${TRIGGER_BASE} w-full ${inputProps.className ?? ''}`}
+      />
+      {open &&
+        pos &&
+        createPortal(
+          <div ref={listRef} className="clay-select-list" style={pos}>
+            {matches.length === 0 ? (
+              <div className="clay-select-option is-empty">
+                {kw ? `Ketik enter utk pakai "${value}"` : 'Belum ada kategori'}
+              </div>
+            ) : (
+              matches.map((o, i) => (
+                <div
+                  key={o.value}
+                  className={`clay-select-option ${o.label === value ? 'is-selected' : ''} ${i === hl ? 'is-highlighted' : ''}`}
+                  onMouseEnter={() => setHl(i)}
+                  onClick={() => {
+                    onChange(o.label)
+                    setOpen(false)
+                  }}
+                >
+                  {o.label}
+                </div>
+              ))
+            )}
+          </div>,
+          document.body,
+        )}
+    </div>
+  )
+}
+
+// ===== Field tanggal gaya TOMBOL (flatpickr; range utk filter periode) =====
+// value: 'YYYY-MM-DD' (single) atau { start, end } (range). onChange mengirim format sama.
+export function ClayDateInput({ value, onChange, range = false, accent = false, placeholder = 'Pilih tanggal',  }) {
+  const wrapRef = useRef(null)
+  const inputRef = useRef(null)
+  const fpRef = useRef(null)
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+
+  useEffect(() => {
+    if (!inputRef.current) return
+    const fp = flatpickr(inputRef.current, {
+      mode: range ? 'range' : 'single',
+      dateFormat: 'Y-m-d',
+      altInput: true,
+      altFormat: 'd/m/Y',
+      allowInput: false,
+      disableMobile: true,
+      ...(range ? { maxDate: 'today' } : {}),
+      onChange: (dates, dateStr) => {
+        if (range) {
+          if (dates.length === 2) {
+            onChangeRef.current({
+              start: flatpickr.formatDate(dates[0], 'Y-m-d'),
+              end: flatpickr.formatDate(dates[1], 'Y-m-d'),
+            })
+          }
+        } else {
+          onChangeRef.current(dateStr)
+        }
+      },
+    })
+    fpRef.current = fp
+    // armDatePicker_ (GAS): altInput readOnly + transparan + klik wrapper membuka kalender
+    if (fp.altInput) {
+      fp.altInput.readOnly = true
+      fp.altInput.classList.add('clay-date-picker-field')
+      if (accent) fp.altInput.classList.add('clay-date-picker-field--accent')
+    }
+    const wrap = wrapRef.current
+    const openIt = () => fp.open()
+    wrap?.addEventListener('click', openIt)
+    return () => {
+      wrap?.removeEventListener('click', openIt)
+      fp.destroy()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range])
+
+  // Sinkronkan perubahan value dari luar (prefill edit / reset form) ke kalender
+  useEffect(() => {
+    const fp = fpRef.current
+    if (!fp) return
+    if (range) {
+      const v = value || {}
+      if (v.start && v.end) fp.setDate([v.start, v.end], false)
+      else if (!v.start && !v.end) fp.clear()
+    } else if (value) fp.setDate(value, false)
+    else fp.clear()
+  }, [range, range ? value?.start : value, range ? value?.end : ''])
+
+  return (
+    <div
+      ref={wrapRef}
+      className={`clay-btn clay-btn-secondary w-full field-lg flex items-center gap-2 text-sm font-semibold text-textSecondary bg-surface hover:bg-gray-100 transition-colors cursor-pointer`}
+    >
+      <span className="material-symbols-outlined icon-md shrink-0 text-primary">calendar_month</span>
+      {/* Input asli disembunyikan eksplisit — flatpickr membuat altInput terpisah yang tampil */}
+      <input type="text" ref={inputRef} autoComplete="off" placeholder={placeholder} style={{ display: 'none' }} />
+    </div>
+  )
+}

@@ -31,7 +31,16 @@ export function useAkunKategori(uid) {
       onSnapshot(
         query(collection(db, 'users', uid, 'kategori'), where('deleted', '==', false), orderBy('nama', 'asc')),
         (snap) => {
-          setKategoriList(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+          // Dedupe defensif per-nama (jaga-jaga dokumen duplikat lama di server)
+          const seen = new Set()
+          const list = []
+          for (const d of snap.docs) {
+            const key = (d.data().nama ?? '').toLowerCase()
+            if (seen.has(key)) continue
+            seen.add(key)
+            list.push({ id: d.id, ...d.data() })
+          }
+          setKategoriList(list)
           setSiap(true)
         },
       ),

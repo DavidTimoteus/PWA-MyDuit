@@ -1,23 +1,6 @@
 import { useState } from 'react'
-import { parseNominal, tanggalPendek } from '../../lib/format.js'
+import { parseNominal, isoHariIni, formatRibuanInput, formatNominal, simbolUang } from '../../lib/format.js'
 import { tambahAkun } from '../../lib/db.js'
-
-const WARNA_KATEGORI = [
-  'bg-emerald-100 text-emerald-700',
-  'bg-sky-100 text-sky-700',
-  'bg-amber-100 text-amber-700',
-  'bg-violet-100 text-violet-700',
-  'bg-rose-100 text-rose-700',
-  'bg-teal-100 text-teal-700',
-  'bg-orange-100 text-orange-700',
-  'bg-indigo-100 text-indigo-700',
-]
-
-export function warnaKategori(nama) {
-  let h = 0
-  for (const c of String(nama)) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return WARNA_KATEGORI[h % WARNA_KATEGORI.length]
-}
 
 // Form mini "buat rekening pertama" — modul rekening lengkap di Fase 3.
 export function ChipAkunBaru({ uid }) {
@@ -61,10 +44,10 @@ export function ChipAkunBaru({ uid }) {
           className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
         />
         <div className="clay-field flex items-center gap-2 rounded-xl px-3 py-2.5">
-          <span className="text-sm font-bold text-slate-400">Rp</span>
+          <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
           <input
             value={saldo}
-            onChange={(e) => setSaldo(e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'))}
+            onChange={(e) => setSaldo(formatRibuanInput(e.target.value))}
             inputMode="numeric"
             placeholder="Saldo awal (opsional)"
             className="w-full bg-transparent text-sm font-semibold outline-none placeholder:font-normal placeholder:text-slate-400"
@@ -72,7 +55,7 @@ export function ChipAkunBaru({ uid }) {
         </div>
         <button
           disabled={saving || !nama.trim()}
-          className="clay-btn-primary w-full py-2.5 text-sm font-extrabold disabled:opacity-60"
+          className="clay-btn-primary btn-lg w-full disabled:opacity-60"
         >
           {saving ? 'Membuat…' : 'Buat Rekening'}
         </button>
@@ -81,37 +64,89 @@ export function ChipAkunBaru({ uid }) {
   )
 }
 
-// Satu baris riwayat — chip aksi selalu tampil (pelajaran dari app GAS).
-export function TransaksiRow({ trans, onEdit, onSalin, onHapus }) {
-  const masuk = trans.jenis === 'pemasukan'
+// Tanggal relatif ringkas: Hari Ini / Kemarin / "12/08" (persis feel GAS formatTanggalRelatif).
+function tanggalRelatif(iso) {
+  const hari = isoHariIni()
+  if (iso === hari) return 'Hari Ini'
+  const y = new Date()
+  y.setDate(y.getDate() - 1)
+  const kemarin = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`
+  if (iso === kemarin) return 'Kemarin'
+  const d = new Date(`${iso}T00:00:00`)
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(d)
+}
+
+// Satu kartu riwayat — markup & interaksi persis GAS renderRiwayatUI():
+// klik = toggle tombol hapus, dblclick = edit; hue shadow ikut jenis
+// (hijau Pemasukan / merah Pengeluaran / biru Pindah Saldo).
+export function TransaksiRow({ trans, bulkMode, selected, onToggleSelect, deleteOpen, onToggleDelete, onEdit, onDelete }) {
+  const isPemasukan = trans.jenis === 'pemasukan'
+  const isPindahSaldo = trans.jenis === 'pindah saldo'
+  const sign = isPindahSaldo ? '' : isPemasukan ? '+' : '-'
+  const color = isPindahSaldo ? 'text-blue-600' : isPemasukan ? 'text-emerald-600' : 'text-red-500'
+  const bg = isPindahSaldo ? 'bg-blue-50' : isPemasukan ? 'bg-emerald-100' : 'bg-red-50'
+  const icon = isPindahSaldo ? 'sync_alt' : isPemasukan ? 'trending_up' : 'trending_down'
+  const clayKey = isPindahSaldo ? 'clay-key-blue' : isPemasukan ? 'clay-key-primary' : 'clay-key-danger'
+  // State "revealed" (klik kartu) — tint border+bg per jenis, persis GAS toggleDeleteBtn()
+  const tintRevealed = isPindahSaldo
+    ? 'border-blue-300 !bg-blue-50'
+    : isPemasukan
+      ? 'border-emerald-300 !bg-emerald-50'
+      : 'border-red-300 !bg-red-50'
+  const dipilih = !!selected?.has(trans.id)
+
+  function handleClick() {
+    if (bulkMode) onToggleSelect?.(trans.id)
+    else onToggleDelete?.(trans.id)
+  }
+
   return (
-    <div className="clay-card flex items-center gap-3 p-3">
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${warnaKategori(trans.kategoriNama)}`}>
-        {(trans.kategoriNama || '?').charAt(0).toUpperCase()}
+    <div
+      onClick={handleClick}
+      onDoubleClick={bulkMode ? undefined : onEdit}
+      className={`tx-card-item clay clay-card ${clayKey} relative bg-white p-4 flex items-center justify-between gap-3 transition-all cursor-pointer select-none ${
+        bulkMode ? `bulk-selectable ${dipilih ? 'bulk-selected' : ''}` : ''
+      } ${!bulkMode && deleteOpen ? tintRevealed : ''}`}
+    >
+      {bulkMode && (
+        <span className="bulk-check w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center shrink-0">
+          <span className="material-symbols-outlined icon-xs text-white">check</span>
+        </span>
+      )}
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className={`clay-icon-tile ${clayKey} w-10 h-10 rounded-full ${bg} flex items-center justify-center shrink-0`}>
+          <span className={`material-symbols-outlined ${color} icon-lg`}>{icon}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-slate-800 text-[15px] truncate mb-0.5">
+            {trans.catatan || trans.kategoriNama || 'Tanpa Keterangan'}
+          </h3>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="font-medium">{tanggalRelatif(trans.tanggal)}</span>
+            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+            <span className="truncate">{trans.kategoriNama || '-'}</span>
+          </div>
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold text-slate-800">{trans.kategoriNama || '(tanpa kategori)'}</p>
-        <p className="truncate text-[11px] font-semibold text-slate-400">
-          {trans.catatan ? `${trans.catatan} · ` : ''}{trans.akunNama}
+      <div className="text-right shrink-0 flex flex-col items-end">
+        <p className={`font-bold ${color} text-[15px] mb-0.5`}>
+          {sign}{simbolUang()} {formatNominal(trans.jumlah || 0)}
         </p>
+        <p className="text-[10px] text-slate-400">{isPindahSaldo ? trans.akunNama : trans.akunNama || 'Tunai'}</p>
       </div>
-      <div className="text-right">
-        <p className={`text-sm font-extrabold ${masuk ? 'text-income' : 'text-expense'}`}>
-          {masuk ? '+' : '−'} Rp{(trans.jumlah || 0).toLocaleString('id-ID')}
-        </p>
-        <p className="text-[10px] font-semibold text-slate-400">{tanggalPendek(trans.tanggal)}</p>
-      </div>
-      <div className="flex shrink-0 items-center gap-1">
-        <button onClick={onEdit} title="Edit" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
-          <span className="material-symbols-outlined text-[14px]">edit</span>
+      {!bulkMode && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete?.(trans)
+          }}
+          className={`delete-btn-action shrink-0 ml-2 w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 text-white items-center justify-center transition-all ${
+            deleteOpen ? 'flex' : 'hidden'
+          }`}
+        >
+          <span className="material-symbols-outlined icon-lg">delete</span>
         </button>
-        <button onClick={onSalin} title="Salin" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
-          <span className="material-symbols-outlined text-[14px]">content_copy</span>
-        </button>
-        <button onClick={onHapus} title="Hapus" className="clay-chip flex h-7 w-7 items-center justify-center rounded-full !bg-red-50 text-red-500 hover:!bg-red-500 hover:text-white">
-          <span className="material-symbols-outlined text-[14px]">delete</span>
-        </button>
-      </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { formatRibuanInput, isoHariIni, parseNominal } from '../../lib/format.js'
+import { formatRibuanInput, formatRupiah, isoHariIni, parseNominal, simbolUang } from '../../lib/format.js'
 import { bayarUtang, simpanUtang } from '../../lib/db.js'
+import { ClayDateInput, ClaySelect } from '../../components/clay-ui.jsx'
 
 function isoTambahHari(n) {
   const d = new Date()
@@ -9,7 +10,7 @@ function isoTambahHari(n) {
 }
 
 // ===== FORM TAMBAH/EDIT UTANG =====
-export function FormUtangModal({ open, onClose, uid, edit }) {
+export function FormUtangModal({ open, onClose, uid, edit, mode = 'utang' }) {
   const [namaPihak, setNamaPihak] = useState('')
   const [tipe, setTipe] = useState('Utang')
   const [total, setTotal] = useState('')
@@ -24,9 +25,9 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
   if (kunci !== kunciLama) {
     setKunciLama(kunci)
     setNamaPihak(edit?.namaPihak ?? '')
-    setTipe(edit?.tipe ?? 'Utang')
-    setTotal(edit?.total ? edit.total.toLocaleString('id-ID') : '')
-    setCicilan(edit?.cicilanPerBulan ? edit.cicilanPerBulan.toLocaleString('id-ID') : '')
+    setTipe(edit?.tipe ?? (mode === 'cicilan' ? 'Cicilan' : 'Utang'))
+    setTotal(formatRibuanInput(String(edit?.total ?? '')))
+    setCicilan(formatRibuanInput(String(edit?.cicilanPerBulan ?? '')))
     setTgl(edit?.tglJatuhTempo ?? isoTambahHari(30))
     setDeskripsi(edit?.deskripsi ?? '')
     setError('')
@@ -39,34 +40,50 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
     const n = parseNominal(total)
     if (!namaPihak.trim()) return setError('Nama pihak wajib diisi.')
     if (n <= 0) return setError('Total harus lebih dari nol.')
-    setSaving(true)
-    try {
-      await simpanUtang(uid, {
-        id: edit?.id,
-        namaPihak: namaPihak.trim(),
-        deskripsi: deskripsi.trim(),
-        total: n,
-        tipe,
-        cicilanPerBulan: parseNominal(cicilan),
-        tglJatuhTempo: tgl,
-        sisaLama: edit?.sisa,
-        totalLama: edit?.total,
-      })
-      onClose()
-    } catch (e2) {
-      setError(e2?.message ?? 'Gagal menyimpan.')
-    } finally {
-      setSaving(false)
-    }
+
+    // Snapshot sebelum modal ditutup
+    const editSnap = edit
+    const namaSnap = namaPihak.trim()
+    const deskSnap = deskripsi.trim()
+    const tipeSnap = tipe
+    const cicilanSnap = parseNominal(cicilan)
+    const tglSnap = tgl
+
+    // OPTIMISTIC: tutup modal sekarang, commit Firestore di background.
+    setError('')
+    setSaving(false)
+    onClose()
+
+    ;(async () => {
+      try {
+        await simpanUtang(uid, {
+          id: editSnap?.id,
+          namaPihak: namaSnap,
+          deskripsi: deskSnap,
+          total: n,
+          tipe: tipeSnap,
+          cicilanPerBulan: cicilanSnap,
+          tglJatuhTempo: tglSnap,
+          sisaLama: editSnap?.sisa,
+          totalLama: editSnap?.total,
+        })
+      } catch (e2) {
+        console.warn('[utang-simpan] gagal:', e2?.message ?? e2)
+        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: 'Gagal menyimpan utang.' } }))
+      }
+    })()
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm md:items-center" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="clay-card w-full max-w-sm rounded-t-[28px] p-5 md:rounded-[28px]">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" onClick={onClose}>
+      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="clay-sheet clay-key-danger w-full max-w-sm rounded-[24px] p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-extrabold text-slate-800">{edit ? 'Edit Utang' : 'Tambah Utang'}</h3>
+          <h3 className="flex items-center gap-2 text-base font-extrabold text-slate-800">
+            <span className="material-symbols-outlined text-danger">account_balance_wallet</span>
+            {edit ? 'Edit Utang' : 'Tambah Utang'}
+          </h3>
           <button type="button" onClick={onClose} className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <span className="material-symbols-outlined icon-md">close</span>
           </button>
         </div>
 
@@ -81,21 +98,18 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
             />
           </div>
           <div>
-            <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Tipe</label>
-            <select
+            <label className="mb-0.5 block text-[11px] font-semibold text-textSecondary">Tipe</label>
+            <ClaySelect
               value={tipe}
-              onChange={(e) => setTipe(e.target.value)}
-              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
-            >
-              <option>Utang</option>
-              <option>Cicilan</option>
-            </select>
+              onChange={setTipe}
+              options={[{ value: 'Utang', label: 'Utang' }, { value: 'Cicilan', label: 'Cicilan' }]}
+            />
           </div>
         </div>
 
         <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Total</label>
         <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
-          <span className="text-sm font-bold text-slate-400">Rp</span>
+          <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
           <input
             value={total}
             onChange={(e) => setTotal(formatRibuanInput(e.target.value))}
@@ -109,7 +123,7 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
           <>
             <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Cicilan per bulan</label>
             <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
-              <span className="text-sm font-bold text-slate-400">Rp</span>
+              <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
               <input
                 value={cicilan}
                 onChange={(e) => setCicilan(formatRibuanInput(e.target.value))}
@@ -122,12 +136,9 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
         )}
 
         <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Jatuh tempo</label>
-        <input
-          type="date"
-          value={tgl}
-          onChange={(e) => setTgl(e.target.value)}
-          className="mb-3 w-full rounded-xl bg-surface px-3 py-2.5 text-sm font-semibold outline-none ring-1 ring-slate-200/70 focus:ring-2 focus:ring-primary"
-        />
+        <div className="mb-3">
+          <ClayDateInput value={tgl} onChange={setTgl} />
+        </div>
 
         <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Catatan</label>
         <input
@@ -138,7 +149,7 @@ export function FormUtangModal({ open, onClose, uid, edit }) {
         />
 
         {error && <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
-        <button disabled={saving} className="clay-btn-primary w-full py-3 text-sm font-extrabold disabled:opacity-60">
+        <button disabled={saving} className="clay-btn-primary btn-lg w-full text-sm font-extrabold disabled:opacity-60">
           {saving ? 'Menyimpan…' : 'Simpan'}
         </button>
       </form>
@@ -159,7 +170,7 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
   if (kunci !== kunciLama) {
     setKunciLama(kunci)
     const defaultNominal = utang ? (lunasin ? utang.sisa : utang.cicilanPerBulan || utang.sisa) : 0
-    setJumlah(defaultNominal ? defaultNominal.toLocaleString('id-ID') : '')
+    setJumlah(formatRibuanInput(String(defaultNominal ?? '')))
     setTanggal(isoHariIni())
     setAkunId(akunList[0]?.id ?? '')
     setError('')
@@ -176,34 +187,44 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
     if (n <= 0) return setError('Nominal harus lebih dari nol.')
     if (!akun) return setError('Pilih rekening sumber.')
     if (n > (utang.sisa || 0)) return setError('Nominal melebihi sisa utang.')
-    setSaving(true)
-    try {
-      await bayarUtang(uid, { utang, jumlah: n, tanggal, akun })
-      onClose()
-    } catch (e2) {
-      setError(e2?.message ?? 'Gagal menyimpan.')
-    } finally {
-      setSaving(false)
-    }
+    // Snapshot sebelum modal ditutup
+    const utangSnap = utang
+    const nSnap = n
+    const tanggalSnap = tanggal
+    const akunSnap = akun
+
+    // OPTIMISTIC: tutup modal sekarang, commit Firestore di background.
+    setError('')
+    setSaving(false)
+    onClose()
+
+    ;(async () => {
+      try {
+        await bayarUtang(uid, { utang: utangSnap, jumlah: nSnap, tanggal: tanggalSnap, akun: akunSnap })
+      } catch (e2) {
+        console.warn('[utang-bayar] gagal:', e2?.message ?? e2)
+        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: 'Gagal mencatat pembayaran.' } }))
+      }
+    })()
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm md:items-center" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="clay-card w-full max-w-sm rounded-t-[28px] p-5 md:rounded-[28px]">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" onClick={onClose}>
+      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="clay-sheet clay-key-danger w-full max-w-sm rounded-[24px] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-extrabold text-slate-800">{lunasin ? 'Lunasin' : 'Bayar'} — {utang.namaPihak}</h3>
           <button type="button" onClick={onClose} className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <span className="material-symbols-outlined icon-md">close</span>
           </button>
         </div>
 
         <p className="mb-3 rounded-xl bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-500">
-          Sisa saat ini: <strong className="text-slate-700">{formatRibuanInput(String(utang.sisa || 0)) ? `Rp${(utang.sisa || 0).toLocaleString('id-ID')}` : 'Rp0'}</strong>
+          Sisa saat ini: <strong className="text-slate-700">{formatRupiah(utang.sisa || 0)}</strong>
         </p>
 
         <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Nominal bayar</label>
         <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
-          <span className="text-sm font-bold text-slate-400">Rp</span>
+          <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
           <input
             value={jumlah}
             onChange={(e) => setJumlah(formatRibuanInput(e.target.value))}
@@ -216,30 +237,22 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
         <div className="mb-3 grid grid-cols-2 gap-2">
           <div>
             <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Tanggal</label>
-            <input
-              type="date"
-              value={tanggal}
-              onChange={(e) => setTanggal(e.target.value)}
-              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
-            />
+            <ClayDateInput value={tanggal} onChange={setTanggal} />
           </div>
           <div>
-            <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Sumber dana</label>
-            <select
+            <label className="mb-0.5 block text-[11px] font-semibold text-textSecondary">Sumber dana</label>
+            <ClaySelect
               value={akunId}
-              onChange={(e) => setAkunId(e.target.value)}
-              className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
-            >
-              {akunList.map((a) => (
-                <option key={a.id} value={a.id}>{a.nama}</option>
-              ))}
-            </select>
+              onChange={setAkunId}
+              placeholder="Pilih rekening"
+              options={akunList.map((a) => ({ value: a.id, label: a.nama }))}
+            />
           </div>
         </div>
 
         {n > 0 && (
-          <p className="clay-chip mb-3 px-3 py-2 text-[11px] font-bold text-primary">
-            Sisa setelah bayar: Rp{sisaBaru.toLocaleString('id-ID')}{sisaBaru === 0 ? ' — LUNAS ✓' : ''}
+          <p className="clay-chip mb-3 rounded-[10px] px-3 py-2 text-[11px] font-bold text-primary">
+            Sisa setelah bayar: {formatRupiah(sisaBaru)}{sisaBaru === 0 ? ' — LUNAS ✓' : ''}
           </p>
         )}
         {error && <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
@@ -248,10 +261,10 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
           {!lunasin && (
             <button
               type="button"
-              onClick={() => setJumlah((utang.sisa || 0).toLocaleString('id-ID'))}
+              onClick={() => setJumlah(formatRibuanInput(String(utang.sisa || 0)))}
               className="clay-btn-soft py-3 text-xs font-extrabold text-slate-600"
             >
-              Lunasin ({formatRibuanInput(String(utang.sisa || 0)) ? `Rp${(utang.sisa || 0).toLocaleString('id-ID')}` : 'Rp0'})
+              Lunasin ({formatRupiah(utang.sisa || 0)})
             </button>
           )}
           <button

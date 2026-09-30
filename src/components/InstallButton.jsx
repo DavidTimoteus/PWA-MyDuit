@@ -31,13 +31,33 @@ export default function InstallButton({ variant = 'sidebar' }) {
   const cls =
     variant === 'sidebar'
       ? 'clay-btn-soft flex w-full items-center gap-3 px-4 py-2.5 text-sm font-bold text-primary transition-all hover:bg-emerald-50'
-      : 'clay-chip flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors active:bg-primary active:text-white'
+      : variant === 'sheet'
+        ? 'clay-btn flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-bold text-slate-700'
+        : 'clay-chip flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors active:bg-primary active:text-white'
 
   return (
     <>
       <button onClick={klik} className={cls} title="Install aplikasi">
-        <span className="material-symbols-outlined text-[20px]">install_mobile</span>
+        <span
+          className={
+            variant === 'sheet'
+              ? 'clay-icon-tile clay-key-neutral flex h-10 w-10 shrink-0 items-center justify-center'
+              : 'material-symbols-outlined icon-lg'
+          }
+        >
+          {variant === 'sheet' ? (
+            <span className="material-symbols-outlined icon-md">install_mobile</span>
+          ) : (
+            'install_mobile'
+          )}
+        </span>
         {variant === 'sidebar' && <span>Install App</span>}
+        {variant === 'sheet' && (
+          <span className="flex-1">
+            <span className="block">Pasang Aplikasi</span>
+            <span className="block text-[11px] font-semibold text-slate-500">Akses cepat &amp; offline</span>
+          </span>
+        )}
       </button>
 
       {hint && (
@@ -49,7 +69,7 @@ export default function InstallButton({ variant = 'sidebar' }) {
               Tekan ikon <strong>Share</strong> di bawah Safari, lalu pilih{' '}
               <strong>“Add to Home Screen”</strong>.
             </p>
-              <button onClick={() => setHint(false)} className="clay-btn-primary mt-4 w-full py-2.5 text-xs font-extrabold">
+              <button onClick={() => setHint(false)} className="clay-btn-primary btn-md mt-4 w-full">
               Mengerti
             </button>
           </div>
