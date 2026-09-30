@@ -78,8 +78,14 @@ export function langgananAkunKategori(db, uid, { onAkun, onKategori, onSiap }) {
 }
 
 export function useAkunKategori(uid) {
+  // Jumlah hook harus SAMA di setiap render. Karena itu hook fallback selalu
+  // dipanggil, tetapi diberi uid null saat context tersedia sehingga ia tidak
+  // membuka langganan apa pun. Memanggilnya secara kondisional (ctx ? ... )
+  // mengubah jumlah hook antar-render dan React melempar error yang membuat
+  // seluruh halaman kosong.
   const ctx = useContext(AkunKategoriCtx)
-  return ctx ?? useAkunKategoriMandiri(uid)
+  const mandiri = useAkunKategoriMandiri(ctx ? null : uid)
+  return ctx ?? mandiri
 }
 
 function useAkunKategoriMandiri(uid) {
