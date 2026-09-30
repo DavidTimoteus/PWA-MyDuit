@@ -3,6 +3,7 @@ import AuthScreen from './components/AuthScreen.jsx'
 import Shell from './components/Shell.jsx'
 import Splash from './components/Splash.jsx'
 import ToastHost from './components/ToastHost.jsx'
+import AkunKategoriProvider from './lib/AkunKategoriProvider.jsx'
 import { useAuth } from './features/auth/useAuth.js'
 import { isFirebaseConfigured } from './lib/firebase.js'
 import { migrasiNormalisasi } from './lib/db.js'
@@ -62,7 +63,12 @@ export default function App() {
         ) : !user ? (
           <AuthScreen />
         ) : (
-          <Shell user={user} />
+          // Satu langganan akun+kategori untuk seluruh modul (lihat
+          // useAkunKategori.js). Dibungkus di sini, bukan di dalam Shell, supaya
+          // tetap aktif saat tab berganti.
+          <AkunKategoriProvider uid={user.uid}>
+            <Shell user={user} />
+          </AkunKategoriProvider>
         )
       )}
     </>
