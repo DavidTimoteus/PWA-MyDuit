@@ -920,6 +920,16 @@ button:active {
   height: 0;
   pointer-events: none;
 }
+
+/* Speed-dial punya width 0 tetapi tombolnya digeser dengan translate(-72px..+72px).
+   Geseran itu meluber keluar kotak nav dan, karena nav adalah fixed inset-x-0,
+   ikut menambah scrollWidth dokumen -> halaman bisa digeser horizontal di layar
+   sempit (terukur 347px pada viewport 320px). clip menahan luberan secara visual
+   tanpa mematikan animasi transform, dan tidak membuat containing block baru
+   seperti overflow:hidden pada elemen fixed. */
+#navShell {
+  overflow-x: clip;
+}
 .fab-dial-btn {
   position: absolute;
   left: 0;

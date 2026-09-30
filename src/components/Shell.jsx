@@ -91,7 +91,7 @@ function NavIkona({ t, active, onClick }) {
   }
 
   return (
-    <button type="button" onClick={onClick} className="flex w-14 flex-col items-center" aria-label={t.label}>
+    <button type="button" onClick={onClick} className="flex w-11 flex-col items-center min-[360px]:w-14" aria-label={t.label}>
       <span className={`nav-icon-wrap ${active ? `nav-icon-active ${activeKey} ${activeColor}` : 'nav-icon-inactive text-textSecondary'}`}>
         <span
           className="material-symbols-outlined icon-xl"
@@ -496,15 +496,18 @@ export default function Shell({ user }) {
               <span className="material-symbols-outlined icon-xs text-slate-400">expand_more</span>
             </button>
 
-            {/* Action buttons di kanan — tersusun rapi dari Contextual Action ke Utilitas & Logout */}
-            <div className="flex items-center gap-1.5 shrink-0">
+            {/* Action buttons di kanan. Di layar sempit (<=360px) hanya yang
+                benar-benar sering dipakai yang ditampilkan; Backup & Keluar
+                sudah tersedia di UserMenuSheet (tombol avatar di bottom bar),
+                jadi tidak perlu memaksa header meluber. */}
+            <div className="flex min-w-0 items-center gap-1.5">
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('myduit:buka-filter'))}
                 aria-label="Filter Transaksi"
-                className="clay-chip clay-key-primary flex h-9 items-center gap-1 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-emerald-50 active:scale-95"
+                className="clay-chip clay-key-primary flex h-9 shrink-0 items-center gap-1 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-emerald-50 active:scale-95"
               >
                 <span className="material-symbols-outlined icon-md text-emerald-600">tune</span>
-                <span className="truncate max-w-[85px]">{filterLabel}</span>
+                <span className="truncate max-w-[70px]">{filterLabel}</span>
               </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('myduit:export-pdf'))}
@@ -516,17 +519,19 @@ export default function Shell({ user }) {
                 <span className="material-symbols-outlined icon-md">picture_as_pdf</span>
               </button>
               <InstallButton variant="chip" />
+              {/* Backup & Keluar: disembunyikan di layar sangat sempit karena
+                  sudah ada di UserMenuSheet; tetap tampil di >=360px. */}
               <button
                 onClick={() => setBackupOpen(true)}
                 title="Backup Data"
-                className="clay-chip flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-50 active:scale-95"
+                className="clay-chip hidden h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-50 active:scale-95 min-[360px]:flex"
               >
                 <span className="material-symbols-outlined icon-md">backup</span>
               </button>
               <button
                 onClick={keluar}
                 title="Keluar"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-danger-light text-danger transition-colors hover:bg-red-500 hover:text-white active:scale-95"
+                className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-danger-light text-danger transition-colors hover:bg-red-500 hover:text-white active:scale-95 min-[360px]:flex"
               >
                 <span className="material-symbols-outlined icon-md">logout</span>
               </button>
@@ -565,13 +570,13 @@ export default function Shell({ user }) {
       {fabDial && <div className="fixed inset-0 z-40 md:hidden" onClick={() => setFabDial(false)} />}
       <nav id="navShell" className="fixed inset-x-0 bottom-0 z-50 h-[80px] md:hidden">
         <div className="clay-nav absolute inset-0" aria-hidden="true"></div>
-        <div className="relative z-10 flex h-full items-center justify-between gap-2 px-5 pt-2">
+        <div className="relative z-10 flex h-full items-center justify-between gap-1 px-2 pt-2 min-[360px]:gap-2 min-[360px]:px-5">
           {TABS.slice(0, 2).map((t) => (
             <NavIkona key={t.id} t={t} active={tab === t.id} onClick={() => setTab(t.id)} />
           ))}
 
           {/* FAB tengah + speed-dial 3 pilihan (aksi via event bus ke TransaksiView) */}
-          <div className="relative -mt-10 flex w-16 justify-center">
+          <div className="relative -mt-10 flex w-14 justify-center min-[360px]:w-16">
             {tab === 'transaksi' && (
               <div className={`fab-speed-dial ${fabDial ? 'open' : ''}`}>
                 <button
@@ -651,7 +656,7 @@ export default function Shell({ user }) {
             onClick={() => setUserMenuOpen(true)}
             aria-label="Menu pengguna"
             aria-haspopup="dialog"
-            className="clay-icon-tile clay-key-neutral flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+            className="clay-icon-tile clay-key-neutral flex h-10 w-10 shrink-0 items-center justify-center rounded-full min-[360px]:h-11 min-[360px]:w-11"
           >
             <span className="material-symbols-outlined icon-lg">account_circle</span>
           </button>

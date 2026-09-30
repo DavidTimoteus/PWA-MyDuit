@@ -168,10 +168,11 @@ async function konfirmHapus() {
 
         {/* Toolbar: 2 kartu sejajar — persis GAS (mb-4) */}
         <div className="mb-4 mt-2 flex flex-wrap items-center gap-2 md:mt-4">
-          {/* Kartu 1: pencarian + filter jenis + pilih banyak */}
-          <div className="clay clay-card clay-key-primary min-w-[280px] flex-auto rounded-[22px] bg-surfaceContainerLowest p-2">
+          {/* Kartu 1: pencarian + filter jenis + pilih banyak.
+              min-w dikurangi agar muat di layar 320px (320 - padding 40 = 280). */}
+          <div className="clay clay-card clay-key-primary min-w-0 flex-auto rounded-[22px] bg-surfaceContainerLowest p-2 sm:min-w-[280px]">
             <div className="flex items-center gap-2">
-              <div className="relative min-w-[120px] flex-1">
+              <div className="relative min-w-0 flex-1">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 icon-lg text-textSecondary">search</span>
                 <input
                   value={keyword}
