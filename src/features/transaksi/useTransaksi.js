@@ -27,7 +27,16 @@ export function useTransaksi(uid, { jenis, range }) {
       (snap) => {
         const list = snap.docs.map(docKeTransaksi)
         lastDocRef.current = snap.docs[snap.docs.length - 1] ?? null
-        setDocs(list)
+        // Halaman lanjutan yang sudah dimuat lewat "Muat lagi" TIDAK boleh
+        // hilang: snapshot ini hanya mencakup PAGE_SIZE dokumen pertama, jadi
+        // mengganti `docs` begitu saja akan memangkas riwayat yang sudah
+        // ditampilkan setiap kali ada satu transaksi baru.
+        setDocs((prev) => {
+          if (prev.length <= list.length) return list
+          const idsBaru = new Set(list.map((t) => t.id))
+          const lanjutan = prev.filter((t) => !idsBaru.has(t.id))
+          return [...list, ...lanjutan]
+        })
         setHasMore(snap.docs.length === PAGE_SIZE)
         setLoading(false)
       },
@@ -47,7 +56,12 @@ export function useTransaksi(uid, { jenis, range }) {
       const snap = await getDocs(q)
       const list = snap.docs.map(docKeTransaksi)
       lastDocRef.current = snap.docs[snap.docs.length - 1] ?? lastDocRef.current
-      setDocs((prev) => [...prev, ...list])
+      // Dedupe: dokumen di batas halaman bisa muncul lagi kalau ada penulisan
+      // baru di antara dua permintaan.
+      setDocs((prev) => {
+        const ada = new Set(prev.map((t) => t.id))
+        return [...prev, ...list.filter((t) => !ada.has(t.id))]
+      })
       setHasMore(snap.docs.length === PAGE_SIZE)
     } catch (e) {
       setError(e?.message ?? String(e))
