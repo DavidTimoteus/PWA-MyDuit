@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { formatRibuanInput, formatRupiah, isoHariIni, parseNominal, simbolUang } from '../../lib/format.js'
 import { bayarUtang, simpanUtang } from '../../lib/db.js'
 import { ClayDateInput, ClaySelect } from '../../components/clay-ui.jsx'
+import { pesanErrorSimpan } from '../../lib/pesanError.js'
 
 function isoTambahHari(n) {
   const d = new Date()
@@ -69,7 +70,7 @@ export function FormUtangModal({ open, onClose, uid, edit, mode = 'utang' }) {
         })
       } catch (e2) {
         console.warn('[utang-simpan] gagal:', e2?.message ?? e2)
-        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: 'Gagal menyimpan utang.' } }))
+        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: pesanErrorSimpan('Menyimpan utang', e2) } }))
       }
     })()
   }
@@ -203,7 +204,7 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
         await bayarUtang(uid, { utang: utangSnap, jumlah: nSnap, tanggal: tanggalSnap, akun: akunSnap })
       } catch (e2) {
         console.warn('[utang-bayar] gagal:', e2?.message ?? e2)
-        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: 'Gagal mencatat pembayaran.' } }))
+        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: pesanErrorSimpan('Mencatat pembayaran', e2) } }))
       }
     })()
   }

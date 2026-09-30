@@ -3,6 +3,11 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+import { fileURLToPath } from 'node:url'
+
+// Path absolut ke stub kosong (lihat resolve.alias di bawah).
+const emptyStub = fileURLToPath(new URL('./src/lib/empty-stub.js', import.meta.url))
+
 export default defineConfig({
   server: {
     host: true,
@@ -20,22 +25,41 @@ export default defineConfig({
     // ulang >1MB — hal yang paling terasa di jaringan seluler.
     rollupOptions: {
       output: {
+        // Hanya lib besar yang dipisah eksplisit. Sisanya dikembalikan
+        // undefined supaya Rollup memakai pemisahan alaminya — penting karena
+        // catch-all `return 'vendor'` justru menelan jspdf ke chunk awal
+        // (terbukti: chunk vendor membengkak jadi 830 kB) dan membatalkan
+        // efek lazy-load yang sudah dibangun.
         manualChunks(id) {
           if (!id.includes('node_modules')) return
-          // Chart.js hanya dipakai tab Statistik → chunk sendiri.
+          // React + ReactDOM jarang berubah: pisahkan agar cache browser tidak
+          // batal tiap kali kode app diedit (dan sebaliknya).
+          if (id.includes('/react-dom/') || id.includes('/react/') ||
+              id.includes('/scheduler/')) return 'vendor-react'
           if (id.includes('chart.js')) return 'vendor-chart'
-          // PDF + spreadsheet: hanya saat user ekspor/impor.
-          if (id.includes('jspdf') || id.includes('html2canvas')) return 'vendor-pdf'
           if (id.includes('xlsx')) return 'vendor-xlsx'
-          if (id.includes('/dompurify/')) return 'vendor-sanitize'
-          // Firebase dipakai dari halaman login, jadi pisahkan: bundel awal
-          // shell bisa mulai dirender lebih cepat.
           if (id.includes('firebase') || id.includes('@firebase')) return 'vendor-firebase'
-          return 'vendor'
+          // undefined = serahkan ke Rollup (jspdf tetap di chunk lazy-nya).
+          return undefined
         },
       },
     },
     chunkSizeWarningLimit: 700,
+  },
+  resolve: {
+    // jsPDF mengimpor html2canvas/canvg/dompurify lewat dynamic import
+    // BER-VARIABEL: `import(i.html2canvas)`. Rollup tidak bisa menganalisis
+    // bentuk seperti itu, jadi ia membundel ketiganya apa adanya — padahal
+    // laporan MyDuit digambar sepenuhnya sebagai vektor dan tidak pernah
+    // memanggilnya. Akibatnya user mengunduh ~800KB mati, bahkan di halaman
+    // login (Vite men-preload chunk-nya di index.html). Alias ke stub kosong
+    // memutus rantai itu; jsPDF hanya memanggilnya kalau ada ForeignObject,
+    // yang tidak pernah terjadi di sini.
+    alias: [
+      { find: /^html2canvas$/, replacement: emptyStub },
+      { find: /^canvg$/, replacement: emptyStub },
+      { find: /^dompurify$/, replacement: emptyStub },
+    ],
   },
   plugins: [
     react(),
@@ -63,15 +87,45 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Precache HANYA aset yang dibutuhkan untuk membuka app: HTML, CSS,
+        // bundel utama, dan ikon. Chunk besar (pdf/xlsx/chart/firebase) sengaja
+        // TIDAK diprecache: semuanya sudah lazy, dan memprecache-nya membuat
+        // setiap kunjungan mengunduh >2MB sebelum app bisa dipakai — justru
+        // mematikan alasan utama PWA ini ada (dipakai offline di HP).
+        // Chunk yang sudah terunduh tetap tersimpan di HTTP cache biasa dan
+        // service worker runtime-cache saat benar-benar dibuka.
+        globPatterns: [
+          'index.html',
+          'manifest.webmanifest',
+          'registerSW.js',
+          'assets/index-*.js',
+          'assets/index-*.css',
+          'icons/*.png',
+          'favicon.svg',
+        ],
+        globIgnores: [
+          '**/vendor-pdf-*.js',
+          '**/vendor-xlsx-*.js',
+          '**/vendor-chart-*.js',
+          '**/vendor-firebase-*.js',
+        ],
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
-        // Jangan precache chunk monster yang tidak pernah dipakai di awal.
-        // chunks yang berat sudah di-lazy; precache semuanya membuat install
-        // PWA pertama kali mengunduh >2.7MB sebelum app bisa dibuka.
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // Chunk lazy yang dibuka saat runtime disimpan di cache ini supaya
+        // kunjungan berikutnya tidak perlu unduh ulang.
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/.*\.(?:js|css)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'myduit-lazy-chunks',
+              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+        ],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
     }),
   ],

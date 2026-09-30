@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { formatRibuanInput, formatRupiah, parseNominal, simbolUang } from '../../lib/format.js'
 import { tambahAkun, updateAkun } from '../../lib/db.js'
 import { ClaySelect } from '../../components/clay-ui.jsx'
+import { pesanErrorSimpan } from '../../lib/pesanError.js'
 
 const TIPE_AKUN = ['Rekening Utama', 'Tabungan', 'E-Wallet', 'Lainnya']
 
@@ -50,7 +51,7 @@ export default function FormRekeningModal({ open, onClose, uid, edit }) {
         }
       } catch (e2) {
         console.warn('[rekening-simpan] gagal:', e2?.message ?? e2)
-        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: 'Gagal menyimpan rekening.' } }))
+        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: pesanErrorSimpan('Menyimpan rekening', e2) } }))
       }
     })()
   }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { formatRibuanInput, isoHariIni, parseNominal, simbolUang } from '../../lib/format.js'
 import { pindahSaldo } from '../../lib/db.js'
 import { ClayDateInput, ClaySelect } from '../../components/clay-ui.jsx'
+import { pesanErrorSimpan } from '../../lib/pesanError.js'
 
 // Modal Pindah Saldo — markup persis GAS #modalPindahSaldo
 // (clay-sheet clay-key-blue max-w-md; Tanggal, Dari*, Ke*, Nominal*, Catatan;
@@ -63,7 +64,7 @@ export default function ModalPindahSaldo({ uid, open, onClose, akunList }) {
         })
       } catch (e2) {
         console.warn('[pindah-saldo] gagal:', e2?.message ?? e2)
-        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: 'Gagal memindahkan saldo.' } }))
+        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: pesanErrorSimpan('Memindahkan saldo', e2) } }))
       }
     })()
   }

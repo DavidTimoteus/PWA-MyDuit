@@ -45,7 +45,7 @@ const TRIGGER_BASE =
   'clay-input field-lg w-full bg-surface text-sm focus:outline-none transition-colors cursor-pointer'
 
 // ===== Dropdown clay — pengganti popup native <select> =====
-export function ClaySelect({ value, onChange, options, placeholder = 'Pilih', className = '' }) {
+export function ClaySelect({ id, value, onChange, options, placeholder = 'Pilih', className = '', ...rest }) {
   const [open, setOpen] = useState(false)
   const [hl, setHl] = useState(-1)
   const triggerRef = useRef(null)
@@ -88,6 +88,10 @@ export function ClaySelect({ value, onChange, options, placeholder = 'Pilih', cl
     <>
       <button
         type="button"
+        id={id}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        {...rest}
         ref={triggerRef}
         onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={(e) => {
@@ -132,7 +136,7 @@ export function ClaySelect({ value, onChange, options, placeholder = 'Pilih', cl
 }
 
 // ===== Combobox kategori — bebas ketik + saran dari daftar (popup clay) =====
-export function ClayCombobox({ value, onChange, options, placeholder, required, inputProps = {} }) {
+export function ClayCombobox({ id, value, onChange, options, placeholder, required, inputProps = {} }) {
   const [open, setOpen] = useState(false)
   const [hl, setHl] = useState(-1)
   const wrapRef = useRef(null)
@@ -154,6 +158,7 @@ export function ClayCombobox({ value, onChange, options, placeholder, required, 
     <div ref={wrapRef} className="relative">
       <input
         ref={inputRef}
+        id={id}
         type="text"
         value={value ?? ''}
         required={required}
@@ -214,7 +219,7 @@ export function ClayCombobox({ value, onChange, options, placeholder, required, 
 
 // ===== Field tanggal gaya TOMBOL (flatpickr; range utk filter periode) =====
 // value: 'YYYY-MM-DD' (single) atau { start, end } (range). onChange mengirim format sama.
-export function ClayDateInput({ value, onChange, range = false, accent = false, placeholder = 'Pilih tanggal',  }) {
+export function ClayDateInput({ id, value, onChange, range = false, accent = false, placeholder = 'Pilih tanggal' }) {
   const wrapRef = useRef(null)
   const inputRef = useRef(null)
   const fpRef = useRef(null)
@@ -250,6 +255,14 @@ export function ClayDateInput({ value, onChange, range = false, accent = false, 
       fp.altInput.readOnly = true
       fp.altInput.classList.add('clay-date-picker-field')
       if (accent) fp.altInput.classList.add('clay-date-picker-field--accent')
+      // flatpickr membuat input alternatif (yang terlihat & difokus). Pindahkan
+      // id ke elemen itu supaya <label htmlFor> benar-benar mengarah ke field
+      // yang bisa diklik/difokus — kalau id tertinggal di input tersembunyi,
+      // klik label tidak membuka kalender dan screen reader tidak menemukannya.
+      if (id) {
+        inputRef.current.removeAttribute('id')
+        fp.altInput.id = id
+      }
     }
     const wrap = wrapRef.current
     const openIt = () => fp.open()
@@ -280,7 +293,7 @@ export function ClayDateInput({ value, onChange, range = false, accent = false, 
     >
       <span className="material-symbols-outlined icon-md shrink-0 text-primary">calendar_month</span>
       {/* Input asli disembunyikan eksplisit — flatpickr membuat altInput terpisah yang tampil */}
-      <input type="text" ref={inputRef} autoComplete="off" placeholder={placeholder} style={{ display: 'none' }} />
+      <input type="text" id={id ? id + '-hidden' : undefined} ref={inputRef} autoComplete="off" placeholder={placeholder} style={{ display: 'none' }} />
     </div>
   )
 }

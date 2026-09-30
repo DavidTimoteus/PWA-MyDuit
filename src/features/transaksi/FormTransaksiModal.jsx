@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { formatRibuanInput, isoHariIni, parseNominal, simbolUang } from '../../lib/format.js'
 import { ambilAtauBuatKategori, simpanTransaksi, updateTransaksi } from '../../lib/db.js'
 import { ClayCombobox, ClayDateInput, ClaySelect } from '../../components/clay-ui.jsx'
+import { pesanErrorSimpan } from '../../lib/pesanError.js'
 
 // Modal Catat / Edit / Salin transaksi — markup persis GAS #viewTambah.
 // JENIS TIDAK dipilih user: di-set sistem dari titik masuk (Aksi Cepat /
@@ -92,7 +93,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
         else await simpanTransaksi(uid, data)
       } catch (e2) {
         console.warn('[transaksi-simpan] gagal:', e2?.message ?? e2)
-        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: 'Gagal menyimpan transaksi.' } }))
+        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: pesanErrorSimpan('Menyimpan transaksi', e2) } }))
       }
     })()
   }
@@ -159,13 +160,14 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
           )}
 
           <div className="flex flex-col gap-1">
-            <label className="block text-[11px] font-semibold text-textSecondary">Tanggal</label>
-            <ClayDateInput value={tanggal} onChange={setTanggal} />
+            <label htmlFor="tx-tanggal" className="block text-[11px] font-semibold text-textSecondary">Tanggal</label>
+            <ClayDateInput id="tx-tanggal" value={tanggal} onChange={setTanggal} />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="block text-[11px] font-semibold text-textSecondary">Sumber / Akun</label>
+            <label htmlFor="tx-akun" className="block text-[11px] font-semibold text-textSecondary">Sumber / Akun</label>
             <ClaySelect
+              id="tx-akun"
               value={akunId}
               onChange={setAkunId}
               placeholder="Pilih Sumber/Akun"
@@ -174,8 +176,9 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="block text-[11px] font-semibold text-textSecondary">Kategori</label>
+            <label htmlFor="tx-kategori" className="block text-[11px] font-semibold text-textSecondary">Kategori</label>
             <ClayCombobox
+              id="tx-kategori"
               value={kategoriNama}
               onChange={setKategoriNama}
               placeholder="Pilih atau ketik kategori..."
@@ -206,8 +209,9 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
           )}
 
           <div className="flex flex-col gap-1">
-            <label className="block text-[11px] font-semibold text-textSecondary">Keterangan</label>
+            <label htmlFor="tx-catatan" className="block text-[11px] font-semibold text-textSecondary">Keterangan</label>
             <input
+              id="tx-catatan"
               type="text"
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
@@ -217,8 +221,9 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="block text-[11px] font-semibold text-textSecondary">Nominal ({simbolUang()})</label>
+            <label htmlFor="tx-jumlah" className="block text-[11px] font-semibold text-textSecondary">Nominal ({simbolUang()})</label>
             <input
+              id="tx-jumlah"
               type="text"
               value={jumlah}
               onChange={(e) => setJumlah(formatRibuanInput(e.target.value))}
@@ -229,7 +234,11 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
             />
           </div>
 
-          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
+          {error && (
+            <p role="alert" aria-live="assertive" className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"

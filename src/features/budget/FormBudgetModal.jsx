@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { formatRibuanInput, parseNominal, simbolUang } from '../../lib/format.js'
 import { simpanBudget } from '../../lib/db.js'
 import { ClaySelect } from '../../components/clay-ui.jsx'
+import { pesanErrorSimpan } from '../../lib/pesanError.js'
 
 // Modal Tambah / Edit Budget — markup persis GAS #modalBudget
 // (clay-sheet clay-key-blue max-w-md, ikon savings biru, header dengan title + close,
@@ -54,7 +55,7 @@ export default function FormBudgetModal({ open, onClose, uid, kategoriList, exis
         })
       } catch (e2) {
         console.warn('[budget-simpan] gagal:', e2?.message ?? e2)
-        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: 'Gagal menyimpan budget.' } }))
+        window.dispatchEvent(new CustomEvent('myduit:toast', { detail: { type: 'error', msg: pesanErrorSimpan('Menyimpan budget', e2) } }))
       }
     })()
   }

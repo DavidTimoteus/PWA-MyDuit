@@ -689,6 +689,10 @@ export default function Shell({ user }) {
 
       {/* Menu pengguna untuk mobile: satu-satunya jalan ke Keluar / Backup /
           ganti lokasi dari tab mana pun (sidebar desktop tersembunyi di mobile). */}
+      {/* Notifikasi global. Wajib ada: enam alur simpan mengirim event
+          myduit:toast saat gagal, dan tanpa host ini kegagalan lewat senyap. */}
+      <ToastHost />
+
       <UserMenuSheet
         open={userMenuOpen}
         onClose={() => setUserMenuOpen(false)}
