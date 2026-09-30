@@ -152,7 +152,7 @@ export default function BudgetView({ user }) {
         <div className="clay-icon-tile clay-key-blue flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md">
           <span className="material-symbols-outlined icon-md" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
         </div>
-        <h2 className="font-display font-extrabold text-2xl sm:text-[28px] leading-tight tracking-tight text-blue-950">
+        <h2 className="font-display font-extrabold text-2xl sm:icon-2xl leading-tight tracking-tight text-blue-950">
           {sub === 'budget' ? 'Budget' : 'Rekening'}
         </h2>
       </header>

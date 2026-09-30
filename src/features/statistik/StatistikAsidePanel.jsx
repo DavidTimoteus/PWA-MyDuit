@@ -104,11 +104,11 @@ export default function StatistikAsidePanel() {
             </div>
             <div
               className="h-1.5 w-full overflow-hidden rounded-full"
-              style={{ background: '#EEF2F7', boxShadow: 'inset 3px 3px 7px rgba(0,0,0,.12), inset -3px -3px 7px rgba(255,255,255,.85)' }}
+              style={{ background: 'var(--color-surface)', boxShadow: 'inset 3px 3px 7px rgba(0,0,0,.12), inset -3px -3px 7px rgba(255,255,255,.85)' }}
             >
               <div
                 className="h-full rounded-full transition-all"
-                style={{ width: `${Math.max(0, Math.min(100, rasioTabungan))}%`, background: 'linear-gradient(to right,#34d399,#059669)' }}
+                style={{ width: `${Math.max(0, Math.min(100, rasioTabungan))}%`, background: 'linear-gradient(to right, var(--color-primary-light), var(--color-primary))' }}
               ></div>
             </div>
             <p className="mt-1.5 text-[11px] font-medium text-textSecondary">Sisa pemasukan setelah pengeluaran</p>

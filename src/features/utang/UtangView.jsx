@@ -243,7 +243,7 @@ export default function UtangView({ user }) {
         </div>
         <p className="mb-3 text-2xl font-bold sm:text-3xl">{formatRupiah(ringkasan.totalSisa)}</p>
         <div className="flex items-center gap-1.5 text-[11px] opacity-90">
-          <span className="material-symbols-outlined text-[14px]">event</span>
+          <span className="material-symbols-outlined icon-xs">event</span>
           <span>{ringkasan.jatuhTempo[0] ? `${ringkasan.jatuhTempo[0].nama} · ${ringkasan.jatuhTempo[0].hari} hari` : 'Tidak ada jatuh tempo dekat'}</span>
         </div>
       </div>
@@ -253,17 +253,17 @@ export default function UtangView({ user }) {
         <div className="clay clay-card clay-key-danger rounded-[22px] bg-gradient-to-br from-red-500 to-red-700 p-4 text-white">
           <div className="mb-2 flex items-center gap-2"><span className="material-symbols-outlined icon-md opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span><p className="text-xs font-semibold uppercase tracking-wider opacity-90">Total Utang</p></div>
           <p className="font-mono text-2xl font-extrabold">{formatRupiah(ringkasan.totalSisa)}</p>
-          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-80"><span className="material-symbols-outlined text-[14px]">trending_up</span>{ringkasan.aktifCount} aktif</p>
+          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-80"><span className="material-symbols-outlined icon-xs">trending_up</span>{ringkasan.aktifCount} aktif</p>
         </div>
         <div className="clay clay-card clay-key-primary rounded-[22px] bg-gradient-to-br from-emerald-500 to-emerald-700 p-4 text-white">
           <div className="mb-2 flex items-center gap-2"><span className="material-symbols-outlined icon-md opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span><p className="text-xs font-semibold uppercase tracking-wider opacity-90">Lunas</p></div>
           <p className="font-mono text-2xl font-extrabold">{formatRupiah(ringkasan.totalLunasNominal)}</p>
-          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-80"><span className="material-symbols-outlined text-[14px]">check</span>{ringkasan.lunasCount} item lunas</p>
+          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-80"><span className="material-symbols-outlined icon-xs">check</span>{ringkasan.lunasCount} item lunas</p>
         </div>
         <div className="clay clay-card clay-key-blue rounded-[22px] bg-gradient-to-br from-blue-500 to-blue-700 p-4 text-white">
           <div className="mb-2 flex items-center gap-2"><span className="material-symbols-outlined icon-md opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>schedule</span><p className="text-xs font-semibold uppercase tracking-wider opacity-90">Cicilan Aktif</p></div>
           <p className="font-mono text-2xl font-extrabold">{ringkasan.cicilanAktif}</p>
-          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-80"><span className="material-symbols-outlined text-[14px]">calendar_month</span>{formatRupiah(ringkasan.totalCicilanPerBulan)}/bln</p>
+          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-80"><span className="material-symbols-outlined icon-xs">calendar_month</span>{formatRupiah(ringkasan.totalCicilanPerBulan)}/bln</p>
         </div>
       </div>
 

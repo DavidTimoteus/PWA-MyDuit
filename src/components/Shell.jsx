@@ -492,7 +492,7 @@ export default function Shell({ user }) {
             >
               <span className="text-sm leading-none">{countryFlag}</span>
               <span className="font-extrabold text-slate-800">{currencySymbol}</span>
-              <span className="material-symbols-outlined text-[15px] text-slate-400">expand_more</span>
+              <span className="material-symbols-outlined icon-xs text-slate-400">expand_more</span>
             </button>
 
             {/* Action buttons di kanan — tersusun rapi dari Contextual Action ke Utilitas & Logout */}

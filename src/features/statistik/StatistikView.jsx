@@ -391,7 +391,7 @@ export default function StatistikView({ user }) {
           <div className="clay-icon-tile clay-key-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-emerald-700 text-white">
             <span className="material-symbols-outlined icon-lg" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
           </div>
-          <h2 className="font-display whitespace-nowrap text-2xl font-extrabold leading-tight sm:text-[28px]">Statistik</h2>
+          <h2 className="font-display whitespace-nowrap text-2xl font-extrabold leading-tight sm:icon-2xl">Statistik</h2>
         </div>
         <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Navigasi periode">
           <button
@@ -400,7 +400,7 @@ export default function StatistikView({ user }) {
             aria-label="Periode sebelumnya"
             className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full bg-white"
           >
-            <span className="material-symbols-outlined text-[16px] text-slate-600">chevron_left</span>
+            <span className="material-symbols-outlined icon-sm text-slate-600">chevron_left</span>
           </button>
           <span className="min-w-[68px] text-center text-xs font-bold leading-tight text-slate-800">{labelPeriode}</span>
           <button
@@ -409,7 +409,7 @@ export default function StatistikView({ user }) {
             aria-label="Periode berikutnya"
             className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full bg-white"
           >
-            <span className="material-symbols-outlined text-[16px] text-slate-600">chevron_right</span>
+            <span className="material-symbols-outlined icon-sm text-slate-600">chevron_right</span>
           </button>
         </div>
       </header>
@@ -504,7 +504,7 @@ export default function StatistikView({ user }) {
               <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">Memuat...</div>
             ) : ringkas.in_ + ringkas.out === 0 ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-slate-400">
-                <span className="material-symbols-outlined text-[32px] text-slate-300">query_stats</span>
+                <span className="material-symbols-outlined icon-2xl text-slate-300">query_stats</span>
                 <p className="text-sm text-slate-500">Belum ada data transaksi untuk periode ini.</p>
               </div>
             ) : null}
@@ -543,7 +543,7 @@ export default function StatistikView({ user }) {
           className="clay clay-card clay-key-primary cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5"
           title="Ketuk/klik dua kali untuk memuat rekomendasi AI"
         >
-          <div className="flex items-center gap-3 px-5 py-4" style={{ background: 'linear-gradient(135deg,#2D6A4F 0%,#1B4332 100%)' }}>
+          <div className="flex items-center gap-3 px-5 py-4" style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)' }}>
             <div
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
               style={{ background: 'rgba(255,255,255,0.15)' }}
@@ -628,7 +628,7 @@ function SummaryCard({ icon, label, value, pct, cls, banding }) {
         {simbolUang()} {formatNominal(value || 0)}
       </p>
       <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-85">
-        <span className="material-symbols-outlined text-[12px]">{iconTrend}</span>
+        <span className="material-symbols-outlined icon-2xs">{iconTrend}</span>
         {pct === null ? 'Belum ada data sebelumnya' : `${pct === 0 ? '0%' : `${positif ? '+' : ''}${pct}%`} ${banding}`}
       </p>
     </div>

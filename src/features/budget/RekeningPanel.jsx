@@ -142,7 +142,7 @@ export default function RekeningPanel({ uid }) {
           <p className="mb-1 text-xs opacity-90 sm:text-sm">Total Semua Saldo</p>
           <p className="font-mono mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">{formatRupiah(total)}</p>
           <div className="flex items-center gap-1.5 text-[11px] opacity-80">
-            <span className="material-symbols-outlined text-[14px]">schedule</span>
+            <span className="material-symbols-outlined icon-xs">schedule</span>
             <span>Terakhir diperbarui: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'numeric', year: 'numeric' })} {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function RekeningPanel({ uid }) {
             aria-label="Halaman sebelumnya"
             className="clay-pagination-arrow flex h-8 w-9 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition-all active:scale-95"
           >
-            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+            <span className="material-symbols-outlined icon-md">chevron_left</span>
           </button>
           <span className="min-w-[84px] text-center text-[11px] font-semibold text-slate-600">Halaman {halaman}/{totalCards}</span>
           <button
@@ -177,7 +177,7 @@ export default function RekeningPanel({ uid }) {
             aria-label="Halaman berikutnya"
             className="clay-pagination-arrow flex h-8 w-9 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition-all active:scale-95"
           >
-            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+            <span className="material-symbols-outlined icon-md">chevron_right</span>
           </button>
         </div>
       )}
@@ -252,7 +252,7 @@ export default function RekeningPanel({ uid }) {
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center shrink-0 shadow-none">
-                      <span className="material-symbols-outlined text-blue-700 text-[14px]">account_balance</span>
+                      <span className="material-symbols-outlined text-blue-700 icon-xs">account_balance</span>
                     </div>
                     <span className="font-bold text-base text-slate-800 truncate">{a.nama}</span>
                   </div>
@@ -268,7 +268,7 @@ export default function RekeningPanel({ uid }) {
                     aria-label="Edit rekening"
                     className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors shrink-0"
                   >
-                    <span className="material-symbols-outlined text-[15px]">edit</span>
+                    <span className="material-symbols-outlined icon-xs">edit</span>
                   </button>
                   <button
                     type="button"
@@ -277,7 +277,7 @@ export default function RekeningPanel({ uid }) {
                     aria-label="Hapus rekening"
                     className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
                   >
-                    <span className="material-symbols-outlined text-[15px]">delete</span>
+                    <span className="material-symbols-outlined icon-xs">delete</span>
                   </button>
                 </div>
 
@@ -296,7 +296,7 @@ export default function RekeningPanel({ uid }) {
                     <>
                       <p className={`text-xs ${log.warna} font-mono truncate`}>{log.teks}</p>
                       <p className="text-[10px] text-blue-700/70 mt-1 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">touch_app</span>
+                        <span className="material-symbols-outlined icon-2xs">touch_app</span>
                         Geser kartu utk ganti rekening
                       </p>
                     </>
@@ -324,7 +324,7 @@ export default function RekeningPanel({ uid }) {
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-blue-700 text-[16px]">account_balance</span>
+                  <span className="material-symbols-outlined text-blue-700 icon-sm">account_balance</span>
                 </div>
                 <p className="font-bold text-base text-slate-800 truncate flex-1">{a.nama}</p>
                 {a.tipe && (
@@ -337,14 +337,14 @@ export default function RekeningPanel({ uid }) {
                   onClick={() => setModal({ open: true, edit: a })}
                   className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                 >
-                  <span className="material-symbols-outlined text-[15px]">edit</span>
+                  <span className="material-symbols-outlined icon-xs">edit</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setHapusTarget(a)}
                   className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500"
                 >
-                  <span className="material-symbols-outlined text-[15px]">delete</span>
+                  <span className="material-symbols-outlined icon-xs">delete</span>
                 </button>
               </div>
               <div className="mb-2">
