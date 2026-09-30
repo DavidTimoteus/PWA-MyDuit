@@ -188,7 +188,8 @@ export default function UtangView({ user }) {
     window.dispatchEvent(new CustomEvent('myduit:utang-update', { detail: ringkasan }))
 
     // Perkiraan Bebas Utang (formula GAS): totalSisa / totalCicilanPerBulan
-    let bulanEstimasi = null, perkiraan = '—'
+    let bulanEstimasi
+    let perkiraan
     if (ringkasan.aktifCount === 0) {
       perkiraan = 'Belum ada utang/cicilan aktif.'
     } else if (ringkasan.totalCicilanPerBulan > 0) {

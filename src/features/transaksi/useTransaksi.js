@@ -46,6 +46,10 @@ export function useTransaksi(uid, { jenis, range }) {
       },
     )
     return () => unsub()
+    // Sengaja bergantung pada range.start/range.end (string), BUKAN objek
+    // `range`: objek baru dibuat setiap render pemanggil, jadi memasukkannya
+    // akan membuka ulang langganan Firestore tanpa henti. ESLint tidak
+    // menandai ini karena keduanya primitif yang stabil.
   }, [uid, jenis, range?.start, range?.end])
 
   async function muatLagi() {

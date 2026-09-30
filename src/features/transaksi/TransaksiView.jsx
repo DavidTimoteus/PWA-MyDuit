@@ -60,7 +60,9 @@ export default function TransaksiView({ user }) {
   const tampil = useMemo(() => {
     const kw = keyword.trim().toLowerCase()
     if (!kw) return docsEnriched
-    return docs.filter((t) =>
+    // docsEnriched dipakai (bukan docs) supaya pencarian ikut mencocokkan nama
+    // kategori/akun hasil enrich, bukan hanya kolom mentah dokumen.
+    return docsEnriched.filter((t) =>
       [t.kategoriNama, t.catatan, t.akunNama, String(t.jumlah)].some((s) =>
         String(s ?? '').toLowerCase().includes(kw),
       ),
@@ -91,7 +93,6 @@ export default function TransaksiView({ user }) {
     }
     window.addEventListener('myduit:aksi-cepat', onAksi)
     return () => window.removeEventListener('myduit:aksi-cepat', onAksi)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const totalPages = Math.max(1, Math.ceil(tampil.length / PER_HALAMAN))

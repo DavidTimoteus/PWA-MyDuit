@@ -204,9 +204,13 @@ export default function RekeningPanel({ uid }) {
               if (delta < -totalCards / 2) delta += totalCards
             }
 
-            let transform = ''
-            let opacity = 0
-            let zIndex = 1
+            // Semua cabang di bawah menetapkan transform/opacity/zIndex, jadi
+            // nilai awalnya tidak pernah terbaca — cukup deklarasikan tanpa
+            // inisialisasi. pointerEvents TIDAK selalu ditetapkan (cabang
+            // delta<0 memakai default), jadi ia tetap butuh nilai awal.
+            let transform
+            let opacity
+            let zIndex
             let pointerEvents = 'none'
 
             if (delta < 0) {
