@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import AuthScreen from './components/AuthScreen.jsx'
 import Shell from './components/Shell.jsx'
 import Splash from './components/Splash.jsx'
+import ToastHost from './components/ToastHost.jsx'
 import { useAuth } from './features/auth/useAuth.js'
 import { isFirebaseConfigured } from './lib/firebase.js'
 import { migrasiNormalisasi } from './lib/db.js'
@@ -49,6 +50,10 @@ export default function App() {
   return (
     <>
       <Splash ready={splashReady} />
+      {/* Dipasang di root, bukan di Shell: toast juga harus hidup saat splash,
+          halaman login, dan layar setup — justru di situ error konfigurasi dan
+          kegagalan login paling mungkin terjadi. */}
+      <ToastHost />
       {splashReady && (
         !fbReady ? (
           <LayarSetup error="Salin .env.example menjadi .env.local lalu isi nilai Firebase, kemudian jalankan ulang dev server." />

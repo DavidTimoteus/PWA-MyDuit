@@ -363,32 +363,25 @@ export default function Shell({ user }) {
   }, [])
 
   async function keluar() {
-    const { auth, db } = getFirebase()
+    const { auth } = getFirebase()
     const uid = auth.currentUser?.uid
     await signOut(auth)
 
-    // Bersihkan cache lokal. Firestore persistence menyimpan SELURUH dokumen
-    // user di IndexedDB supaya app bisa dibuka offline — artinya setelah logout
-    // data keuangan masih utuh di perangkat. Untuk app pribadi di HP sendiri itu
-    // memang diinginkan (user mau data tetap ada saat login lagi), jadi cache
-    // TIDAK dihapus. Yang dihapus hanya marker per-user, supaya user berikutnya
-    // di perangkat ini tidak mewarisi state lama.
+    // Bersihkan penanda migrasi milik user yang keluar saja.
+    //
+    // Cache Firestore di IndexedDB SENGAJA tidak dihapus: itu yang membuat app
+    // bisa dibuka offline, dan di perangkat sendiri data memang seharusnya
+    // tetap ada saat login lagi. Yang dibersihkan hanya penanda per-user supaya
+    // user berikutnya di perangkat ini tidak mewarisi state lama.
+    //
+    // CATATAN: jangan memanggil db.terminate() di sini. getFirebase() meng-cache
+    // instance db di variabel modul, jadi terminate() membuat referensi itu mati
+    // permanen — login berikutnya di sesi yang sama tidak akan bisa menulis
+    // sama sekali sampai halaman di-reload.
     try {
-      if (uid) {
-        for (const k of Object.keys(localStorage)) {
-          if (k === 'myduit:negara' || k.startsWith('myduit-migrasi-norm-')) {
-            // 'myduit:negara' sengaja dipertahankan: preferensi tampilan bukan
-            // data rahasia, dan memaksa user mengatur ulang tiap logout
-            //-justru lebih mengganggu.
-            if (k !== 'myduit:negara') localStorage.removeItem(k)
-          }
-        }
-      }
-      // Beri Firestore kesempatan flush writeBatch yang masih in-flight supaya
-      // tidak hilang hanya karena user menekan Keluar.
-      if (db && typeof db.terminate === 'function') db.terminate()
+      if (uid) localStorage.removeItem(`myduit-migrasi-norm-${uid}`)
     } catch (e) {
-      console.warn('bersihkan cache lokal gagal:', e?.message)
+      console.warn('bersihkan penanda lokal gagal:', e?.message)
     }
   }
 
@@ -689,10 +682,6 @@ export default function Shell({ user }) {
 
       {/* Menu pengguna untuk mobile: satu-satunya jalan ke Keluar / Backup /
           ganti lokasi dari tab mana pun (sidebar desktop tersembunyi di mobile). */}
-      {/* Notifikasi global. Wajib ada: enam alur simpan mengirim event
-          myduit:toast saat gagal, dan tanpa host ini kegagalan lewat senyap. */}
-      <ToastHost />
-
       <UserMenuSheet
         open={userMenuOpen}
         onClose={() => setUserMenuOpen(false)}
