@@ -274,7 +274,12 @@ export function ClayDateInput({ id, value, onChange, range = false, accent = fal
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range])
 
-  // Sinkronkan perubahan value dari luar (prefill edit / reset form) ke kalender
+  // Sinkronkan perubahan value dari luar (prefill edit / reset form) ke kalender.
+  // Nilai dependensi diekstrak ke variabel sederhana: ekspresi ternary di dalam
+  // array deps tidak bisa diverifikasi statis oleh ESLint dan mudah salah.
+  const vStart = range ? value?.start : undefined
+  const vEnd = range ? value?.end : undefined
+  const vScalar = range ? undefined : value
   useEffect(() => {
     const fp = fpRef.current
     if (!fp) return
@@ -284,7 +289,10 @@ export function ClayDateInput({ id, value, onChange, range = false, accent = fal
       else if (!v.start && !v.end) fp.clear()
     } else if (value) fp.setDate(value, false)
     else fp.clear()
-  }, [range, range ? value?.start : value, range ? value?.end : ''])
+    // `value` sengaja dibaca di dalam efek; identitasnya sudah diwakili oleh
+    // vStart/vEnd/vScalar di bawah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range, vStart, vEnd, vScalar])
 
   return (
     <div

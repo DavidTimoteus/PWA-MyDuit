@@ -26,12 +26,17 @@ export default function StatistikAsidePanel() {
     return () => window.removeEventListener('myduit:statistik-update', onUpdate)
   }, [])
 
-  // Placeholder saat pertama kali dimuat
-  const ringkas = data || {
-    in: 0, out: 0, saldo: 0, rataHarian: 0, akunList: 0,
-    jmlTransaksi: 0, kategoriAktif: 0,
-    pengeluaranTerbesar: null,
-  }
+  // Placeholder saat pertama kali dimuat. Dibungkus useMemo supaya identitasnya
+  // stabil antar-render — kalau tidak, useMemo di bawah dianggap selalu berubah.
+  const ringkas = useMemo(
+    () =>
+      data || {
+        in: 0, out: 0, saldo: 0, rataHarian: 0, akunList: 0,
+        jmlTransaksi: 0, kategoriAktif: 0,
+        pengeluaranTerbesar: null,
+      },
+    [data],
+  )
   const { pengeluaranTerbesar } = ringkas
 
   const rasioTabungan = useMemo(() => {

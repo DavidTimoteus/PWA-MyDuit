@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatRibuanInput, formatRupiah, parseNominal, simbolUang } from '../../lib/format.js'
+import { formatRibuanInput, parseNominal, simbolUang } from '../../lib/format.js'
 import { tambahAkun, updateAkun } from '../../lib/db.js'
 import { ClaySelect } from '../../components/clay-ui.jsx'
 import { pesanErrorSimpan } from '../../lib/pesanError.js'

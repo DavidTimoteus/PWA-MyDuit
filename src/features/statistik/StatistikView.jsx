@@ -502,6 +502,12 @@ export default function StatistikView({ user }) {
             <canvas ref={chartRef}></canvas>
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">Memuat...</div>
+            ) : error ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center">
+                <span className="material-symbols-outlined icon-2xl text-red-400">error</span>
+                <p className="text-sm font-semibold text-red-500">Gagal memuat data statistik.</p>
+                <p className="max-w-md text-[11px] leading-snug text-slate-500">{error}</p>
+              </div>
             ) : ringkas.in_ + ringkas.out === 0 ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-slate-400">
                 <span className="material-symbols-outlined icon-2xl text-slate-300">query_stats</span>

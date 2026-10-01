@@ -7,8 +7,6 @@ import FormRekeningModal from './FormRekeningModal.jsx'
 
 // Sub-tab Rekening: hero Total Saldo + pagination card-stack + daftar rekening.
 // Paritas dengan GAS ViewBudget.html #budgetRekeningPanel + #rekeningPaginationControls.
-const PER_HALAMAN_MOBILE = 1   // mobile: 1 card/halaman (geser vertikal)
-const PER_HALAMAN_DESKTOP = 2 // desktop: 2 cards/halaman (pager)
 
 function rangeBulanIni() {
   const d = new Date()
@@ -16,12 +14,6 @@ function rangeBulanIni() {
   const akhir = new Date(d.getFullYear(), d.getMonth() + 1, 0)
   const f = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`
   return { start: f(awal), end: f(akhir) }
-}
-
-function inisialTipe(tipe) {
-  if (!tipe) return '?'
-  const parts = tipe.split(/[\s/]+/).filter(Boolean)
-  return parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : tipe.substring(0, 2).toUpperCase()
 }
 
 // dd/MM/yyyy HH:mm (persis GAS). Firestore Timestamp punya .toDate(); serverTimestamp offline = null → skip.
@@ -71,17 +63,6 @@ export default function RekeningPanel({ uid }) {
   }, [])
   const [hapusTarget, setHapusTarget] = useState(null)
   const [halaman, setHalaman] = useState(1)
-  const [jumlahPerHalaman, setJumlahPerHalaman] = useState(PER_HALAMAN_MOBILE)
-
-  // Responsive: 1 card/halaman di mobile, 2 di desktop
-  useEffect(() => {
-    function handleResize() {
-      setJumlahPerHalaman(window.innerWidth >= 768 ? PER_HALAMAN_DESKTOP : PER_HALAMAN_MOBILE)
-    }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   // Listen event global
   useEffect(() => {
@@ -94,7 +75,6 @@ export default function RekeningPanel({ uid }) {
 
   const total = akunList.reduce((s, a) => s + (Number(a.saldo) || 0), 0)
   const totalCards = akunList.length
-  const totalHalaman = Math.max(1, Math.ceil(akunList.length / jumlahPerHalaman))
   const activeIdx = halaman - 1
 
   // Gesture Touch / Swipe untuk card-stack mobile (persis GAS handleRekeningTouch)

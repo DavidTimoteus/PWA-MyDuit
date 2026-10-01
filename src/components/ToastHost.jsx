@@ -74,10 +74,14 @@ export default function ToastHost() {
   useEffect(() => {
     const onToast = (e) => buka(e.detail)
     window.addEventListener('myduit:toast', onToast)
+    // Salin ref ke variabel lokal: cleanup boleh jalan setelah render lain
+    // mengganti `timers.current`, dan membaca `.current` langsung di cleanup
+    // berarti membersihkan map yang salah (timer bocor).
+    const peta = timers.current
     return () => {
       window.removeEventListener('myduit:toast', onToast)
-      for (const t of timers.current.values()) clearTimeout(t)
-      timers.current.clear()
+      for (const t of peta.values()) clearTimeout(t)
+      peta.clear()
     }
   }, [buka])
 

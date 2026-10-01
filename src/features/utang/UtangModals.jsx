@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { formatRibuanInput, formatRupiah, isoHariIni, parseNominal, simbolUang } from '../../lib/format.js'
 import { bayarUtang, simpanUtang } from '../../lib/db.js'
 import { ClayDateInput, ClaySelect } from '../../components/clay-ui.jsx'

@@ -157,6 +157,19 @@ async function konfirmHapus() {
 
   function bukaForm(mode, doc = null) {
     setOpenDeleteId(null)
+    // Pindah saldo BUKAN pemasukan/pengeluaran: field-nya beda (dariId/keId,
+    // tanpa kategori) dan `updateTransaksi` tidak mengenal jenis ini — kalau
+    // dibiarkan, mengeditnya akan menulis akunId yang salah dan merusak saldo.
+    // Jalur edit/salin hanya untuk pemasukan & pengeluaran; transfer harus
+    // dihapus lalu dibuat ulang.
+    if (doc && doc.jenis === 'pindah saldo') {
+      window.dispatchEvent(
+        new CustomEvent('myduit:toast', {
+          detail: { type: 'info', msg: 'Pindah saldo tidak bisa diedit. Hapus lalu buat ulang bila perlu diubah.' },
+        }),
+      )
+      return
+    }
     setModal({ open: true, mode, doc })
   }
 

@@ -21,9 +21,6 @@ const UtangAsidePanel     = lazy(() => import('../features/utang/UtangAsidePanel
 const BackupModal         = lazy(() => import('../features/backup/BackupModal.jsx'))
 const ExportPdfModal      = lazy(() => import('../features/laporan/ExportPdfModal.jsx'))
 
-// Kelas font khusus untuk menyesuaikan dengan GAS - gunakan Manrope untuk semua teks
-const FONT_CLASS = 'font-manrope'
-
 const TABS = [
   { id: 'transaksi', label: 'Transaksi', icon: 'home', fase: 'Fase 2' },
   { id: 'statistik', label: 'Statistik', icon: 'monitoring', fase: 'Fase 4' },
@@ -51,14 +48,6 @@ function navActiveClass(id) {
   if (id === 'budget') return 'clay-key-blue bg-gradient-to-br from-blue-500 to-blue-700 text-white'
   if (id === 'utang') return 'clay-key-danger bg-gradient-to-br from-red-500 to-red-700 text-white'
   return 'clay-key-primary bg-gradient-to-br from-primary to-emerald-700 text-white'
-}
-
-function greeting() {
-  const h = new Date().getHours()
-  if (h < 11) return 'Selamat pagi'
-  if (h < 15) return 'Selamat siang'
-  if (h < 19) return 'Selamat sore'
-  return 'Selamat malam'
 }
 
 function Avatar({ user, size = 'h-9 w-9 text-sm' }) {

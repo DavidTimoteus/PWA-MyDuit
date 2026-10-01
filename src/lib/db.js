@@ -144,6 +144,12 @@ export async function simpanTransaksi(uid, data) {
 }
 
 export async function updateTransaksi(uid, lama, data) {
+  // Guard: pindah saldo punya field & efek saldo berbeda (dariId/keId, bukan
+  // akunId+kategori). Melewatinya ke sini akan menulis akunId salah dan
+  // merusak saldo — tolak keras, jangan pernah "koreksi diam-diam".
+  if (lama?.jenis === 'pindah saldo' || data?.jenis === 'pindah saldo') {
+    throw new Error('Pindah saldo tidak bisa diedit lewat form transaksi. Hapus lalu buat ulang.')
+  }
   const baru = {
     jumlah: Number(data.jumlah),
     jenis: data.jenis,
@@ -155,18 +161,34 @@ export async function updateTransaksi(uid, lama, data) {
   const { db } = getFirebase()
   const batch = writeBatch(db)
   batch.update(transaksiRef(uid, lama.id), baru)
-  if (lama.akunId) {
-    batch.update(akunRef(uid, lama.akunId), {
-      saldo: increment(-deltaSaldo(lama)),
+
+  const akunLama = lama.akunId
+  const akunBaru = baru.akunId
+  if (akunLama && akunLama === akunBaru) {
+    // Rekening TIDAK berpindah: cukup SATU delta bersih (baru - lama).
+    // Menulis dua kali ke dokumen akun yang sama dalam satu batch membuat
+    // `mutasiTerakhir` saling menimpa dan hasil saldo bergantung urutan
+    // penerapan — digabung agar deterministik.
+    const delta = deltaSaldo(baru) - deltaSaldo(lama)
+    batch.update(akunRef(uid, akunBaru), {
+      saldo: increment(delta),
       updatedAt: serverTimestamp(),
-      mutasiTerakhir: { delta: -deltaSaldo(lama), keterangan: 'Koreksi edit transaksi', at: serverTimestamp() },
+      mutasiTerakhir: { delta, keterangan: 'Koreksi edit transaksi', at: serverTimestamp() },
+    })
+  } else {
+    if (akunLama) {
+      batch.update(akunRef(uid, akunLama), {
+        saldo: increment(-deltaSaldo(lama)),
+        updatedAt: serverTimestamp(),
+        mutasiTerakhir: { delta: -deltaSaldo(lama), keterangan: 'Koreksi edit transaksi', at: serverTimestamp() },
+      })
+    }
+    batch.update(akunRef(uid, akunBaru), {
+      saldo: increment(deltaSaldo(baru)),
+      updatedAt: serverTimestamp(),
+      mutasiTerakhir: { delta: deltaSaldo(baru), keterangan: `Transaksi ${data.kategoriNama ?? ''}`.trim(), at: serverTimestamp() },
     })
   }
-  batch.update(akunRef(uid, baru.akunId), {
-    saldo: increment(deltaSaldo(baru)),
-    updatedAt: serverTimestamp(),
-    mutasiTerakhir: { delta: deltaSaldo(baru), keterangan: `Transaksi ${data.kategoriNama ?? ''}`.trim(), at: serverTimestamp() },
-  })
   await batch.commit()
 }
 
@@ -377,7 +399,7 @@ export function budgetRef(uid, id) {
   return doc(db, 'users', uid, 'budget', id)
 }
 
-export async function simpanBudget(uid, { id, kategoriId, kategoriNama, limitNominal, bulan, tahun }) {
+export async function simpanBudget(uid, { id, kategoriId, limitNominal, bulan, tahun }) {
   const data = {
     kategoriId,
     limitNominal: Number(limitNominal),
@@ -452,12 +474,17 @@ export async function ambilAtauBuatKategori(uid, nama, jenis = 'Pengeluaran') {
 }
 
 // Bayar utang/cicilan: catat pembayaran + transaksi pengeluaran + kurangi sisa + saldo akun.
+// ATOMIK: keempat penulisan dibungkus SATU writeBatch. Versi sebelumnya memakai
+// empat await terpisah — bila salah satu gagal (jaringan/permission), pembayaran
+// bisa tercatat tetapi saldo/sisa utang tidak ikut berubah (data uang rusak senyap).
 export async function bayarUtang(uid, { utang, jumlah, tanggal, akun }) {
   const katId = await ambilAtauBuatKategori(uid, 'Pembayaran', 'Pengeluaran')
   const ket = `Bayar ${utang.tipe === 'Cicilan' ? 'cicilan' : 'utang'} ${utang.namaPihak}`
   const sisaBaru = Math.max(0, (Number(utang.sisa) || 0) - jumlah)
 
-  await addDoc(userCol(uid, 'pembayaranUtang'), {
+  const { db } = getFirebase()
+  const batch = writeBatch(db)
+  batch.set(doc(userCol(uid, 'pembayaranUtang')), {
     utangId: utang.id,
     jumlah,
     tanggal,
@@ -465,7 +492,7 @@ export async function bayarUtang(uid, { utang, jumlah, tanggal, akun }) {
     deleted: false,
     createdAt: serverTimestamp(),
   })
-  await addDoc(userCol(uid, 'transaksi'), {
+  batch.set(doc(userCol(uid, 'transaksi')), {
     jumlah,
     jenis: 'pengeluaran',
     kategoriId: katId,
@@ -475,14 +502,15 @@ export async function bayarUtang(uid, { utang, jumlah, tanggal, akun }) {
     deleted: false,
     createdAt: serverTimestamp(),
   })
-  await updateDoc(utangRef(uid, utang.id), {
+  batch.update(utangRef(uid, utang.id), {
     sisa: sisaBaru,
     status: sisaBaru <= 0 ? 'Lunas' : 'Belum Lunas',
     updatedAt: serverTimestamp(),
   })
-  await updateDoc(akunRef(uid, akun.id), {
+  batch.update(akunRef(uid, akun.id), {
     saldo: increment(-jumlah),
     updatedAt: serverTimestamp(),
     mutasiTerakhir: { delta: -jumlah, keterangan: ket, at: serverTimestamp() },
   })
+  await batch.commit()
 }

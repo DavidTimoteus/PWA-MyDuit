@@ -383,7 +383,7 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
     teks(doc, 'Analisis keuangan otomatis', M + 14, y + 11, { size: 7, warna: [214, 233, 224] })
     teks(doc, 'SEGERA HADIR', W - M - 4, y + 8.5, { size: 6.6, bold: true, warna: [214, 233, 224], align: 'right' })
 
-    blok.forEach(([judul, isi], i) => {
+    blok.forEach(([judul, _isi], i) => {
       const x = M + 4 + i * (wBlok + gap)
       bulatIsi(doc, x, y + 18, wBlok, hBlok, 2.5, C.zebra)
       teks(doc, judul, x + 3, y + 23, { size: 6.4, bold: true, warna: C.hijau })

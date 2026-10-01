@@ -50,6 +50,7 @@ export function useTransaksi(uid, { jenis, range }) {
     // `range`: objek baru dibuat setiap render pemanggil, jadi memasukkannya
     // akan membuka ulang langganan Firestore tanpa henti. ESLint tidak
     // menandai ini karena keduanya primitif yang stabil.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, jenis, range?.start, range?.end])
 
   async function muatLagi() {

@@ -58,7 +58,6 @@ export async function restoreData(uid, json, onProgress) {
     if (!Array.isArray(arr)) continue
     for (const item of arr) {
       if (!item || !item.id) continue
-      // eslint-disable-next-line no-unused-vars
       const { id, ...rest } = item
       ops.push({ koleksi: c, ref: doc(db, 'users', uid, c, String(id)), data: rest })
     }

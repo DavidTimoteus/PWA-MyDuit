@@ -3,6 +3,7 @@
 // build Vite tetapi mematikan aplikasi saat runtime.
 import js from '@eslint/js'
 import globals from 'globals'
+import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 
 export default [
@@ -19,15 +20,22 @@ export default [
         ecmaFeatures: { jsx: true },
       },
     },
-    plugins: { 'react-hooks': reactHooks },
+    plugins: { react, 'react-hooks': reactHooks },
+    settings: { react: { version: 'detect' } },
     rules: {
       ...js.configs.recommended.rules,
       // Yang paling penting: menangkap simbol yang dipakai tapi tidak diimpor
       // (UserMenuSheet, startAfter) sebelum sampai produksi.
       'no-undef': 'error',
+      // TANPA rule ini, komponen yang dipakai sebagai <Nama /> di JSX dilaporkan
+      // "defined but never used" (false positive) — sehingga import yang BENAR-
+      // BENAR mati tidak bisa dibedakan dari noise. Itu persis kondisi yang dulu
+      // meloloskan bug UserMenuSheet. Plugin react membuat no-unused-vars sadar
+      // pemakaian di JSX.
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-uses-react': 'off', // React 19: JSX runtime otomatis, tak perlu import React
       // Variabel tak terpakai: peringatan saja, tidak memblokir.
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      // JSX memakai identifier huruf besar; no-unused-vars perlu tahu itu dipakai.
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
     },
