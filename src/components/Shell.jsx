@@ -30,9 +30,9 @@ const TABS = [
 
 // Tema sidebar mengikuti tab aktif (sama persis GAS: Budget=biru, Utang=merah, lainnya=hijau)
 function sidebarTheme(tab) {
-  if (tab === 'budget') return { panel: 'clay-key-blue', logo: 'from-blue-500 to-blue-700' }
-  if (tab === 'utang') return { panel: 'clay-key-danger', logo: 'from-red-500 to-red-700' }
-  return { panel: 'clay-key-primary', logo: 'from-primary to-emerald-700' }
+  if (tab === 'budget') return { panel: 'clay-key-blue', logo: 'bg-blue-600' }
+  if (tab === 'utang') return { panel: 'clay-key-danger', logo: 'bg-red-600' }
+  return { panel: 'clay-key-primary', logo: 'bg-primary' }
 }
 
 // clay-key saat tombol TIDAK aktif (identitas tiap menu)
@@ -45,9 +45,9 @@ const NAV_BASE_KEY = {
 
 // class saat tombol AKTIF: gradient + shadow mengikuti tema tab
 function navActiveClass(id) {
-  if (id === 'budget') return 'clay-key-blue bg-gradient-to-br from-blue-500 to-blue-700 text-white'
-  if (id === 'utang') return 'clay-key-danger bg-gradient-to-br from-red-500 to-red-700 text-white'
-  return 'clay-key-primary bg-gradient-to-br from-primary to-emerald-700 text-white'
+  if (id === 'budget') return 'clay-key-blue bg-blue-600 text-white'
+  if (id === 'utang') return 'clay-key-danger bg-red-600 text-white'
+  return 'clay-key-primary bg-primary text-white'
 }
 
 function Avatar({ user, size = 'h-9 w-9 text-sm' }) {
@@ -56,7 +56,7 @@ function Avatar({ user, size = 'h-9 w-9 text-sm' }) {
   }
   const inisial = (user.displayName || user.email || '?').charAt(0).toUpperCase()
   return (
-    <div className={`${size} flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-emerald-700 font-extrabold text-white`}>
+    <div className={`${size} flex items-center justify-center rounded-full bg-primary font-extrabold text-white`}>
       {inisial}
     </div>
   )
@@ -289,7 +289,7 @@ function LokasiModal({ open, onClose, aktifCode, otomatis }) {
                 key={code}
                 type="button"
                 onClick={() => pilih(code)}
-                className={`clay-btn ${pilihan ? 'clay-key-primary bg-gradient-to-br from-primary to-emerald-700 text-white' : 'clay-key-neutral bg-white text-slate-700 hover:bg-slate-50'} btn-lg flex w-full items-center gap-3`}
+                className={`clay-btn ${pilihan ? 'clay-key-primary bg-primary text-white' : 'clay-key-neutral bg-white text-slate-700 hover:bg-slate-50'} btn-lg flex w-full items-center gap-3`}
               >
                 <span className="text-base leading-none">{n.bendera}</span>
                 <span className="min-w-0 flex-1 truncate text-left">{n.nama}</span>
@@ -397,7 +397,7 @@ export default function Shell({ user }) {
       <aside className="hidden md:flex md:shrink-0 md:grow-0 md:w-[260px] md:min-w-[260px] md:max-w-[260px] lg:w-[350px] lg:min-w-[350px] lg:max-w-[350px] md:h-full md:p-4 md:pr-2 md:gap-4">
         <div className={`clay ${sidebarTheme(tab).panel} bg-surfaceContainerLowest flex flex-col h-full w-full min-w-0 rounded-[28px] p-4 lg:p-5`}>
           <div className="flex items-center gap-3 px-1 pb-4 pt-1">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${sidebarTheme(tab).logo} text-white shadow-lg shrink-0`}>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${sidebarTheme(tab).logo} text-white shadow-sm shrink-0`}>
               <span className="material-symbols-outlined icon-lg" style={{ fontVariationSettings: '"FILL" 1' }}>savings</span>
             </div>
             <div>
@@ -524,21 +524,17 @@ export default function Shell({ user }) {
                 <span className="material-symbols-outlined icon-md">picture_as_pdf</span>
               </button>
               <InstallButton variant="chip" />
-              {/* Backup & Keluar: disembunyikan di layar sangat sempit karena
-                  sudah ada di UserMenuSheet; tetap tampil di >=360px. */}
+              {/* Menu pengguna (Keluar / Backup / Lokasi). Pindah ke header sejak
+                  tombol avatar dihapus dari bottom nav agar FAB bisa presisi di
+                  tengah (nav kini grid 5 kolom simetris). */}
               <button
-                onClick={() => setBackupOpen(true)}
-                title="Backup Data"
-                className="clay-chip hidden h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-50 active:scale-95 min-[360px]:flex"
+                type="button"
+                onClick={() => setUserMenuOpen(true)}
+                aria-label="Menu pengguna"
+                aria-haspopup="dialog"
+                className="clay-chip flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 active:scale-95"
               >
-                <span className="material-symbols-outlined icon-md">backup</span>
-              </button>
-              <button
-                onClick={keluar}
-                title="Keluar"
-                className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-danger-light text-danger transition-colors hover:bg-red-500 hover:text-white active:scale-95 min-[360px]:flex"
-              >
-                <span className="material-symbols-outlined icon-md">logout</span>
+                <span className="material-symbols-outlined icon-lg">account_circle</span>
               </button>
             </div>
           </header>
@@ -571,24 +567,31 @@ export default function Shell({ user }) {
   </div>
 </main>
 
-      {/* ===== BOTTOM NAV MOBILE — pola GAS: ikon clay tanpa label + FAB notch tengah ===== */}
+      {/* ===== BOTTOM NAV MOBILE — grid simetris: 2 tab | FAB | 2 tab ===== */}
       {fabDial && <div className="fixed inset-0 z-40 md:hidden" onClick={() => setFabDial(false)} />}
-      <nav id="navShell" className="fixed inset-x-0 bottom-0 z-50 h-[80px] md:hidden">
+      <nav id="navShell" className="fixed inset-x-0 bottom-0 z-50 h-[76px] md:hidden">
         <div className="clay-nav absolute inset-0" aria-hidden="true"></div>
-        <div className="relative z-10 flex h-full items-center justify-between gap-1 px-2 pt-2 min-[360px]:gap-2 min-[360px]:px-5">
-          {TABS.slice(0, 2).map((t) => (
-            <NavIkona key={t.id} t={t} active={tab === t.id} onClick={() => setTab(t.id)} />
-          ))}
+        {/* Grid 5 kolom sama lebar mengunci FAB tepat di tengah. Sebelumnya
+            flex justify-between dengan 6 item (4 tab + FAB + tombol user) membuat
+            FAB bergeser ke kiri dan tampak "tidak pas" dengan notch. */}
+        <div className="relative z-10 grid h-full grid-cols-5 items-center px-1">
+          <NavIkona t={TABS[0]} active={tab === TABS[0].id} onClick={() => setTab(TABS[0].id)} />
+          <NavIkona t={TABS[1]} active={tab === TABS[1].id} onClick={() => setTab(TABS[1].id)} />
 
           {/* FAB tengah + speed-dial 3 pilihan (aksi via event bus ke TransaksiView) */}
-          <div className="relative -mt-10 flex w-14 justify-center min-[360px]:w-16">
+          {/* Wrapper WAJIB w-full: ia adalah item grid kolom ke-3 (lebar kolom
+              ±76px). Dengan lebar tetap w-14/w-16, FAB rata-kiri di dalam
+              kolom dan bergeser ±6px dari pusat notch (yang dipatok di 50%
+              nav) — persis keluhan "FAB tidak pas dengan notch". w-full
+              membuat kolom yang memusatkan FAB. */}
+          <div className="relative -mt-10 flex w-full justify-center">
             {tab === 'transaksi' && (
               <div className={`fab-speed-dial ${fabDial ? 'open' : ''}`}>
                 <button
                   type="button"
                   onClick={() => { setFabDial(false); dispatchAksi('pemasukan') }}
                   aria-label="Catat Pemasukan"
-                  className="clay-fab clay-key-primary fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest bg-gradient-to-br from-emerald-500 to-emerald-700 text-white"
+                  className="clay-fab clay-key-primary fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest bg-primary text-white"
                   style={{ '--tx': '-72px', '--ty': '-38px', transitionDelay: '.02s' }}
                 >
                   <span className="material-symbols-outlined icon-sm">trending_up</span>
@@ -597,7 +600,7 @@ export default function Shell({ user }) {
                   type="button"
                   onClick={() => { setFabDial(false); dispatchAksi('pindah-saldo') }}
                   aria-label="Pindah Saldo"
-                  className="clay-fab clay-key-blue fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest bg-gradient-to-br from-blue-500 to-blue-700 text-white"
+                  className="clay-fab clay-key-blue fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest bg-blue-600 text-white"
                   style={{ '--tx': '0px', '--ty': '-86px', transitionDelay: '.07s' }}
                 >
                   <span className="material-symbols-outlined icon-sm">sync_alt</span>
@@ -606,7 +609,7 @@ export default function Shell({ user }) {
                   type="button"
                   onClick={() => { setFabDial(false); dispatchAksi('pengeluaran') }}
                   aria-label="Catat Pengeluaran"
-                  className="clay-fab clay-key-danger fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest bg-gradient-to-br from-red-500 to-red-700 text-white"
+                  className="clay-fab clay-key-danger fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest bg-red-600 text-white"
                   style={{ '--tx': '72px', '--ty': '-38px', transitionDelay: '.12s' }}
                 >
                   <span className="material-symbols-outlined icon-sm">trending_down</span>
@@ -632,10 +635,10 @@ export default function Shell({ user }) {
               }
               className={`clay-fab group relative z-10 flex h-14 w-14 items-center justify-center rounded-full border-4 border-surfaceContainerLowest text-white transition-all duration-200 ${
                 tab === 'budget'
-                  ? 'clay-key-blue bg-gradient-to-br from-blue-600 to-blue-700'
+                  ? 'clay-key-blue bg-blue-600'
                   : tab === 'utang'
-                  ? 'clay-key-danger bg-gradient-to-br from-red-500 to-red-700'
-                  : 'clay-key-primary bg-gradient-to-br from-primary to-emerald-700'
+                  ? 'clay-key-danger bg-red-600'
+                  : 'clay-key-primary bg-primary'
               }`}
             >
               <span
@@ -649,22 +652,8 @@ export default function Shell({ user }) {
             </button>
           </div>
 
-          {TABS.slice(2).map((t) => (
-            <NavIkona key={t.id} t={t} active={tab === t.id} onClick={() => setTab(t.id)} />
-          ))}
-
-          {/* Menu pengguna. Di mobile sidebar desktop tersembunyi, jadi tanpa
-              tombol ini user tidak bisa Keluar / Backup / ganti lokasi dari tab
-              Budget, Utang, atau Statistik. */}
-          <button
-            type="button"
-            onClick={() => setUserMenuOpen(true)}
-            aria-label="Menu pengguna"
-            aria-haspopup="dialog"
-            className="clay-icon-tile clay-key-neutral flex h-10 w-10 shrink-0 items-center justify-center rounded-full min-[360px]:h-11 min-[360px]:w-11"
-          >
-            <span className="material-symbols-outlined icon-lg">account_circle</span>
-          </button>
+          <NavIkona t={TABS[2]} active={tab === TABS[2].id} onClick={() => setTab(TABS[2].id)} />
+          <NavIkona t={TABS[3]} active={tab === TABS[3].id} onClick={() => setTab(TABS[3].id)} />
         </div>
       </nav>
 

@@ -388,7 +388,7 @@ export default function StatistikView({ user }) {
       {/* Header mobile-only (logo + judul + navigator ringkas) — di desktop judul dihilangkan */}
       <header className="flex items-center justify-between pt-4 pb-4 md:hidden">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="clay-icon-tile clay-key-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-emerald-700 text-white">
+          <div className="clay-icon-tile clay-key-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-white">
             <span className="material-symbols-outlined icon-lg" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
           </div>
           <h2 className="font-display whitespace-nowrap text-2xl font-extrabold leading-tight sm:icon-2xl">Statistik</h2>
@@ -468,7 +468,7 @@ export default function StatistikView({ user }) {
             value={ringkas.in_}
             pct={pctIn}
             banding={labelBanding}
-            cls="clay-key-primary bg-gradient-to-br from-emerald-500 to-emerald-700"
+            cls="clay-key-primary bg-primary"
           />
           <SummaryCard
             icon="trending_down"
@@ -476,7 +476,7 @@ export default function StatistikView({ user }) {
             value={ringkas.out}
             pct={pctOut}
             banding={labelBanding}
-            cls="clay-key-danger bg-gradient-to-br from-red-500 to-red-700"
+            cls="clay-key-danger bg-red-600"
           />
           <SummaryCard
             icon="savings"
@@ -484,7 +484,7 @@ export default function StatistikView({ user }) {
             value={ringkas.saldo}
             pct={pctSaldo}
             banding={labelBanding}
-            cls="clay-key-blue bg-gradient-to-br from-blue-500 to-blue-700"
+            cls="clay-key-blue bg-blue-600"
           />
         </div>
 

@@ -59,7 +59,7 @@ export default function BudgetAsidePanel() {
         <div className="mb-3 h-px shrink-0 bg-slate-200/70"></div>
 
         {/* Sisa Budget (gradient biru, hero card dengan progress bar) */}
-        <div className="clay-card clay-key-blue shrink-0 rounded-[22px] bg-gradient-to-br from-blue-500 to-blue-700 p-2.5 text-white">
+        <div className="clay-card clay-key-blue shrink-0 rounded-[22px] bg-blue-600 p-2.5 text-white">
           <p className="text-[11px] font-semibold uppercase tracking-wider opacity-90">Sisa Budget</p>
           <p className="font-mono text-lg font-extrabold mt-0.5">{formatRupiah(ringkas.sisa)}</p>
           <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
@@ -120,14 +120,14 @@ export default function BudgetAsidePanel() {
           <div className="mt-2 grid grid-cols-2 gap-1.5">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('myduit:budget-add-rekening'))}
-              className="clay-btn clay-key-blue btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-xs font-bold text-white"
+              className="clay-btn clay-key-blue btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-blue-600 text-xs font-bold text-white"
             >
               <span className="material-symbols-outlined icon-sm">account_balance</span>
               Rekening
             </button>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('myduit:budget-add-budget'))}
-              className="clay-btn clay-key-blue btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-xs font-bold text-white"
+              className="clay-btn clay-key-blue btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-blue-600 text-xs font-bold text-white"
             >
               <span className="material-symbols-outlined icon-sm">add</span>
               Budget

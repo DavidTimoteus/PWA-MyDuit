@@ -87,7 +87,7 @@ export default function RightPanel({ uid }) {
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="flex min-h-0 flex-1 flex-col gap-2">
             {/* Total Saldo */}
-            <div className="clay clay-card clay-key-primary flex flex-col gap-0.5 rounded-[18px] bg-gradient-to-br from-primary to-emerald-700 p-4 text-white">
+            <div className="clay clay-card clay-key-primary flex flex-col gap-0.5 rounded-[18px] bg-primary p-4 text-white">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined icon-sm opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
                 <p className="text-[10px] font-semibold uppercase tracking-wider opacity-90">Total Saldo</p>
@@ -141,21 +141,21 @@ export default function RightPanel({ uid }) {
             <div className="flex flex-col gap-1.5">
               <button
                 onClick={() => aksi('pemasukan')}
-                className="clay-btn clay-key-primary btn-lg w-full bg-gradient-to-br from-primary to-emerald-700 text-white"
+                className="clay-btn clay-key-primary btn-lg w-full bg-primary text-white"
               >
                 <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
                 Tambah Pemasukan
               </button>
               <button
                 onClick={() => aksi('pengeluaran')}
-                className="clay-btn clay-key-danger btn-lg w-full bg-gradient-to-br from-red-500 to-red-700 text-white"
+                className="clay-btn clay-key-danger btn-lg w-full bg-red-600 text-white"
               >
                 <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>remove_circle</span>
                 Tambah Pengeluaran
               </button>
               <button
                 onClick={() => aksi('pindah-saldo')}
-                className="clay-btn clay-key-blue btn-lg w-full bg-gradient-to-br from-blue-500 to-blue-700 text-white"
+                className="clay-btn clay-key-blue btn-lg w-full bg-blue-600 text-white"
               >
                 <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>swap_horiz</span>
                 Pindah Saldo

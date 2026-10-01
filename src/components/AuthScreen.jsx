@@ -49,7 +49,7 @@ export default function AuthScreen() {
   }
 
   return (
-    <div className="min-h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-primary-dark via-primary to-primary-light">
+    <div className="min-h-full flex flex-col items-center justify-center p-6 bg-primary">
       <div className="clay-card w-full max-w-sm rounded-[32px] p-8 text-center">
         <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl clay-hero text-4xl font-extrabold text-white">
           M

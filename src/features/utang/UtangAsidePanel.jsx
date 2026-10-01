@@ -57,7 +57,7 @@ export default function UtangAsidePanel() {
         <div className="mb-3 h-px shrink-0 bg-slate-200/70"></div>
 
         {/* SIGNATURE: Progres Pelunasan (ring SVG) */}
-        <div className="clay-card clay-key-primary flex shrink-0 items-center gap-3.5 rounded-[18px] bg-gradient-to-br from-emerald-500 to-emerald-700 p-3.5 text-white">
+        <div className="clay-card clay-key-primary flex shrink-0 items-center gap-3.5 rounded-[18px] bg-primary p-3.5 text-white">
           <div className="relative shrink-0" style={{ width: 64, height: 64 }}>
             <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90">
               <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,.25)" strokeWidth="7" />
@@ -145,14 +145,14 @@ export default function UtangAsidePanel() {
           <div className="mt-2 grid grid-cols-2 gap-1.5">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('myduit:utang-add', { detail: { mode: 'utang' } }))}
-              className="clay-btn clay-key-danger btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-xs font-bold text-white"
+              className="clay-btn clay-key-danger btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-red-600 text-xs font-bold text-white"
             >
               <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
               Utang
             </button>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('myduit:utang-add', { detail: { mode: 'cicilan' } }))}
-              className="clay-btn clay-key-danger btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-xs font-bold text-white"
+              className="clay-btn clay-key-danger btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-red-600 text-xs font-bold text-white"
             >
               <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
               Cicilan

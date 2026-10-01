@@ -300,10 +300,9 @@ button:active {
   border-radius: var(--clay-r-card-sm);
   background-color: #ffffff;
   box-shadow:
-    6px 6px 16px rgba(var(--clay-h, var(--clay-h-neutral)), 0.20),
-    -6px -6px 16px rgba(255, 255, 255, 0.75),
-    inset 2px 2px 5px rgba(255, 255, 255, 0.55),
-    inset -3px -3px 7px rgba(var(--clay-h, var(--clay-h-neutral)), 0.10);
+    3px 3px 10px rgba(var(--clay-h, var(--clay-h-neutral)), 0.10),
+    -2px -2px 8px rgba(255, 255, 255, 0.7),
+    inset 0 0 0 1px rgba(var(--clay-h, var(--clay-h-neutral)), 0.06);
 }
 
 /* Kartu lembut (empty state, info) — setengah kekuatan */
@@ -508,15 +507,14 @@ button:active {
 /* ===== NAV BAWAH MOBILE (clay bar mengambang + notch memeluk FAB) ===== */
 .clay-nav {
   background-color: #ffffff;
-  border-radius: 24px 24px 0 0;
+  border-radius: 20px 20px 0 0;
   box-shadow:
-    0 -10px 28px rgba(var(--clay-h, var(--clay-h-neutral)), 0.18),
-    0 -2px 6px rgba(var(--clay-h, var(--clay-h-neutral)), 0.10),
+    0 -8px 24px rgba(var(--clay-h, var(--clay-h-neutral)), 0.14),
+    0 -1px 3px rgba(var(--clay-h, var(--clay-h-neutral)), 0.08),
     inset 1px 1px 3px rgba(255, 255, 255, 0.7);
-  /* Notch: lubang setengah-lingkaran di tengah-atas tempat FAB "duduk" (pola GAS).
-     Mask memotong SELURUH isi elemen — pasang HANYA di div background kosong,
-     bukan di <nav> yang berisi ikon/FAB. */
-  --notch-r: 40px;
+  /* Notch: lubang setengah-lingkaran di tengah-atas tempat FAB "duduk".
+     Radius disesuaikan dengan FAB 56px + celah 8px agar tepinya pas. */
+  --notch-r: 36px;
   -webkit-mask: radial-gradient(circle var(--notch-r) at 50% 0px, transparent 97%, #000 100%);
   mask: radial-gradient(circle var(--notch-r) at 50% 0px, transparent 97%, #000 100%);
 }
@@ -646,37 +644,47 @@ button:active {
   outline-offset: 2px;
 }
 
+/* ===== HERO CARD (pengganti gradient 2-warna jenuh) =====
+   Gradient jenuh dua arah (mis. emerald-500 -> emerald-700) adalah penanda
+   paling khas desain "AI-generated". Diganti satu warna dasar + satu lapis
+   cahaya lembut diagonal yang halus, sehingga terlihat seperti permukaan
+   material, bukan pelangi. */
+.hero-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  color: #fff;
+  isolation: isolate;
+}
+.hero-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0) 42%);
+  pointer-events: none;
+  z-index: -1;
+}
+.hero-primary { background-color: #2d6a4f; }
+.hero-danger  { background-color: #b3261e; }
+.hero-blue    { background-color: #1d4ed8; }
+.hero-amber   { background-color: #b45309; }
+.hero-neutral { background-color: #334155; }
+
 /* ===== 3D DANGER CARD (hero utang) ===== */
 .card-3d-danger {
   position: relative;
-  border-radius: 18px;
-  background: linear-gradient(150deg, #EF5350 0%, #e53e3e 45%, #B71C1C 100%);
+  border-radius: 20px;
+  background-color: #b3261e;
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -5px 10px -2px rgba(80, 5, 5, 0.35),
-    0 14px 24px -10px rgba(150, 20, 20, 0.55),
-    0 4px 10px rgba(100, 15, 15, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 10px 22px -12px rgba(140, 20, 20, 0.5);
   overflow: hidden;
 }
 .card-3d-danger::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 100%);
-  pointer-events: none;
-}
-.card-3d-danger::after {
-  content: '';
-  position: absolute;
-  right: -36px;
-  bottom: -36px;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 72%);
+  inset: 0;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 45%);
   pointer-events: none;
 }
 

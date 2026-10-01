@@ -117,7 +117,7 @@ export default function RekeningPanel({ uid }) {
   return (
     <div>
       {/* Hero Total Semua Saldo — gradient biru persis ViewBudget.html #totalSaldoBudget */}
-      <div className="clay clay-key-blue mt-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 p-5 text-white md:flex md:items-center md:justify-between md:gap-6 min-h-[100px] md:min-h-[170px]">
+      <div className="clay clay-key-blue mt-4 rounded-2xl bg-blue-600 p-5 text-white md:flex md:items-center md:justify-between md:gap-6 min-h-[100px] md:min-h-[170px]">
         <div className="min-w-0">
           <p className="mb-1 text-xs opacity-90 sm:text-sm">Total Semua Saldo</p>
           <p className="font-mono mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">{formatRupiah(total)}</p>

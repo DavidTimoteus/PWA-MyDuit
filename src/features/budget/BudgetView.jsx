@@ -149,7 +149,7 @@ export default function BudgetView({ user }) {
     <section className="mx-auto max-w-3xl px-5 pb-32 md:pb-10">
       {/* Header mobile (md:hidden) — logo savings biru + judul "Rekening" (persis GAS ViewBudget.html) */}
       <header className="flex items-center gap-2 pt-3 pb-4 md:hidden">
-        <div className="clay-icon-tile clay-key-blue flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
           <span className="material-symbols-outlined icon-md" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
         </div>
         <h2 className="font-display font-extrabold text-2xl sm:icon-2xl leading-tight tracking-tight text-blue-950">
@@ -221,7 +221,7 @@ export default function BudgetView({ user }) {
           </div>
 
           {/* Hero Total Budget — gradient biru (persis GAS) */}
-          <div className="clay clay-key-blue mb-4 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 p-5 text-white">
+          <div className="hero-card hero-blue mb-4 shrink-0 p-5">
             <p className="mb-1 text-xs opacity-90 sm:text-sm">Total Budget</p>
             <p className="font-mono mb-2 text-xl font-extrabold sm:text-2xl">{formatRupiah(ringkasan.totalLimit)}</p>
             <div className="flex items-center justify-between text-[11px] opacity-90">
