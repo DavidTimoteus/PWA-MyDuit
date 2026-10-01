@@ -79,16 +79,32 @@ function NavIkona({ t, active, onClick }) {
     activeKey = 'clay-key-danger'
   }
 
+  // Bottom nav sebelumnya HANYA ikon tanpa label → tab aktif sulit dikenali dan
+  // secara aksesibilitas ikon saja tidak cukup jelas. Sekarang: label teks selalu
+  // tampil, ikon terisi (FILL 1) + pil inset saat aktif, dan titik indikator.
   return (
-    <button type="button" onClick={onClick} className="flex w-11 flex-col items-center min-[360px]:w-14" aria-label={t.label}>
-      <span className={`nav-icon-wrap ${active ? `nav-icon-active ${activeKey} ${activeColor}` : 'nav-icon-inactive text-textSecondary'}`}>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={t.label}
+      aria-current={active ? 'page' : undefined}
+      className={`nav-item group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl py-1.5 transition-colors ${
+        active ? activeColor : 'text-textSecondary'
+      }`}
+    >
+      <span className={`nav-icon-wrap ${active ? `nav-icon-active ${activeKey}` : 'nav-icon-inactive'}`}>
         <span
-          className="material-symbols-outlined icon-xl"
-          style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0, 'wght' 400, 'GRAD' 0" }}
+          className="material-symbols-outlined icon-lg"
+          style={{ fontVariationSettings: active ? "'FILL' 1, 'wght' 600" : "'FILL' 0, 'wght' 400, 'GRAD' 0" }}
         >
           {t.icon}
         </span>
       </span>
+      <span className={`max-w-full truncate text-[11px] leading-none ${active ? 'font-extrabold' : 'font-semibold'}`}>
+        {t.label}
+      </span>
+      {/* Titik indikator aktif — sinyal kedua selain warna (ramah buta warna) */}
+      <span className={`h-1 w-1 rounded-full transition-opacity ${active ? 'bg-current opacity-100' : 'opacity-0'}`} />
     </button>
   )
 }

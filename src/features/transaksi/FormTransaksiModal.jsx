@@ -3,11 +3,13 @@ import { formatRibuanInput, isoHariIni, parseNominal, simbolUang } from '../../l
 import { ambilAtauBuatKategori, simpanTransaksi, updateTransaksi } from '../../lib/db.js'
 import { ClayCombobox, ClayDateInput, ClaySelect } from '../../components/clay-ui.jsx'
 import { pesanErrorSimpan } from '../../lib/pesanError.js'
+import { bacaStruk, matikanOcr } from '../../lib/ocrStruk.js'
 
 // Modal Catat / Edit / Salin transaksi — markup persis GAS #viewTambah.
 // JENIS TIDAK dipilih user: di-set sistem dari titik masuk (Aksi Cepat /
 // speed-dial mengirim preset pemasukan|pengeluaran; default pengeluaran).
-// Grup Scan Struk tampil (mode add) — fungsinya (OCR) menyusul.
+// Grup Scan Struk (mode add) menjalankan OCR 100% di browser (lihat ocrStruk.js):
+// pengguna memilih/memfoto struk → total, tanggal, dan keterangan terisi otomatis.
 export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunList, kategoriList, mode, doc: sumber }) {
   const [jenis, setJenis] = useState('pengeluaran')
   const [jumlah, setJumlah] = useState('')
@@ -20,10 +22,33 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
   const fileUploadRef = useRef(null)
   const fileCameraRef = useRef(null)
 
+  // ===== Status OCR Scan Struk =====
+  const [scan, setScan] = useState(null) // { nama, url } pratinjau gambar
+  const [scanProses, setScanProses] = useState(false)
+  const [scanProgress, setScanProgress] = useState(0)
+  const [scanHasil, setScanHasil] = useState(null) // hasil bacaStruk()
+  const [scanPesan, setScanPesan] = useState('') // info/kesalahan OCR
+  const masihTerpasang = useRef(true)
+
+  useEffect(() => {
+    masihTerpasang.current = true
+    return () => {
+      masihTerpasang.current = false
+      // Worker Tesseract memakan memori; lepas saat modal dilepas.
+      matikanOcr()
+    }
+  }, [])
+
   useEffect(() => {
     if (!open) return
     setError('')
     setSaving(false)
+    // Bersihkan sisa hasil scan dari sesi sebelumnya
+    setScan(null)
+    setScanHasil(null)
+    setScanPesan('')
+    setScanProses(false)
+    setScanProgress(0)
     if ((mode === 'edit' || mode === 'salin') && sumber) {
       setJenis(sumber.jenis ?? 'pengeluaran')
       setJumlah(formatRibuanInput(String(sumber.jumlah ?? '')))
@@ -44,6 +69,66 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
   }, [open, mode, sumber?.id])
 
   if (!open) return null
+
+  // ===== Handler OCR Scan Struk =====
+  async function prosesStruk(e) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // izinkan pilih file yang sama dua kali
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setScanPesan('File harus berupa gambar (JPG/PNG/WebP).')
+      return
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      setScanPesan('Gambar terlalu besar (maks 15 MB).')
+      return
+    }
+
+    setScanPesan('')
+    setScanHasil(null)
+    setScanProses(true)
+    setScanProgress(0)
+    setScan({ nama: file.name, url: URL.createObjectURL(file) })
+
+    try {
+      const hasil = await bacaStruk(file, (p) => {
+        if (masihTerpasang.current) setScanProgress(Math.round(p * 100))
+      })
+      if (!masihTerpasang.current) return
+      setScanHasil(hasil)
+
+      // Isi otomatis: hanya timpa field yang belum diisi user (jangan ganggu
+      // ketikan manual), kecuali nominal & tanggal yang memang target scan.
+      if (hasil.total && hasil.total > 0) setJumlah(formatRibuanInput(String(hasil.total)))
+      if (hasil.tanggal) setTanggal(hasil.tanggal)
+      if (hasil.jenis) setJenis(hasil.jenis)
+      if (hasil.merchant) setCatatan((c) => c || hasil.merchant)
+
+      if (!hasil.total || hasil.total <= 0) {
+        setScanPesan('Total tidak terbaca otomatis. Isi nominal manual di bawah — teks struk tetap tersimpan untuk diperiksa.')
+      } else if ((hasil.confidence ?? 0) < 55) {
+        setScanPesan(`Total terdeteksi: ${formatRibuanInput(String(hasil.total))}. Keyakinan OCR rendah — mohon periksa sebelum simpan.`)
+      }
+    } catch (err) {
+      console.warn('[scan-struk] gagal:', err?.message ?? err)
+      if (masihTerpasang.current) setScanPesan('Gagal membaca struk. Coba foto yang lebih terang & tegak, atau isi manual.')
+    } finally {
+      if (masihTerpasang.current) setScanProses(false)
+    }
+  }
+
+  function terapkanUlang() {
+    if (!scanHasil) return
+    if (scanHasil.total) setJumlah(formatRibuanInput(String(scanHasil.total)))
+    if (scanHasil.tanggal) setTanggal(scanHasil.tanggal)
+    if (scanHasil.jenis) setJenis(scanHasil.jenis)
+    if (scanHasil.merchant) setCatatan((c) => c || scanHasil.merchant)
+  }
+
+  function tutupModal() {
+    if (scan?.url) URL.revokeObjectURL(scan.url)
+    onClose()
+  }
 
   async function submit(e) {
     e.preventDefault()
@@ -101,7 +186,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
   const judul = mode === 'edit' ? 'Edit Transaksi' : mode === 'salin' ? 'Salin Transaksi' : 'Catat Transaksi'
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" onClick={tutupModal}>
       <div className="clay-sheet clay-key-primary flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 px-4 pb-2 pt-4">
           <h3 className="flex min-w-0 items-center gap-2 text-sm font-bold text-slate-800 sm:text-base">
@@ -121,7 +206,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
             )}
             <button
               type="button"
-              onClick={onClose}
+              onClick={tutupModal}
               aria-label="Tutup"
               className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
             >
@@ -132,30 +217,97 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
 
         <form onSubmit={submit} className="min-h-0 space-y-2 overflow-y-auto px-4 py-2">
           {/* Scan Struk / Foto — HANYA mode tambah (GAS menyembunyikannya saat edit).
-              Fungsi OCR menyusul; tombol & pemilih file sudah terpasang. */}
+              OCR berjalan 100% di browser: total, tanggal, jenis, dan merchant terisi otomatis. */}
           {mode === 'add' && (
-            <div className="flex flex-col gap-1">
-              <label className="block text-[11px] font-semibold text-textSecondary">Scan Struk / Foto Transaksi</label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileUploadRef.current?.click()}
-                  className="clay-btn-secondary clay-btn btn-sm flex-1 bg-surface text-textSecondary transition-colors hover:bg-gray-100"
-                >
-                  <span className="material-symbols-outlined icon-md">upload_file</span>
-                  Upload Struk
-                </button>
-                <button
-                  type="button"
-                  onClick={() => fileCameraRef.current?.click()}
-                  className="clay-btn-secondary clay-btn btn-sm flex-1 bg-surface text-textSecondary transition-colors hover:bg-gray-100"
-                >
-                  <span className="material-symbols-outlined icon-md">photo_camera</span>
-                  Foto Struk
-                </button>
+            <div className="flex flex-col gap-1.5 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-2.5">
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined icon-sm text-primary">document_scanner</span>
+                <label className="text-[11px] font-semibold text-textSecondary">Scan Struk / Foto Transaksi</label>
+                {scanHasil?.confidence > 0 && (
+                  <span className="ml-auto rounded-full bg-primary-light px-2 py-0.5 text-[10px] font-bold text-primary">
+                    Akurasi {Math.round(scanHasil.confidence)}%
+                  </span>
+                )}
               </div>
-              <input type="file" accept="image/*" ref={fileUploadRef} style={{ display: 'none' }} onChange={() => {}} />
-              <input type="file" accept="image/*" capture="environment" ref={fileCameraRef} style={{ display: 'none' }} onChange={() => {}} />
+
+              {!scanProses && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileUploadRef.current?.click()}
+                    className="clay-btn-secondary clay-btn btn-sm flex-1 bg-surface text-textSecondary transition-colors hover:bg-gray-100"
+                  >
+                    <span className="material-symbols-outlined icon-md">upload_file</span>
+                    Upload Struk
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileCameraRef.current?.click()}
+                    className="clay-btn-secondary clay-btn btn-sm flex-1 bg-surface text-textSecondary transition-colors hover:bg-gray-100"
+                  >
+                    <span className="material-symbols-outlined icon-md">photo_camera</span>
+                    Foto Struk
+                  </button>
+                </div>
+              )}
+
+              {/* Pratinjau + progress OCR */}
+              {scan && (
+                <div className="flex items-center gap-2.5 rounded-lg bg-surface p-2">
+                  <img
+                    src={scan.url}
+                    alt="Pratinjau struk"
+                    className="h-14 w-14 shrink-0 rounded-md object-cover ring-1 ring-slate-200"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-medium text-slate-600">{scan.nama}</p>
+                    {scanProses ? (
+                      <>
+                        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${scanProgress}%` }} />
+                        </div>
+                        <p className="mt-0.5 text-[10px] text-textSecondary">Membaca struk… {scanProgress}%</p>
+                      </>
+                    ) : (
+                      <p className="mt-0.5 text-[10px] text-emerald-600">Selesai diproses</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Hasil baca: chip ringkas + tombol terapkan ulang */}
+              {scanHasil && !scanProses && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {scanHasil.total ? (
+                    <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                      Nominal: {formatRibuanInput(String(scanHasil.total))}
+                    </span>
+                  ) : null}
+                  {scanHasil.tanggal && (
+                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">{scanHasil.tanggal}</span>
+                  )}
+                  {scanHasil.merchant && (
+                    <span className="max-w-[10rem] truncate rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                      {scanHasil.merchant}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={terapkanUlang}
+                    className="ml-auto inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary-light"
+                  >
+                    <span className="material-symbols-outlined icon-xs">refresh</span>
+                    Terapkan ulang
+                  </button>
+                </div>
+              )}
+
+              {scanPesan && (
+                <p className="rounded-md bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700">{scanPesan}</p>
+              )}
+
+              <input type="file" accept="image/*" ref={fileUploadRef} style={{ display: 'none' }} onChange={prosesStruk} />
+              <input type="file" accept="image/*" capture="environment" ref={fileCameraRef} style={{ display: 'none' }} onChange={prosesStruk} />
             </div>
           )}
 

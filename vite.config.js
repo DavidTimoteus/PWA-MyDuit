@@ -124,6 +124,21 @@ export default defineConfig({
               expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
+          // Aset OCR (Tesseract): worker, WASM core, dan model bahasa (ind/eng)
+          // diunduh dari CDN jsdelivr. Di-cache agar pemakaian KEDUA dan
+          // seterusnya berjalan offline — konsisten dengan janji offline-first
+          // app. CacheFirst karena aset ini berversi (URL mengandung versi) dan
+          // tidak akan berubah.
+          {
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/(?:tesseract\.js|tesseract\.js-core|@tesseract\.js-data)\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'myduit-ocr-assets',
+              // Model bahasa ~10-15MB per bahasa + core WASM ~4MB.
+              expiration: { maxEntries: 24, maxAgeSeconds: 60 * 60 * 24 * 180 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },

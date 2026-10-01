@@ -83,7 +83,6 @@ export async function ambilDataLaporan(uid, bulan, tahun) {
     .sort((a, b) => String(a.tanggal).localeCompare(String(b.tanggal)))
   const budgets = budgetSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
   const utangSemua = utangSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
-
   let pemasukan = 0, pengeluaran = 0
   const kategoriIn = {}, kategoriOut = {}
   for (const t of transaksi) {
@@ -105,9 +104,21 @@ export async function ambilDataLaporan(uid, bulan, tahun) {
   const cicilanPerBulan = utangAktif.reduce((s, u) => s + (Number(u.cicilanPerBulan) || 0), 0)
   const perluPerhatian = utangAktif.filter((u) => u.hari !== null && u.hari <= 14).sort((a, b) => a.hari - b.hari)
 
+  // Anggaran vs realisasi: gabungkan limit budget dengan pengeluaran nyata
+  // per kategori. Sebelumnya data ini dihitung lalu dibuang (tidak dirender).
+  const anggaran = budgets
+    .map((b) => {
+      const nama = kategori[b.kategoriId]?.nama || b.kategoriNama || 'Tanpa kategori'
+      const limit = Number(b.limitNominal) || 0
+      const terpakai = kategoriOut[nama] || 0
+      const persen = limit > 0 ? Math.round((terpakai / limit) * 100) : 0
+      return { nama, limit, terpakai, persen, sisa: limit - terpakai, lewat: terpakai > limit }
+    })
+    .sort((a, b) => b.persen - a.persen)
+
   return {
     bulan, tahun, label: `${BULAN[bulan]} ${tahun}`,
-    transaksi, akun, kategori, budgets,
+    transaksi, akun, kategori, budgets, anggaran,
     pemasukan, pengeluaran, saldo: pemasukan - pengeluaran,
     totalSaldo: Object.values(akun).reduce((s, a) => s + (Number(a.saldo) || 0), 0),
     totalBudget: budgets.reduce((s, b) => s + (Number(b.limitNominal) || 0), 0),
@@ -213,7 +224,10 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
     teks(doc, label, x + 4, y + 7, { size: 7, bold: true, warna: C.slate500 })
     teks(doc, nilai, x + 4, y + 15, { size: 12, bold: true, warna })
   })
-  y += hKartu + 9
+  y += hKartu + 4
+  // Baris total kekayaan: data yang sebelumnya dihitung tapi tak pernah ditampilkan.
+  teks(doc, `Total saldo seluruh rekening saat ini: ${rp(data.totalSaldo)}`, M, y + 3, { size: 8, bold: true, warna: C.hijauTua })
+  y += 9
 
   // ================= RINGKASAN UTANG =================
   const u = data.utang
@@ -257,7 +271,7 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
       doc.setFillColor(...(telat ? C.merah : [245, 158, 11]))
       doc.circle(px + 4, py + 5.5, 1.1, 'F')
       teks(doc, String(x.namaPihak ?? '—').slice(0, 22), px + 7, py + 4.8, { size: 8, bold: true })
-      teks(doc, labelJatuhTempo(x.hari), px + 7, py + 8.8, { size: 6.8, warna: C.slate500 })
+      teks(doc, labelJatuhTempo(x.hari), px + 7, py + 8.8, { size: 7.2, warna: C.slate500 })
       teks(doc, rp(x.sisa), px + wItem - 3, py + 6.8, { size: 8, bold: true, align: 'right' })
     })
     y += Math.ceil(daftarUtang.length / 2) * 13 + 4
@@ -266,7 +280,7 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
     doc.setFillColor(16, 185, 129)
     doc.circle(M + 4, y + 5.5, 1.1, 'F')
     teks(doc, 'Semua terkendali', M + 7, y + 4.8, { size: 8, bold: true })
-    teks(doc, 'Tidak ada kewajiban dalam H-14', M + 7, y + 8.8, { size: 6.8, warna: C.slate500 })
+    teks(doc, 'Tidak ada kewajiban dalam H-14', M + 7, y + 8.8, { size: 7.2, warna: C.slate500 })
     y += 15
   }
 
@@ -312,6 +326,47 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
   })
   y += tinggiKat + 10
 
+  // ================= ANGGARAN VS REALISASI =================
+  // Data budget sebelumnya dihitung lalu dibuang. Di sini ditampilkan sebagai
+  // tabel batang: limit vs terpakai per kategori, dengan penanda bila lewat.
+  if (data.anggaran?.length) {
+    const Hhal2 = doc.internal.pageSize.getHeight()
+    const tinggiAng = 12 + data.anggaran.length * 11
+    if (y + tinggiAng > Hhal2 - 24) {
+      doc.addPage()
+      y = M
+    }
+    teks(doc, 'Anggaran vs Realisasi', M, y, { size: 11, bold: true })
+    const lewat = data.anggaran.filter((a) => a.lewat).length
+    teks(doc, lewat ? `${lewat} kategori melebihi anggaran` : `${data.anggaran.length} anggaran terkendali`, W - M, y, {
+      size: 8, warna: lewat ? C.merah : C.slate500, align: 'right',
+    })
+    y += 3
+    doc.setDrawColor(...C.slate200)
+    doc.setLineWidth(0.3)
+    doc.line(M, y, W - M, y)
+    y += 5
+
+    data.anggaran.forEach((a) => {
+      const wNama = 40
+      teks(doc, String(a.nama).slice(0, 22), M, y + 3.5, { size: 8.4, bold: true })
+      // Batang: lebar relatif terhadap 100% (dibatasi 100% agar tidak luber)
+      const xBar = M + wNama
+      const wBar = lebar - wNama - 52
+      const isi = Math.min(1, a.persen / 100)
+      bulatIsi(doc, xBar, y + 1, wBar, 3.2, 1.6, [231, 238, 235])
+      if (isi > 0) bulatIsi(doc, xBar, y + 1, Math.max(1.6, wBar * isi), 3.2, 1.6, a.lewat ? C.merah : a.persen >= 80 ? [245, 158, 11] : C.hijauMuda)
+      teks(doc, `${rp(a.terpakai)} / ${rp(a.limit)}`, xBar + wBar + 3, y + 3.5, {
+        size: 7.6, align: 'left', warna: a.lewat ? C.merahTeks : C.slate500,
+      })
+      teks(doc, a.lewat ? `+${a.persen - 100}%` : `${a.persen}%`, W - M, y + 3.5, {
+        size: 8, bold: true, align: 'right', warna: a.lewat ? C.merah : C.slate900,
+      })
+      y += 11
+    })
+    y += 4
+  }
+
   // ================= TABEL TRANSAKSI =================
   teks(doc, 'Rincian Transaksi', M, y, { size: 11, bold: true })
   teks(doc, `${data.transaksi.length} transaksi - ${data.label}`, W - M, y, { size: 8, warna: C.slate500, align: 'right' })
@@ -328,7 +383,7 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
     startY: y,
     head: [['Tanggal', 'Jenis', 'Kategori', 'Keterangan', 'Akun', 'Nominal']],
     body: body.length ? body : [['—', '—', '—', 'Belum ada transaksi pada periode ini.', '—', '—']],
-    margin: { left: M, right: M, top: M, bottom: 18 },
+    margin: { left: M, right: M, top: M, bottom: 22 },
     theme: 'plain',
     styles: { font: 'helvetica', fontSize: 7.4, cellPadding: { top: 2, right: 2, bottom: 2, left: 2 }, textColor: C.slate900, lineColor: [232, 239, 236], lineWidth: 0.1, overflow: 'linebreak', valign: 'middle' },
     headStyles: { fillColor: C.hijau, textColor: C.putih, fontStyle: 'bold', fontSize: 7, halign: 'left' },
@@ -378,21 +433,21 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
     bulatIsi(doc, M, y, lebar, 14, 3.5, C.hijau)
     doc.setFillColor(255, 255, 255)
     doc.circle(M + 8, y + 7, 3.4, 'F')
-    teks(doc, 'AI', M + 8, y + 8.5, { size: 6.6, bold: true, warna: C.hijau, align: 'center' })
+    teks(doc, 'AI', M + 8, y + 8.5, { size: 7, bold: true, warna: C.hijau, align: 'center' })
     teks(doc, 'Rekomendasi AI', M + 14, y + 6.5, { size: 9.5, bold: true, warna: C.putih })
     teks(doc, 'Analisis keuangan otomatis', M + 14, y + 11, { size: 7, warna: [214, 233, 224] })
-    teks(doc, 'SEGERA HADIR', W - M - 4, y + 8.5, { size: 6.6, bold: true, warna: [214, 233, 224], align: 'right' })
+    teks(doc, 'SEGERA HADIR', W - M - 4, y + 8.5, { size: 7, bold: true, warna: [214, 233, 224], align: 'right' })
 
     blok.forEach(([judul, _isi], i) => {
       const x = M + 4 + i * (wBlok + gap)
       bulatIsi(doc, x, y + 18, wBlok, hBlok, 2.5, C.zebra)
-      teks(doc, judul, x + 3, y + 23, { size: 6.4, bold: true, warna: C.hijau })
+      teks(doc, judul, x + 3, y + 23, { size: 7, bold: true, warna: C.hijau })
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(6.8)
       doc.setTextColor(...C.slate500)
       doc.text(pecahan[i], x + 3, y + 27.5)
     })
-    teks(doc, 'Konten di atas adalah pratinjau visual, bukan rekomendasi AI final.', M + 4, y + tinggiAI - 2.5, { size: 6.4, warna: C.slate400 })
+    teks(doc, 'Konten di atas adalah pratinjau visual, bukan rekomendasi AI final.', M + 4, y + tinggiAI - 2.5, { size: 7, warna: C.slate400 })
   }
 
   // ================= FOOTER TIAP HALAMAN =================
@@ -402,9 +457,9 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
     doc.setPage(i)
     doc.setDrawColor(...C.slate200)
     doc.setLineWidth(0.3)
-    doc.line(M, H - 12, W - M, H - 12)
-    teks(doc, 'MyDuit - Laporan pribadi dan rahasia', M, H - 8, { size: 7, warna: C.slate400 })
-    teks(doc, `Halaman ${i} dari ${total}`, W - M, H - 8, { size: 7, warna: C.slate400, align: 'right' })
+    doc.line(M, H - 15, W - M, H - 15)
+    teks(doc, 'MyDuit - Laporan pribadi dan rahasia', M, H - 10, { size: 7, warna: C.slate400 })
+    teks(doc, `Halaman ${i} dari ${total}`, W - M, H - 10, { size: 7, warna: C.slate400, align: 'right' })
   }
 
   return doc

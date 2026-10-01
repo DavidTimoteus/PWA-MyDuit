@@ -49,37 +49,53 @@ export default function BudgetPanel({
         ) : (
           budgets.map((b) => {
             const kategoriNama = b.kategoriNama ?? kategoriList.find((k) => k.id === b.kategoriId)?.nama ?? '?'
+            const sisa = b.limitNominal - b.terpakai
+            // BUG LAMA: lebar batang memakai b.persen apa adanya. Saat lewat
+            // anggaran (mis. 118%) batang meluber keluar container. Dibatasi 100%.
+            const lebarBar = Math.min(100, Math.max(0, b.persen))
+            const status = b.lewat ? 'lewat' : b.persen >= 80 ? 'waspada' : 'aman'
+            const warnaBar = status === 'lewat' ? 'bg-expense' : status === 'waspada' ? 'bg-amber-400' : 'bg-blue-500'
+            const warnaTeks = status === 'lewat' ? 'text-expense' : status === 'waspada' ? 'text-amber-600' : 'text-blue-700'
+            const ikonStatus = status === 'lewat' ? 'error' : status === 'waspada' ? 'warning' : 'check_circle'
             return (
               <div key={b.id} className="clay-card p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${b.lewat ? 'bg-red-50 text-expense' : 'bg-blue-50 text-blue-700'}`}>
+                <div className="flex items-start gap-3">
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-base font-extrabold ${b.lewat ? 'bg-red-50 text-expense' : 'bg-blue-50 text-blue-700'}`}>
                     {kategoriNama.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-slate-800">{kategoriNama}</p>
-                    <p className="text-[11px] font-semibold text-slate-400">
-                      Terpakai {formatRupiah(b.terpakai)} · Sisa {formatRupiah(b.limitNominal - b.terpakai)}
+                    <p className="truncate text-[15px] font-bold leading-tight text-slate-800">{kategoriNama}</p>
+                    <p className="mt-0.5 flex items-center gap-1 text-[12px] font-semibold text-slate-400">
+                      <span className="material-symbols-outlined icon-xs">flag</span>
+                      Limit {formatRupiah(b.limitNominal)}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <button onClick={() => setModal({ open: true, edit: b })} title="Edit" className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
-                      <span className="material-symbols-outlined icon-xs">edit</span>
+                    <button onClick={() => setModal({ open: true, edit: b })} aria-label={`Edit budget ${kategoriNama}`} title="Edit" className="clay-chip flex h-11 w-11 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
+                      <span className="material-symbols-outlined icon-sm">edit</span>
                     </button>
-                    <button onClick={() => setHapusTarget(b)} title="Hapus" className="clay-chip flex h-8 w-8 items-center justify-center rounded-full !bg-red-50 text-red-500 hover:!bg-red-500 hover:text-white">
-                      <span className="material-symbols-outlined icon-xs">delete</span>
+                    <button onClick={() => setHapusTarget(b)} aria-label={`Hapus budget ${kategoriNama}`} title="Hapus" className="clay-chip flex h-11 w-11 items-center justify-center rounded-full !bg-red-50 text-red-500 hover:!bg-red-500 hover:text-white">
+                      <span className="material-symbols-outlined icon-sm">delete</span>
                     </button>
                   </div>
                 </div>
-                <div className="mt-2.5 flex items-center gap-2">
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className={`h-full rounded-full transition-all ${b.lewat ? 'bg-expense' : b.persen >= 80 ? 'bg-amber-400' : 'bg-blue-500'}`}
-                      style={{ width: `${b.persen}%` }}
-                    />
+
+                <div className="mt-3.5">
+                  <div className="mb-1 flex items-baseline justify-between">
+                    <span className="text-[12px] font-semibold text-slate-500">
+                      Terpakai {formatRupiah(b.terpakai)}
+                    </span>
+                    <span className={`inline-flex items-center gap-0.5 text-[12px] font-extrabold ${warnaTeks}`}>
+                      <span className="material-symbols-outlined icon-xs">{ikonStatus}</span>
+                      {b.lewat ? `+${b.persen - 100}%` : `${b.persen}%`}
+                    </span>
                   </div>
-                  <span className={`text-[11px] font-extrabold ${b.lewat ? 'text-expense' : 'text-slate-500'}`}>
-                    {b.lewat ? 'Melebihi!' : `${b.persen}%`}
-                  </span>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div className={`h-full rounded-full transition-all ${warnaBar}`} style={{ width: `${lebarBar}%` }} />
+                  </div>
+                  <p className={`mt-1 text-[12px] font-semibold ${sisa < 0 ? 'text-expense' : 'text-slate-400'}`}>
+                    {sisa < 0 ? `Lewat ${formatRupiah(-sisa)}` : `Sisa ${formatRupiah(sisa)}`}
+                  </p>
                 </div>
               </div>
             )

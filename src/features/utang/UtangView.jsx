@@ -47,67 +47,80 @@ function infoJatuhTempo(iso) {
   return { teks: `Jatuh tempo ${tanggalPendek(iso)} (${d} hari lagi)`, cls: 'text-slate-400', hari: d }
 }
 
-function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
+export function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
   const lunas = t.status === 'Lunas' || (t.sisa || 0) <= 0
-  const terlambat = !lunas && selisihHari(t.tglJatuhTempo) < 0
   const terbayar = Math.max(0, (t.total || 0) - (t.sisa || 0))
   const persen = t.total > 0 ? Math.round((terbayar / t.total) * 100) : 0
-  const jatuh = infoJatuhTempo(t.tglJatuhTempo)
+  // BUG LAMA: utang yang sudah LUNAS tetap dihitung telat karena selisihHari
+  // dijalankan tanpa memandang status → muncul "Terlambat 61 hari" di kartu lunas.
+  // Jatuh tempo hanya relevan untuk utang yang belum lunas.
+  const hari = lunas ? null : selisihHari(t.tglJatuhTempo)
+  const terlambat = hari !== null && hari < 0
+  const mendekati = hari !== null && hari >= 0 && hari <= 7
+  const jatuh = lunas ? { teks: 'Sudah lunas', cls: 'text-slate-400' } : infoJatuhTempo(t.tglJatuhTempo)
   const clayKey = lunas ? 'clay-key-primary' : terlambat ? 'clay-key-danger' : 'clay-key-neutral'
 
   return (
     <div className={`clay-card ${clayKey} p-4`}>
-      <div className="flex items-center gap-3">
-        <div className={`clay-icon-tile ${clayKey} flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${lunas ? 'bg-emerald-50 text-income' : 'bg-red-50 text-expense'}`}>
-          <span className="material-symbols-outlined icon-lg">{lunas ? 'task_alt' : 'account_balance_wallet'}</span>
+      <div className="flex items-start gap-3">
+        <div className={`clay-icon-tile ${clayKey} flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${lunas ? 'bg-emerald-50 text-income' : terlambat ? 'bg-red-50 text-expense' : 'bg-slate-50 text-slate-500'}`}>
+          <span className="material-symbols-outlined icon-lg">{lunas ? 'task_alt' : terlambat ? 'schedule' : mendekati ? 'notification_important' : 'account_balance_wallet'}</span>
         </div>
+
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <p className="truncate text-sm font-bold text-slate-800">{t.namaPihak}</p>
-            <span className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${t.tipe === 'Cicilan' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-600'}`}>
+          <p className="truncate text-[15px] font-bold leading-tight text-slate-800">{t.namaPihak}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${t.tipe === 'Cicilan' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}`}>
               {t.tipe}
             </span>
-            <span className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${lunas ? 'bg-emerald-50 text-income' : terlambat ? 'bg-red-500 text-white' : 'bg-red-50 text-expense'}`}>
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${lunas ? 'bg-emerald-50 text-income' : terlambat ? 'bg-red-500 text-white' : 'bg-red-50 text-expense'}`}>
               {lunas ? 'Lunas' : terlambat ? 'Terlambat' : 'Aktif'}
             </span>
           </div>
-          <p className={`truncate text-[11px] ${jatuh.cls}`}>{jatuh.teks}</p>
+          <p className={`mt-1 truncate text-[12px] ${jatuh.cls}`}>
+            {terlambat && <span className="material-symbols-outlined icon-xs mr-0.5 align-middle">error</span>}
+            {jatuh.teks}
+          </p>
         </div>
+
         <div className="flex shrink-0 items-center gap-1">
-          <button onClick={onEdit} title="Edit" className="clay-chip flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
-            <span className="material-symbols-outlined icon-xs">edit</span>
+          <button onClick={onEdit} aria-label="Edit utang" title="Edit" className="clay-chip flex h-11 w-11 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200">
+            <span className="material-symbols-outlined icon-sm">edit</span>
           </button>
-          <button onClick={onHapus} title="Hapus" className="clay-chip flex h-8 w-8 items-center justify-center rounded-full !bg-red-50 text-red-500 hover:!bg-red-500 hover:text-white">
-            <span className="material-symbols-outlined icon-xs">delete</span>
+          <button onClick={onHapus} aria-label="Hapus utang" title="Hapus" className="clay-chip flex h-11 w-11 items-center justify-center rounded-full !bg-red-50 text-red-500 hover:!bg-red-500 hover:text-white">
+            <span className="material-symbols-outlined icon-sm">delete</span>
           </button>
         </div>
       </div>
 
-      {/* Progress terbayar */}
-      <div className="mt-3 flex items-center gap-2">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
-          <div className={`h-full rounded-full bg-gradient-to-r ${lunas ? 'from-emerald-400 to-emerald-600' : 'from-red-400 to-red-600'} transition-all`} style={{ width: `${persen}%` }} />
+      {/* Progres terbayar: angka di atas batang supaya mudah dibaca sekilas */}
+      <div className="mt-3.5">
+        <div className="mb-1 flex items-baseline justify-between">
+          <span className="text-[11px] font-semibold text-slate-400">Terbayar {formatRupiah(terbayar)}</span>
+          <span className={`text-[12px] font-extrabold ${lunas ? 'text-income' : 'text-slate-600'}`}>{persen}%</span>
         </div>
-        <span className="text-[11px] font-extrabold text-slate-500">{persen}%</span>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+          <div className={`h-full rounded-full bg-gradient-to-r transition-all ${lunas ? 'from-emerald-400 to-emerald-600' : terlambat ? 'from-red-400 to-red-600' : 'from-blue-400 to-blue-600'}`} style={{ width: `${Math.min(100, persen)}%` }} />
+        </div>
       </div>
 
-      <div className="mt-3 flex items-end justify-between gap-2">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Sisa</p>
-          <p className={`text-lg font-extrabold tracking-tight ${lunas ? 'text-income' : 'text-slate-800'}`}>{formatRupiah(t.sisa || 0)}</p>
-          <p className="text-[10px] font-semibold text-slate-400">dari {formatRupiah(t.total || 0)}</p>
+      <div className="mt-3.5 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Sisa</p>
+          <p className={`text-xl font-extrabold leading-tight tracking-tight ${lunas ? 'text-income' : 'text-slate-800'}`}>{formatRupiah(t.sisa || 0)}</p>
+          <p className="text-[11px] font-medium text-slate-400">dari {formatRupiah(t.total || 0)}</p>
         </div>
-        <div className="flex items-center gap-2">
-          {t.tipe === 'Cicilan' && t.cicilanPerBulan > 0 && !lunas && (
-            <p className="text-[11px] font-bold text-slate-500">{formatRupiah(t.cicilanPerBulan)}/bln</p>
-          )}
-          {!lunas && (
-            <>
-              <button onClick={onLunasin} className="clay-btn-soft btn-sm text-slate-600">Lunasin</button>
-              <button onClick={onBayar} className="clay-btn-primary btn-sm">Bayar</button>
-            </>
-          )}
-        </div>
+        {!lunas && (
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {t.tipe === 'Cicilan' && t.cicilanPerBulan > 0 && (
+              <p className="text-[11px] font-bold text-slate-500">{formatRupiah(t.cicilanPerBulan)}/bln</p>
+            )}
+            <div className="flex items-center gap-2">
+              <button onClick={onLunasin} className="clay-btn-soft btn-sm min-h-11 px-3 text-slate-600">Lunasin</button>
+              <button onClick={onBayar} className="clay-btn-primary btn-sm min-h-11 px-3">Bayar</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
