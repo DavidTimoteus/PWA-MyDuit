@@ -55,7 +55,7 @@ export default function AuthScreen() {
           M
         </div>
         <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">MyDuit</h1>
-        <p className="mt-1 text-sm font-semibold text-slate-400">Catat. Pantau. Kendalikan.</p>
+        <p className="mt-1 text-sm font-semibold text-slate-500">Catat. Pantau. Kendalikan.</p>
         <p className="mt-4 text-sm leading-relaxed text-slate-500">
           Keuanganmu tersimpan aman di akunmu sendiri dan tetap bisa dibuka tanpa internet.
         </p>

@@ -118,14 +118,14 @@ export default function BackupModal({ open, onClose, uid }) {
           </button>
         </div>
 
-        <p className="mb-4 text-xs leading-relaxed text-slate-400">
+        <p className="mb-4 text-xs leading-relaxed text-slate-500">
           Ekspor semua data ke berkas JSON di perangkatmu. Pemulihan akan menimpa dokumen dengan ID sama — aman untuk pindah device.
         </p>
 
         <button
           onClick={ekspor}
           disabled={loading}
-          className="clay-btn clay-key-primary btn-lg mb-2 w-full bg-primary text-white hover:bg-primary-dark disabled:opacity-60"
+          className="clay-btn clay-key-primary solid-primary btn-lg mb-2 w-full text-white hover:-dark disabled:opacity-60"
         >
           <span className="material-symbols-outlined icon-md">download</span>
           Ekspor Data Sekarang
@@ -151,7 +151,7 @@ export default function BackupModal({ open, onClose, uid }) {
             {preview.catatan?.length > 0 && (
               <ul className="mt-1.5 space-y-0.5">
                 {preview.catatan.map((c, i) => (
-                  <li key={i} className="flex items-start gap-1 text-[10px] leading-snug text-slate-400">
+                  <li key={i} className="flex items-start gap-1 text-[10px] leading-snug text-slate-500">
                     <span className="material-symbols-outlined icon-2xs mt-px shrink-0">check</span>
                     <span>{c}</span>
                   </li>
@@ -161,7 +161,7 @@ export default function BackupModal({ open, onClose, uid }) {
             <button
               onClick={pulihkan}
               disabled={loading}
-              className="clay-btn clay-key-danger btn-md mt-2 w-full bg-expense text-white hover:brightness-110 disabled:opacity-60"
+              className="clay-btn clay-key-danger solid-danger btn-md mt-2 w-full text-white hover:brightness-110 disabled:opacity-60"
             >
               {loading
                 ? progress?.total

@@ -7,9 +7,66 @@
   --color-surface: #f4f7f6;
   --color-income: #10b981;
   --color-expense: #e53e3e;
+  /* Varian TEKS. Token income/expense di atas tetap untuk FILL (chart, badge,
+     ikon besar) karena sudah jadi identitas visual. Tapi sebagai warna teks di
+     kartu putih keduanya GAGAL WCAG AA:
+        income  #10b981 = 2.54:1
+        expense #e53e3e = 4.13:1
+     Nilai di bawah diukur >= 4.5:1 di #ffffff DAN di surface #f4f7f6.
+     Gunakan `text-incomeText` / `text-expenseText` untuk angka & label. */
+  --color-incomeText: #047857;   /* 5.48:1 di putih */
+  --color-expenseText: #b3261e;  /* 6.54:1 di putih */
+
+  /* Token semantik yang DIPAKAI di JSX tapi sebelumnya belum didefinisikan.
+     Tailwind v4 hanya membuat utility untuk token yang ada di @theme; class
+     seperti `text-danger` yang tak punya token TIDAK PERNAH digenerate, jadi
+     elemen diam-diam jatuh ke warna bawaan (hitam). Gejalanya: ikon nav "Utang"
+     tampil hitam saat aktif, padahal harus merah. Lengkapi di sini agar
+     `text-danger` / `bg-danger` dst benar-benar menghasilkan CSS. */
+  --color-danger: #b3261e;
+  --color-danger-light: #fdecea;
+  --color-warning: #b45309;
+  --color-warning-light: #fef3c7;
+  --color-info: #1d4ed8;
+  --color-info-light: #e0e7ff;
+  --color-success: #2d6a4f;
+  --color-success-light: #e7f2ec;
+  /* Alias tekstual yang dipakai JSX (text-textPrimary/Secondary) */
+  --color-textPrimary: #1e293b;
+  /* Token sekunder WAJIB ada. 61 elemen memakai `text-textSecondary`;
+     tanpa token ini utility-nya tidak terbentuk dan teks jatuh ke
+     slate-400 default (kontras 2.63:1 di putih — white-on-white).
+     Nilai di bawah diukur: 4.76:1 di #ffffff, 4.53:1 di #f4f7f6. */
+  --color-textSecondary: #475569;
+  --color-surfaceContainerLowest: #ffffff;
+  --color-surfaceContainerLow: #f4f7f6;
 
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
 }
+
+/* ==========================================================================
+   LAPISAN KOMPONEN
+   --------------------------------------------------------------------------
+   Seluruh aturan kustom app (mulai baris berikutnya sampai blok penutup)
+   dibungkus `@layer components`.
+
+   INI adalah perbaikan AKAR bug "ringkasan utang / Total Saldo: teks putih di
+   atas background putih sehingga tak terbaca".
+
+   BUKTI (diukur di browser, bukan dikira-kira):
+     Tailwind v4 menaruh utility seperti `bg-primary` dan `text-white` di dalam
+     `@layer utilities`. Aturan CSS yang TIDAK diberi layer SELALU menang atas
+     utility, berapa pun spesifisitasnya (specificity tidak dihitung lintas
+     layer — urutan layer yang menentukan). Akibatnya
+     `.clay-card { background-color:#fff }` (tak berlapis) mengalahkan
+     `bg-primary`, sehingga kartu "Total Saldo" yang teksnya `text-white`
+     tampil PUTIH DI ATAS PUTIH. Kontras WCAG terukur 1.0 — buta total.
+
+   Setelah dibungkus `@layer components`, utility Tailwind (lapisan utilities)
+   menang lagi seperti mestinya, sementara komponen kustom tetap dapat menimpa
+   lewat selector yang lebih spesifik.
+   ========================================================================== */
+@layer components {
 
 :root {
   /* Clay radius tokens */
@@ -26,6 +83,7 @@
   --clay-h-amber: 208, 134, 9;
   --clay-h-neutral: 100, 116, 139;
   --clay-h-blue: 31, 84, 200;
+  --clay-h-info: 29, 78, 216;
 
   --clay-bg: #f8faf9;
 
@@ -142,7 +200,7 @@ button {
 }
 /* Base ukuran tombol (GAS ViewCSS.html gobal button rule): tinggi pre-set 48px +
    padding 0 16px supaya CTA tanpa token ukuran TIDAK lonjong kesamping (tinggi
-   mengikuti konten pendek + w-full). Dikalahkan utility Tailwind h-*/w-* (icon
+   mengikuti konten pendek + w-full). Dikalahkan utility Tailwind min-h-* (icon
    chips 32/36px) & token .btn-sm/.btn-md/.btn-lg (spesifisitas class > elemen). */
 button,
 .btn {
@@ -253,18 +311,6 @@ button:active {
 .splash-dot:nth-child(5) { animation-delay: 0.48s; }
 .splash-dot:nth-child(6) { animation-delay: 0.60s; }
 
-@keyframes splash-logo-pop {
-  from { transform: scale(0.6) rotate(-8deg); opacity: 0; }
-  to   { transform: scale(1) rotate(0); opacity: 1; }
-}
-@keyframes splash-letter-in {
-  from { transform: translateY(14px); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
-}
-@keyframes splash-dot-bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
-  30%           { transform: translateY(-7px); opacity: 1; }
-}
 
 /* ===== MONOSPACE DIGITS (Manrope with tabular nums) ===== */
 .font-mono {
@@ -276,14 +322,50 @@ button:active {
 
 /* ===== CLAY BASE ===== */
 .clay {
+  /* ---------------------------------------------------------------
+     CLAYMORPHISM (esensi, riset primer — bukan sekadar drop-shadow)
+
+     Resep resmi: TEPAT 3 bayangan =
+       1. outset  (mengambang dari halaman)
+       2. inset GELAP   (kanan-bawah)
+       3. inset TERANG  (kiri-atas)
+     Dua inset itulah yang memberi kesan "menggembung seperti tanah liat".
+     Tanpa inset = bukan claymorphism, cuma kartu berbayang.
+
+     Perbedaan wajib vs neumorphism: background kartu TIDAK harus sama
+     dengan halaman — clay mengambang dengan warnanya sendiri, jadi kontras
+     teks tetap terjaga (neumorphism gagal a11y karena itu).
+     --------------------------------------------------------------- */
   --clay-h: var(--clay-h-primary);
+  /* Offset: tinggi-kiri untuk highlight, bawah-kanan untuk shade */
+  --clay-r: 10px;
+  --clay-blur: 18px;
   border-radius: var(--clay-r-card);
+  /* Surface default: elemen clay WAJIB punya bidang sendiri. Tanpa ini
+     kartu jadi transparan (hanya bayangan) -> tampilan rusak. */
+  background-color: var(--color-surfaceContainerLowest);
   box-shadow:
-    6px 6px 16px rgba(var(--clay-h), 0.20),
-    -6px -6px 16px rgba(255, 255, 255, 0.75),
-    inset 2px 2px 5px rgba(255, 255, 255, 0.55),
-    inset -3px -3px 7px rgba(var(--clay-h), 0.10);
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease;
+    /* 1. OUTSET — mengambang, pakai HUE komponen (bukan hitam generik) */
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.30),
+    /* 2. INSET gelap — kanan bawah, memberi volume */
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(var(--clay-h), 0.22),
+    /* 3. INSET terang — kiri atas, pantulan cahaya */
+    inset calc(var(--clay-r) * 0.55) calc(var(--clay-r) * 0.55) var(--clay-blur)
+      rgba(255, 255, 255, 0.75);
+  transition:
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s ease;
+}
+
+/* State: TEKAN -> inset aprofund, outset hilang (meneceb ke dalam). */
+.clay:active {
+  transform: scale(0.985);
+  box-shadow:
+    inset calc(var(--clay-r) * 0.9) calc(var(--clay-r) * 0.9) var(--clay-blur)
+      rgba(var(--clay-h), 0.26),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(var(--clay-h), 0.18);
 }
 
 .clay-key-primary { --clay-h: var(--clay-h-primary); }
@@ -297,12 +379,22 @@ button:active {
    (declaration-nya menang dari clay-key-* krn urutan stylesheet) — hue wajib
    lewat fallback var(--clay-h, <default>) supaya clay-key-* selalu menang. */
 .clay-card {
-  border-radius: var(--clay-r-card-sm);
-  background-color: #ffffff;
+  --clay-r: 7px;
+  --clay-blur: 14px;
+  /* FIX BUG SISTEMIK: sebelumnya .clay-card HANYA mendefinisikan box-shadow,
+     tanpa background-color & border-radius. Akibatnya 23 pemakaian
+     `.clay-card` (yang tidak menambahkan utility bg-* / rounded-*) tampil
+     sebagai kartu TRANSPARAN tanpa sudut — hanya bayangan mengambang.
+     Sekarang kartu punya bidang putih + radius clay sebagai default;
+     varian .solid-* (spesifisitas 2 kelas) tetap menimpanya. */
+  border-radius: var(--clay-r-card);
+  background-color: var(--color-surfaceContainerLowest);
   box-shadow:
-    3px 3px 10px rgba(var(--clay-h, var(--clay-h-neutral)), 0.10),
-    -2px -2px 8px rgba(255, 255, 255, 0.7),
-    inset 0 0 0 1px rgba(var(--clay-h, var(--clay-h-neutral)), 0.06);
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h, var(--clay-h-neutral)), 0.16),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(var(--clay-h, var(--clay-h-neutral)), 0.1),
+    inset calc(var(--clay-r) * 0.55) calc(var(--clay-r) * 0.55) var(--clay-blur)
+      rgba(255, 255, 255, 0.9);
 }
 
 /* Kartu lembut (empty state, info) — setengah kekuatan */
@@ -338,6 +430,9 @@ button:active {
 /* ===== BUTTONS ===== */
 .clay-btn {
   border-radius: var(--clay-r-button);
+  /* Bidang default tombol clay (varian .solid-* & .clay-btn-primary/danger
+     menimpanya lewat spesifisitas). Tanpa ini tombol netral transparan. */
+  background-color: var(--color-surfaceContainerLowest);
   box-shadow:
     5px 5px 14px rgba(var(--clay-h, var(--clay-h-primary)), 0.32),
     -5px -5px 14px rgba(255, 255, 255, 0.5),
@@ -355,7 +450,8 @@ button:active {
 
 .clay-btn-primary {
   --clay-h: var(--clay-h-primary);
-  background: linear-gradient(145deg, #40916c 0%, #2d6a4f 55%, #1b4332 100%);
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #40916c 0%, #2d6a4f 55%, #1b4332 100%);
   color: #fff;
   border-radius: var(--clay-r-button);
   box-shadow:
@@ -375,7 +471,8 @@ button:active {
 
 .clay-btn-danger {
   --clay-h: var(--clay-h-danger);
-  background: linear-gradient(145deg, #ef5350 0%, #e53e3e 55%, #b71c1c 100%);
+  background-color: #c62828;
+  background-image: linear-gradient(145deg, #ef5350 0%, #e53e3e 55%, #b71c1c 100%);
   color: #fff;
   border-radius: var(--clay-r-button);
   box-shadow:
@@ -448,13 +545,19 @@ button:active {
 
 /* ===== CHIPS ===== */
 .clay-chip {
-  border-radius: var(--clay-r-chip) !important;
+  --clay-r: 4px;
+  --clay-blur: 9px;
+  /* FIX BUG: .clay-chip tidak punya border-radius -> semua chip yang tidak
+     menambah utility rounded-* tampil PERSEGI LANCIP (keluhan utama).
+     Default sekarang pill + bidang putih. */
+  border-radius: var(--clay-r-chip);
+  background-color: var(--color-surfaceContainerLowest);
   box-shadow:
-    3px 3px 9px rgba(var(--clay-h, var(--clay-h-primary)), 0.18),
-    -3px -3px 9px rgba(255, 255, 255, 0.6),
-    inset 1px 1px 3px rgba(255, 255, 255, 0.5),
-    inset -2px -2px 4px rgba(var(--clay-h, var(--clay-h-primary)), 0.12);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h, var(--clay-h-primary)), 0.22),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(var(--clay-h, var(--clay-h-primary)), 0.16),
+    inset calc(var(--clay-r) * 0.55) calc(var(--clay-r) * 0.55) var(--clay-blur)
+      rgba(255, 255, 255, 0.55);
 }
 .clay-chip:active {
   transform: scale(0.92);
@@ -468,8 +571,17 @@ button:active {
   border-radius: 8px !important;
 }
 
-/* Pill Bulanan | Tahunan (Statistik) — paksa radius pill penuh untuk override
-   utility Tailwind rounded-* yang mungkin menimpa .clay-chip */
+/* Pill Bulanan | Tahunan (Statistik).
+   FIX BUG: sebelumnya HANYA `.stat-pill-tab.clay-chip` yang punya radius,
+   sementara tombol Bulanan/Tahunan di JSX memakai `stat-pill-tab` TANPA
+   `clay-chip` -> saat TIDAK aktif tombol tampil PERSEGI LANCIP (keluhan user).
+   Sekarang .stat-pill-tab sendiri punya radius pill + bidang. */
+.stat-pill-tab {
+  border-radius: var(--clay-r-chip);
+  background-color: var(--color-surfaceContainerLowest);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
+}
+.stat-pill-tab:active { transform: scale(0.96); }
 .stat-pill-tab.clay-chip {
   border-radius: var(--clay-r-chip) !important;
 }
@@ -550,8 +662,8 @@ button:active {
 /* Layar sangat sempit (<=360px): rapatkan sedikit agar 4 tab + FAB muat */
 @media (max-width: 360px) {
   .nav-icon-wrap {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
   }
 }
 
@@ -649,24 +761,60 @@ button:active {
    paling khas desain "AI-generated". Diganti satu warna dasar + satu lapis
    cahaya lembut diagonal yang halus, sehingga terlihat seperti permukaan
    material, bukan pelangi. */
+/* ------------------------------------------------------------------
+   Hero card = kartu statistikuthoritatif (Total Utang / Lunas /
+   Cicilan / Pemasukan / Pengeluaran / Saldo).
+
+   PRA-SEBELUMNYA: hero-* memakai `background-color` pekat + teks putih.
+   Itu (a) bukan claymorphism — tidak ada inner/outer shadow, dan (b)
+   rapuh: begitu utility Tailwind `bg-*` ikut menempel, cascade bisa
+   membalik jadi putih-di-atas-putih.
+
+   SEKARANG: kartu tetap putih seperti .clay-card, dan IDENTITAS warna
+   dibawa oleh aksen (ikon + label + nilai memakai warna solid yang
+   kontrasnya terukur). Ini persis pola "satu warna solid untuk aksi,
+   warna status untuk keadaan" — teks tidak pernah colour-on-colour,
+   sehingga mustahil jadi white-on-white.
+   ------------------------------------------------------------------ */
 .hero-card {
   position: relative;
-  border-radius: 20px;
+  border-radius: var(--clay-r-card-sm);
+  background-color: #ffffff;
+  color: #1e293b;               /* slate-800: kontras 14.6:1 di putih */
   overflow: hidden;
-  color: #fff;
-  isolation: isolate;
+  --clay-h: var(--clay-h-primary);
+  --clay-r: 7px;
+  --clay-blur: 15px;
+  /* CLAYMORPHITION penuh: 1 outset + 2 inset. Versi lama hanya 2 outset
+     (drop-shadow), itu sebabnya kartu ini terasa "cuma bayangan bawah". */
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.26),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(var(--clay-h), 0.16),
+    inset calc(var(--clay-r) * 0.55) calc(var(--clay-r) * 0.55) var(--clay-blur)
+      rgba(255, 255, 255, 0.9);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+.hero-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    4px 4px 13px rgba(var(--clay-h), 0.26),
+    -3px -3px 10px rgba(255, 255, 255, 0.85);
+}
+/* Aksen warna: strip tipis di tepi atas, penanda status tanpa menyamakan
+   seluruh bidang warna dengan teks. */
 .hero-card::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0) 42%);
+  inset: 0 0 auto 0;
+  height: 4px;
+  background-color: var(--clay-h);
   pointer-events: none;
-  z-index: -1;
 }
-.hero-primary { background-color: #2d6a4f; }
-.hero-danger  { background-color: #b3261e; }
-.hero-blue    { background-color: #1d4ed8; }
+.hero-primary { --clay-h: var(--clay-h-primary); }
+.hero-danger  { --clay-h: var(--clay-h-danger); }
+.hero-blue    { --clay-h: var(--clay-h-blue); }
+.hero-gold    { --clay-h: var(--clay-h-amber); }
 .hero-amber   { background-color: #b45309; }
 .hero-neutral { background-color: #334155; }
 
@@ -691,7 +839,11 @@ button:active {
 /* ===== UTILITY ===== */
 .bg-surfaceContainerLowest { background-color: #ffffff; }
 .bg-surfaceContainerLow { background-color: #f8faf9; }
-.text-textSecondary { color: #64748b; }
+/* CATATAN: JANGAN tambahkan override `.text-textSecondary` di sini.
+   Token `--color-textSecondary` di @theme (#475569, kontras 7.58:1) sudah
+   menghasilkan utility ini secara otomatis. Override manual dengan #64748b
+   (slate-500, 4.76:1) PERNAH ada di sini dan membuat 61 elemen kembali pucat
+   tanpa disadari — persis gejala "teks putih/pudar di atas putih". */
 .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 
@@ -731,6 +883,10 @@ button:active {
 .clay-date-picker-field--accent { color: var(--color-primary); font-weight: 700; }
 
 /* ===== DROPDOWN / COMBOBOX CLAY (popup custom) ===== */
+.clay-select-trigger {
+  /* FIX: sebelumnya tanpa border-radius -> dropdown select tampil lancip */
+  border-radius: var(--clay-r-input) !important;
+}
 .clay-select-trigger .material-symbols-outlined { transition: transform 0.2s ease; }
 .clay-select-trigger.is-open .material-symbols-outlined { transform: rotate(180deg); }
 .clay-select-list {
@@ -887,10 +1043,6 @@ button:active {
 .riwayat-dot-spinner__dot:nth-child(7)::before { animation-delay: calc(var(--uib-speed) * -0.875); }
 .riwayat-dot-spinner__dot:nth-child(8) { transform: rotate(315deg); }
 .riwayat-dot-spinner__dot:nth-child(8)::before { animation-delay: 0s; }
-@keyframes spin0123 {
-  0%, 100% { transform: scale(0); opacity: 0.5; }
-  50% { transform: scale(1); opacity: 1; }
-}
 
 /* ===== FLATPICKR — tema hijau app (override biru bawaan) ===== */
 .flatpickr-day.selected,
@@ -966,10 +1118,500 @@ button:active {
 }
 .fab-icon-open { transform: rotate(45deg); }
 
+.clay-pop {
+  animation: clayPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+}
+
+/* ---------- Keyframes: wajib top-level agar tidak ikut ter-layer ---------- */
+
+@keyframes splash-logo-pop {
+  from { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes splash-letter-in {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes splash-dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+  30%           { transform: translateY(-7px); opacity: 1; }
+}
+
+@keyframes spin0123 {
+  0%, 100% { transform: scale(0); opacity: 0.5; }
+  50% { transform: scale(1); opacity: 1; }
+}
+
 @keyframes clayPop {
   from { opacity: 0; transform: translateY(10px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.clay-pop {
-  animation: clayPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+/* ---------------------------------------------------------------
+   Pill/tab aktif (mis. tombol Bulanan/Tahunan di Statistik).
+
+   Kenapa class khusus ini, bukan `bg-primary text-white`?
+   `bg-primary` tinggal di @layer utilities. Begitu utility lain ikut
+   menempel (atau cascade theme berubah), background bisa kembali
+   putih sementara teks tetap putih -> white-on-white, persis bug yang
+   dulu hilang. Dengan background-color dieksplisitkan di @layer
+   components, warnanya terkunci dan kontrasnya terukur.
+   --------------------------------------------------------------- */
+.clay-chip-primary {
+  border-radius: var(--clay-r-chip);
+  background-color: #2d6a4f;            /* primary solid: putih di atasnya = 6.39:1 */
+  color: #ffffff;
+  --clay-h: var(--clay-h-primary);
+  box-shadow:
+    3px 3px 9px rgba(var(--clay-h), 0.32),
+    -3px -3px 9px rgba(255, 255, 255, 0.55);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.clay-chip-primary:hover {
+  background-color: #35795a;
+  transform: translateY(-1px);
+  box-shadow:
+    4px 4px 12px rgba(var(--clay-h), 0.36),
+    -3px -3px 9px rgba(255, 255, 255, 0.55);
+}
+.clay-chip-primary:active {
+  transform: scale(0.96) translateY(0);
+  box-shadow:
+    inset 2px 2px 6px rgba(0, 0, 0, 0.22),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.32);
+}
+
+/* ============================================================
+   SURFACE SOLID BER-CLAYMORPHISM
+   ------------------------------------------------------------
+   MASALAH: `clay-btn clay-key-primary bg-primary text-white` —
+   utility `bg-*` ada di @layer utilities, sementara aturan
+   clay ada di @layer components. Di Tailwind v4 utilities SELALU
+   menang, jadi background utility MENIMPA dan inset shadow clay
+   hilang -> komponen jadi blok warna rata, bukan clay.
+
+   SOLUSI: class dedicated di @layer components yang mengunci
+   background-color. Nilai warnanya SAMA PERSIS dengan utility
+   yang sebelumnya dipakai, jadi tidak ada loncatan visual —
+   yang berubah hanya bayangan dalam (menjadi clay asli).
+
+   Setiap class tetap punya 3 shadow: 1 outset + 2 inset.
+   ============================================================ */
+
+/* Tombol solid */
+.clay-btn.solid-primary {
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #40916c 0%, #2d6a4f 55%, #1b4332 100%);
+  color: #ffffff;
+  --clay-r: 5px;
+  --clay-blur: 14px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.34),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.22),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.30);
+}
+.clay-btn.solid-primary:hover { background-color: #35795a; }
+
+.clay-btn.solid-danger {
+  background-color: #c62828;
+  background-image: linear-gradient(145deg, #ef5350 0%, #e53e3e 55%, #b71c1c 100%);
+  color: #ffffff;
+  --clay-r: 5px;
+  --clay-blur: 14px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.34),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.24),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.28);
+}
+.clay-btn.solid-danger:hover { background-color: #d32f2f; }
+
+.clay-btn.solid-blue {
+  background-color: #1d4ed8;
+  background-image: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 55%, #1e3a8a 100%);
+  color: #ffffff;
+  --clay-r: 5px;
+  --clay-blur: 14px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.34),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.26),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.30);
+}
+.clay-btn.solid-blue:hover { background-color: #2563eb; }
+
+/* Kartu solid (untuk panel ringkasan) */
+.clay-card.solid-primary {
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #35795a 0%, #2d6a4f 60%, #1b4332 100%);
+  color: #ffffff;
+  --clay-r: 8px;
+  --clay-blur: 18px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.32),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.24),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.24);
+}
+.clay-card.solid-danger {
+  background-color: #b3261e;
+  background-image: linear-gradient(145deg, #d94a42 0%, #b3261e 60%, #8c1d18 100%);
+  color: #ffffff;
+  --clay-r: 8px;
+  --clay-blur: 18px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.32),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.26),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.22);
+}
+.clay-card.solid-blue {
+  background-color: #1d4ed8;
+  background-image: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 60%, #1e3a8a 100%);
+  color: #ffffff;
+  --clay-r: 8px;
+  --clay-blur: 18px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.32),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.26),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.24);
+}
+.clay-card.solid-green {
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #40916c 0%, #2d6a4f 60%, #1b4332 100%);
+  color: #ffffff;
+  --clay-r: 8px;
+  --clay-blur: 18px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.32),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.22),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.26);
+}
+
+/* Icon tile solid */
+.clay-icon-tile.solid-primary {
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #40916c 0%, #2d6a4f 100%);
+  color: #ffffff;
+  --clay-r: 5px;
+  --clay-blur: 12px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.32),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.20),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.28);
+}
+.clay-icon-tile.solid-blue {
+  background-color: #1d4ed8;
+  background-image: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  --clay-r: 5px;
+  --clay-blur: 12px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.32),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.22),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.28);
+}
+
+/* FAB solid */
+.clay-fab.solid-primary {
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #40916c 0%, #2d6a4f 55%, #1b4332 100%);
+  --clay-r: 7px;
+  --clay-blur: 18px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.40),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.26),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.28);
+}
+.clay-fab.solid-blue {
+  background-color: #1d4ed8;
+  background-image: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 55%, #1e3a8a 100%);
+  --clay-r: 7px;
+  --clay-blur: 18px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.40),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.28),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.28);
+}
+.clay-fab.solid-danger {
+  background-color: #c62828;
+  background-image: linear-gradient(145deg, #ef5350 0%, #e53e3e 55%, #b71c1c 100%);
+  --clay-r: 7px;
+  --clay-blur: 18px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.40),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.28),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.26);
+}
+
+/* Chip solid */
+.clay-chip-active-danger {
+  --clay-h: var(--clay-h-danger);
+  background-color: #c62828;
+  background-image: linear-gradient(145deg, #ef5350 0%, #c62828 100%);
+  color: #ffffff;
+  --clay-r: 4px;
+  --clay-blur: 10px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.30),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.20),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.26);
+}
+
+.clay-chip.solid-primary {
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #40916c 0%, #2d6a4f 100%);
+  color: #ffffff;
+  --clay-r: 4px;
+  --clay-blur: 10px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.30),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.20),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.26);
+}
+
+/* ============================================================
+   CLASS YANG SEBELUMNYA HILANG (phantom class)
+   ------------------------------------------------------------
+   Dipakai di JSX tapi TIDAK didefinisikan di CSS, sehingga elemen
+   kehilangan style sepenuhnya:
+     - .clay-hero       (AuthScreen: logo kotak di kartu login)
+     - .clay-key-info   (FormTransaksiModal: kartu saran rekening baru)
+     - .clay-btn-primary-soft (tombol sekunder "Bayar" di kartu utang)
+   ============================================================ */
+
+/* Logo aplikasi di kartu login — bidang solid brand + clay penuh */
+.clay-hero {
+  --clay-h: var(--clay-h-primary);
+  --clay-r: 8px;
+  --clay-blur: 16px;
+  border-radius: var(--clay-r-icon);
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #40916c 0%, #2d6a4f 55%, #1b4332 100%);
+  color: #ffffff;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.40),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.22),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.28);
+}
+
+/* Kartu info (saran rekening baru) — biru lembut, teks tetap gelap */
+.clay-key-info {
+  --clay-h: var(--clay-h-info);
+  background-color: #eff6ff;
+  color: #1e3a8a;
+  box-shadow:
+    4px 4px 12px rgba(var(--clay-h), 0.16),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.85),
+    inset -2px -2px 6px rgba(var(--clay-h), 0.10);
+}
+
+/* Tombol sekunder biru-lembut (aksi "Bayar" di kartu utang mobile) */
+.clay-btn-primary-soft {
+  --clay-h: var(--clay-h-blue);
+  border-radius: var(--clay-r-button);
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  box-shadow:
+    4px 4px 12px rgba(var(--clay-h), 0.22),
+    -3px -3px 10px rgba(255, 255, 255, 0.7),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.7),
+    inset -2px -2px 5px rgba(var(--clay-h), 0.12);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.clay-btn-primary-soft:active {
+  transform: scale(0.96);
+  box-shadow:
+    inset 2px 2px 6px rgba(var(--clay-h), 0.28),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.6);
+}
+
+/* ============================================================
+   UTANG MOBILE — mode "pas layar" (tanpa scroll)
+   ------------------------------------------------------------
+   Kartu + pager harus muat dalam tinggi = 100dvh - bottom-nav (76px).
+   Pada layar PENDEK (mis. 320x568 / iPhone SE) chrome-nya terlalu tinggi,
+   jadi bagian header/hero/filter/aksi dirapatkan. Kartu memakai flex-1
+   supaya mengisi sisa ruang; kalau sisa < tinggi minimum kartu, yang
+   dikorbankan adalah padding chrome — BUKAN potongan pada kartu.
+   ============================================================ */
+
+/* Hero "Total Sisa Utang Aktif" (mobile) — beri napas vertikal lebih
+   supaya tidak gepeng (terukur hanya 38px di 320px). */
+.utang-m-hero {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+/* Kartu utang mobile: tinggi mengikuti ISI (hug content), tidak melar
+   memenuhi layar. Kalau melar, layar tinggi menyisakan rongga kosong besar. */
+.utang-m-card { align-self: center; }
+
+/* Area kartu: boleh menyusut (min-h-0) tapi tidak pernah di bawah 232px,
+   supaya kartu tetap utuh dan tidak terpotong. */
+.utang-m-area { min-height: 232px; overscroll-behavior: contain; }
+
+/* ===== CARD-STACK REKENING (mobile Budget/Rekening) =====
+   Dulu: wrapper dikunci `height:225px; overflow:hidden` -> begitu isi kartu
+   tumbuh (nama panjang, saldo besar, log mutasi 2 baris) kartu TERDALAM
+   translateY(24px) terpotong. Terukur: isi +40px sudah clipping 12px.
+
+   Sekarang: tinggi wrapper mengikuti kartu depan (position:relative), dan
+   ruang ekstra 30px dicadangkan di bawah untuk kedalaman stack (2 lapis
+   translateY 12px + 24px) supaya tidak ada yang terpotong & tidak menabrak
+   pager di bawahnya. */
+.rekening-stack-wrap {
+  overflow: visible;
+  isolation: isolate;
+  padding-bottom: 30px;
+  /* min-height:0 menOverride min-h-[225px] utility agar tinggi benar-benar
+     mengikuti isi kartu (yang sekarang position:relative / in-flow). */
+  min-height: 0;
+  height: auto;
+}
+
+/* ===== PAGER UTANG (mobile) =====
+   Satu bar terpadu: [<]  · dot · dot  [>]. Rule global `button{padding:0 16px}`
+   WAJIB ditimpa (padding:0) supaya dot tidak ikut melebar jadi 32px dan tetap
+   bisa dibedakan mana halaman aktif. */
+.utang-m-dot {
+  padding: 0;
+  border: none;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  background-color: var(--color-slate-300, #cbd5e1);
+  transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.22s ease;
+}
+.utang-m-dot--aktif {
+  width: 22px;
+  background-color: var(--color-danger);
+}
+.utang-m-dot:not(.utang-m-dot--aktif):hover {
+  background-color: var(--color-slate-400, #94a3b8);
+}
+/* Tombol panah: bulat, tetap 40px, jangan kena padding global. */
+.utang-m-pager-btn {
+  padding: 0;
+  height: 40px;
+  min-height: 40px;
+}
+.utang-m-pager-btn:disabled {
+  cursor: default;
+  transform: none;
+}
+
+/* Layar pendek: rapatkan chrome secara bertahap. */
+@media (max-height: 700px) {
+  .utang-m-header { padding-top: 0.5rem; padding-bottom: 0.375rem; }
+  .utang-m-hero { padding-top: 1.25rem; padding-bottom: 1.25rem; margin-bottom: 0.375rem; }
+  .utang-m-hero p:first-child { font-size: 10px; }
+  .utang-m-hero p:last-child { font-size: 1.25rem; }
+  .utang-m-hero-sub { display: none; }
+  /* Kartu diringkas agar SELALU muat di area (tidak terpotong / pager
+     menimpa). Tiles detail disembunyikan lebih awal, body & angka dirapatkan. */
+  .utang-m-body { gap: 0.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .utang-m-sisa { font-size: 26px; }
+  .utang-m-tiles { display: none; }
+  .utang-m-extra { display: none; }
+}
+@media (max-height: 620px) {
+  .utang-m-header { padding-top: 0.375rem; padding-bottom: 0.25rem; }
+  .utang-m-hero { padding-top: 1rem; padding-bottom: 1rem; }
+  .utang-m-hero-nilai { font-size: 22px; }
+  .utang-m-hero p:first-child { display: none; }
+  .utang-m-hero-sub { display: none; }
+  .utang-m-body { gap: 0.4rem; padding-top: 0.4rem; padding-bottom: 0.4rem; }
+  .utang-m-sisa { font-size: 24px; }
+}
+
+/* Layar pendek: kartu dipadatkan supaya tetap MUAT tanpa scroll.
+   Yang dikecilkan: padding kartu, angka sisa, dan kartu detail sekunder.
+   Informasi inti (nama, sisa, progres, jatuh tempo, aksi) tetap utuh. */
+@media (max-height: 700px) {
+  .utang-m-card { padding: 0.75rem 0.875rem 0.75rem 1rem; }
+  .utang-m-body { gap: 0.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .utang-m-sisa { font-size: 26px; }
+}
+@media (max-height: 620px) {
+  .utang-m-card { padding: 0.625rem 0.75rem 0.625rem 0.875rem; }
+  .utang-m-sisa { font-size: 23px; }
+  .utang-m-tiles { display: none; }
+  .utang-m-extra { display: none; }
+}
+
+/* Pager utang mobile: di layar sangat sempit (<=360px) titik halaman
+   dikurangi otomatis supaya baris pager tidak pernah meluber. Titik
+   ke-6 dan ke-7 disembunyikan; label "x / y" tetap menunjukkan posisi. */
+@media (max-width: 360px) {
+  .utang-m-titik > button:nth-child(n+6) { display: none; }
+}
+
+/* ============================================================
+   BOTTOM NAV — label TIDAK boleh terpotong
+   ------------------------------------------------------------
+   Grid 5 kolom (~76px/kolom) dikurangi padding nav-item membuat
+   lebar efektif label ~44px, sedangkan "Transaksi" butuh ~52px ->
+   teks terpotong ("Transaks..."). Perbaikan:
+   - nav-item: px minimal (padding horizontal 2px) supaya label
+     dapat ruang maksimal di dalam kolomnya.
+   - font sedikit lebih kecil + tracking rapat di layar sempit.
+   ============================================================ */
+.nav-item {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+/* Label nav: jangan pernah dikompres (dulu jadi 5.9px lalu tinta terpangkas) */
+.nav-item > span { flex-shrink: 0; }
+@media (max-width: 380px) {
+  .nav-item { padding-left: 0; padding-right: 0; }
+  .nav-item > span.truncate { font-size: 10px; letter-spacing: -0.02em; }
+}
+
+/* ============================================================
+   HEADER STATISTIK MOBILE — navigator periode jangan bikin judul terpotong
+   ------------------------------------------------------------
+   Di 320px, judul "Statistik" (103px) + navigator (2 tombol 32px + label
+   periode ~79-100px) melebihi lebar header -> teks terpotong. Perbaikan:
+   - header boleh wrap; navigator turun ke baris kedua bila perlu.
+   - label periode dibatasi lebar dan boleh truncate.
+   ============================================================ */
+.stat-header-mobile {
+  display: flex;
+  align-items: center;
+}
+.stat-periode-label {
+  min-width: 96px;
+  text-align: center;
+  white-space: nowrap;
 }

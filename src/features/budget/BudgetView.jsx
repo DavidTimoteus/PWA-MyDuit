@@ -220,28 +220,42 @@ export default function BudgetView({ user }) {
             </button>
           </div>
 
-          {/* Hero Total Budget — gradient biru (persis GAS) */}
+          {/* Total Budget — kartu clay (bukan gradient biru).
+              Aksen warna dibawa .hero-blue; teks tetap gelap di atas putih
+              supaya kontrasnya terukur dan tidak pernah white-on-white. */}
           <div className="hero-card hero-blue mb-4 shrink-0 p-5">
-            <p className="mb-1 text-xs opacity-90 sm:text-sm">Total Budget</p>
-            <p className="font-mono mb-2 text-xl font-extrabold sm:text-2xl">{formatRupiah(ringkasan.totalLimit)}</p>
-            <div className="flex items-center justify-between text-[11px] opacity-90">
+            <div className="mb-1 flex items-center gap-2">
+              <span
+                className="material-symbols-outlined icon-md text-info"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                wallet
+              </span>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-600 sm:text-sm">
+                Total Budget
+              </p>
+            </div>
+            <p className="font-mono mb-2 text-xl font-extrabold tracking-tight text-slate-900 tabular-nums lg:text-2xl">
+              {formatRupiah(ringkasan.totalLimit)}
+            </p>
+            <div className="flex items-center justify-between text-[11px] font-medium text-slate-600">
               <span>Terpakai: {formatRupiah(ringkasan.totalTerpakai)}</span>
               <span>Sisa: {formatRupiah(ringkasan.sisa)}</span>
             </div>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
               <div
-                className={`h-full rounded-full transition-all ${ringkasan.lewat ? 'bg-red-300' : 'bg-white'}`}
+                className={`h-full rounded-full transition-all ${ringkasan.lewat ? 'bg-danger' : 'bg-info'}`}
                 style={{ width: `${Math.min(100, ringkasan.persen)}%` }}
               />
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-x-3 border-t pt-3" style={{ borderColor: 'rgba(255,255,255,0.25)' }}>
+            <div className="mt-3 grid grid-cols-2 gap-x-3 border-t border-slate-200 pt-3">
               <div>
-                <p className="text-[10px] font-medium opacity-80">Pemasukan bulan ini</p>
-                <p className="font-mono text-xs font-bold">—</p>
+                <p className="text-[10px] font-medium text-slate-500">Pemasukan bulan ini</p>
+                <p className="font-mono text-xs font-bold text-slate-800">—</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-medium opacity-80">Pengeluaran bulan ini</p>
-                <p className="font-mono text-xs font-bold">—</p>
+                <p className="text-[10px] font-medium text-slate-500">Pengeluaran bulan ini</p>
+                <p className="font-mono text-xs font-bold text-slate-800">—</p>
               </div>
             </div>
           </div>

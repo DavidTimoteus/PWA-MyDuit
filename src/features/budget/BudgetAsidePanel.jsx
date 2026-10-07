@@ -42,8 +42,8 @@ export default function BudgetAsidePanel() {
   }
 
   return (
-    <aside className="hidden lg:flex lg:h-full lg:w-[350px] lg:min-w-[350px] lg:max-w-[350px] lg:shrink-0 lg:grow-0 lg:flex-col lg:overflow-hidden lg:p-4 lg:pl-2">
-      <div className="clay clay-key-blue flex h-full flex-col overflow-hidden rounded-[28px] bg-surfaceContainerLowest p-5 w-full min-w-0">
+    <aside className="hidden xl:flex xl:h-full xl:w-[350px] xl:min-w-[350px] xl:max-w-[350px] xl:shrink-0 xl:grow-0 xl:flex-col xl:overflow-hidden xl:p-4 xl:pl-2">
+      <div className="clay clay-key-blue flex h-full flex-col overflow-y-auto hide-scrollbar rounded-[28px] bg-surfaceContainerLowest p-5 w-full min-w-0">
         {/* Header — judul "Statistik Budget" + tombol Cetak PDF di kanan */}
         <div className="flex shrink-0 items-center justify-between px-1 pb-3">
           <h2 className="text-base font-extrabold tracking-tight text-slate-800">Statistik Budget</h2>
@@ -59,8 +59,8 @@ export default function BudgetAsidePanel() {
         <div className="mb-3 h-px shrink-0 bg-slate-200/70"></div>
 
         {/* Sisa Budget (gradient biru, hero card dengan progress bar) */}
-        <div className="clay-card clay-key-blue shrink-0 rounded-[22px] bg-blue-600 p-2.5 text-white">
-          <p className="text-[11px] font-semibold uppercase tracking-wider opacity-90">Sisa Budget</p>
+        <div className="clay-card clay-key-blue solid-blue shrink-0 rounded-[22px] p-2.5 text-white">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-white">Sisa Budget</p>
           <p className="font-mono text-lg font-extrabold mt-0.5">{formatRupiah(ringkas.sisa)}</p>
           <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
             <div
@@ -89,8 +89,8 @@ export default function BudgetAsidePanel() {
 
         {/* Divider + Perlu Perhatian */}
         <div className="mt-3 h-px shrink-0 bg-slate-200/70"></div>
-        <p className="mt-3 shrink-0 px-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-          <span className="material-symbols-outlined icon-sm text-amber-500">warning</span>
+        <p className="mt-3 shrink-0 px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+          <span className="material-symbols-outlined icon-sm text-amber-600">warning</span>
           Perlu Perhatian
         </p>
         <div className="mt-2 space-y-1.5">
@@ -116,18 +116,18 @@ export default function BudgetAsidePanel() {
         {/* Spacer + Aksi Cepat — tinggi btn-md (40px) konsisten dengan tombol lain */}
         <div className="mt-auto pt-3">
           <div className="h-px bg-slate-200/70"></div>
-          <p className="mt-3 px-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">Aksi Cepat</p>
+          <p className="mt-3 px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Aksi Cepat</p>
           <div className="mt-2 grid grid-cols-2 gap-1.5">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('myduit:budget-add-rekening'))}
-              className="clay-btn clay-key-blue btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-blue-600 text-xs font-bold text-white"
+              className="clay-btn clay-key-blue solid-blue btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl text-xs font-bold text-white"
             >
               <span className="material-symbols-outlined icon-sm">account_balance</span>
               Rekening
             </button>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('myduit:budget-add-budget'))}
-              className="clay-btn clay-key-blue btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl bg-blue-600 text-xs font-bold text-white"
+              className="clay-btn clay-key-blue solid-blue btn-md flex w-full items-center justify-center gap-1.5 rounded-2xl text-xs font-bold text-white"
             >
               <span className="material-symbols-outlined icon-sm">add</span>
               Budget

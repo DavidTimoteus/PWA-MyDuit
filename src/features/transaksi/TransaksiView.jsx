@@ -270,7 +270,7 @@ async function konfirmHapus() {
             >
               <span className="material-symbols-outlined icon-md">chevron_left</span>
             </button>
-            <span className="text-[11px] font-medium text-slate-400">Halaman {page}/{totalPages}</span>
+            <span className="text-[11px] font-medium text-slate-500">Halaman {page}/{totalPages}</span>
             <button
               type="button"
               aria-label="Halaman berikutnya"
@@ -344,7 +344,7 @@ async function konfirmHapus() {
             <button
               onClick={() => setBulkHapusOpen(true)}
               disabled={selected.size === 0}
-              className="clay-btn clay-key-danger btn-sm bg-red-500 text-white transition-colors hover:bg-red-600 disabled:opacity-60"
+              className="clay-btn clay-key-danger solid-danger btn-sm text-white transition-colors hover: disabled:opacity-60"
             >
               <span className="material-symbols-outlined icon-sm">delete</span>
               Hapus
@@ -404,7 +404,7 @@ async function konfirmHapus() {
               <button
                 onClick={konfirmHapus}
                 disabled={hapusLoading}
-                className="clay-btn clay-key-danger btn-md flex-1 bg-red-500 text-white transition-colors hover:bg-red-600 disabled:opacity-60"
+                className="clay-btn clay-key-danger solid-danger btn-md flex-1 text-white transition-colors hover: disabled:opacity-60"
               >
                 {hapusLoading ? 'Menghapus…' : 'Ya, Hapus'}
               </button>
@@ -430,7 +430,7 @@ async function konfirmHapus() {
               <button
                 onClick={konfirmHapusMassal}
                 disabled={hapusLoading}
-                className="clay-btn clay-key-danger btn-md flex-1 bg-red-500 text-white transition-colors hover:bg-red-600 disabled:opacity-60"
+                className="clay-btn clay-key-danger solid-danger btn-md flex-1 text-white transition-colors hover: disabled:opacity-60"
               >
                 {hapusLoading ? 'Menghapus…' : 'Ya, Hapus Semua'}
               </button>

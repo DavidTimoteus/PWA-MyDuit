@@ -41,7 +41,7 @@ export default function FilterTransaksiModal({ open, chip, rentang, onClose, onA
     <label className={`flex cursor-pointer items-center justify-between py-3 ${id === 'rentang' ? '' : 'border-b border-gray-100'}`}>
       <div>
         <span className={`block text-sm font-medium ${primary ? 'text-primary' : 'text-slate-800'}`}>{label}</span>
-        {subtitle !== null && <span className="text-xs text-slate-400">{subtitle}</span>}
+        {subtitle !== null && <span className="text-xs text-slate-500">{subtitle}</span>}
       </div>
       <input type="radio" name="filterTipeModal" checked={tipe === id} onChange={() => setTipe(id)} className="clay-radio" />
     </label>
@@ -58,7 +58,7 @@ export default function FilterTransaksiModal({ open, chip, rentang, onClose, onA
           <button
             onClick={onClose}
             aria-label="Tutup"
-            className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
             <span className="material-symbols-outlined icon-lg">close</span>
           </button>
@@ -91,7 +91,7 @@ export default function FilterTransaksiModal({ open, chip, rentang, onClose, onA
           </button>
           <button
             onClick={terapkan}
-            className="clay-btn clay-key-primary btn-md flex-1 bg-primary text-white transition-colors hover:bg-emerald-800"
+            className="clay-btn clay-key-primary solid-primary btn-md flex-1 text-white transition-colors hover:"
           >
             Terapkan
           </button>

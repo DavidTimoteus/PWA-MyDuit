@@ -36,7 +36,7 @@ export default function ExportPdfModal({ open, onClose, uid, userName }) {
       <div className="clay-sheet clay-key-primary flex max-h-[90vh] w-full flex-col overflow-hidden bg-white sm:max-w-sm" onClick={(e) => e.stopPropagation()}>
         <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 pb-4 pt-5">
           <h3 className="text-lg font-extrabold text-slate-800">Export Laporan PDF</h3>
-          <button onClick={onClose} aria-label="Tutup" className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} aria-label="Tutup" className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:text-slate-600">
             <span className="material-symbols-outlined icon-lg">close</span>
           </button>
         </div>
@@ -82,7 +82,7 @@ export default function ExportPdfModal({ open, onClose, uid, userName }) {
         </div>
         <div className="flex shrink-0 gap-3 border-t border-slate-100 px-5 py-4">
           <button onClick={onClose} className="clay-btn clay-btn-secondary btn-md flex-1 text-textSecondary">Batal</button>
-          <button onClick={proses} disabled={loading} className="clay-btn clay-key-primary btn-md flex-1 bg-primary text-white disabled:opacity-60">
+          <button onClick={proses} disabled={loading} className="clay-btn clay-key-primary solid-primary btn-md flex-1 text-white disabled:opacity-60">
             <span className="material-symbols-outlined icon-md">picture_as_pdf</span>
             {loading ? 'Menyiapkan…' : 'Export PDF'}
           </button>

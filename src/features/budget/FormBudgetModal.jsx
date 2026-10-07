@@ -85,17 +85,17 @@ export default function FormBudgetModal({ open, onClose, uid, kategoriList, exis
         />
         <label className="mb-0.5 block text-[11px] font-semibold text-textSecondary">Limit per bulan</label>
         <div className="clay-field mb-4 flex items-center gap-2 rounded-xl px-3 py-2.5">
-          <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
+          <span className="text-sm font-bold text-slate-500">{simbolUang()}</span>
           <input
             value={limit}
             onChange={(e) => setLimit(formatRibuanInput(e.target.value))}
             inputMode="numeric"
             placeholder="0"
-            className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400"
+            className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-500"
           />
         </div>
         {error && <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
-        <button disabled={saving} className="clay-btn clay-key-blue btn-lg w-full bg-blue-700 text-sm font-extrabold text-white transition-colors hover:bg-blue-800 disabled:opacity-60">
+        <button disabled={saving} className="clay-btn clay-key-blue solid-blue btn-lg w-full text-sm font-extrabold text-white transition-colors hover: disabled:opacity-60">
           <span className="material-symbols-outlined icon-sm">save</span>
           {saving ? 'Menyimpan…' : 'Simpan'}
         </button>

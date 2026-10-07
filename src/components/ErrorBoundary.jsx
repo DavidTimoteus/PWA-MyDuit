@@ -61,7 +61,7 @@ export default class ErrorBoundary extends Component {
     return (
       <div className="min-h-full flex items-center justify-center bg-surface p-6">
         <div className="clay-card w-full max-w-md rounded-[28px] p-6 text-center">
-          <span className="material-symbols-outlined icon-hero text-amber-500">error</span>
+          <span className="material-symbols-outlined icon-hero text-amber-600">error</span>
           <h1 className="mt-3 text-lg font-extrabold text-slate-800">Aplikasi gagal dimuat</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">{pesanRamah(error)}</p>
           <button

@@ -24,7 +24,7 @@ export function ChipAkunBaru({ uid }) {
   if (selesai) {
     return (
       <div className="clay-card p-6 text-center">
-        <span className="material-symbols-outlined text-4xl text-income">check_circle</span>
+        <span className="material-symbols-outlined text-4xl text-incomeText">check_circle</span>
         <p className="mt-2 text-sm font-bold text-slate-700">Rekening dibuat! Lanjut catat transaksi.</p>
       </div>
     )
@@ -33,7 +33,7 @@ export function ChipAkunBaru({ uid }) {
   return (
     <div className="clay-card p-6">
       <h3 className="text-base font-extrabold text-slate-800">Buat rekening pertama</h3>
-      <p className="mt-1 text-xs leading-relaxed text-slate-400">
+      <p className="mt-1 text-xs leading-relaxed text-slate-500">
         Rekening adalah sumber dana transaksi (mis. Rekening Utama, E-Wallet, Tabungan).
       </p>
       <form onSubmit={buat} className="mt-4 space-y-2">
@@ -44,13 +44,13 @@ export function ChipAkunBaru({ uid }) {
           className="clay-field w-full rounded-xl px-3 py-2.5 text-sm font-semibold"
         />
         <div className="clay-field flex items-center gap-2 rounded-xl px-3 py-2.5">
-          <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
+          <span className="text-sm font-bold text-slate-500">{simbolUang()}</span>
           <input
             value={saldo}
             onChange={(e) => setSaldo(formatRibuanInput(e.target.value))}
             inputMode="numeric"
             placeholder="Saldo awal (opsional)"
-            className="w-full bg-transparent text-sm font-semibold outline-none placeholder:font-normal placeholder:text-slate-400"
+            className="w-full bg-transparent text-sm font-semibold outline-none placeholder:font-normal placeholder:text-slate-500"
           />
         </div>
         <button
@@ -83,7 +83,7 @@ export function TransaksiRow({ trans, bulkMode, selected, onToggleSelect, delete
   const isPemasukan = trans.jenis === 'pemasukan'
   const isPindahSaldo = trans.jenis === 'pindah saldo'
   const sign = isPindahSaldo ? '' : isPemasukan ? '+' : '-'
-  const color = isPindahSaldo ? 'text-blue-600' : isPemasukan ? 'text-emerald-600' : 'text-red-500'
+  const color = isPindahSaldo ? 'text-blue-600' : isPemasukan ? 'text-incomeText' : 'text-expenseText'
   const bg = isPindahSaldo ? 'bg-blue-50' : isPemasukan ? 'bg-emerald-100' : 'bg-red-50'
   const icon = isPindahSaldo ? 'sync_alt' : isPemasukan ? 'trending_up' : 'trending_down'
   const clayKey = isPindahSaldo ? 'clay-key-blue' : isPemasukan ? 'clay-key-primary' : 'clay-key-danger'
@@ -121,7 +121,7 @@ export function TransaksiRow({ trans, bulkMode, selected, onToggleSelect, delete
           <h3 className="font-semibold text-slate-800 text-[15px] truncate mb-0.5">
             {trans.catatan || trans.kategoriNama || 'Tanpa Keterangan'}
           </h3>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex min-w-0 items-center gap-2 text-xs text-slate-500">
             <span className="font-medium">{tanggalRelatif(trans.tanggal)}</span>
             <span className="w-1 h-1 rounded-full bg-slate-300"></span>
             <span className="truncate">{trans.kategoriNama || '-'}</span>
@@ -132,7 +132,7 @@ export function TransaksiRow({ trans, bulkMode, selected, onToggleSelect, delete
         <p className={`font-bold ${color} text-[15px] mb-0.5`}>
           {sign}{simbolUang()} {formatNominal(trans.jumlah || 0)}
         </p>
-        <p className="text-[10px] text-slate-400">{isPindahSaldo ? trans.akunNama : trans.akunNama || 'Tunai'}</p>
+        <p className="text-[10px] text-slate-500">{isPindahSaldo ? trans.akunNama : trans.akunNama || 'Tunai'}</p>
       </div>
       {!bulkMode && (
         <button

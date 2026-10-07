@@ -88,7 +88,7 @@ function NavIkona({ t, active, onClick }) {
       onClick={onClick}
       aria-label={t.label}
       aria-current={active ? 'page' : undefined}
-      className={`nav-item group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl py-1.5 transition-colors ${
+      className={`nav-item group relative flex h-[54px] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-0 transition-colors ${
         active ? activeColor : 'text-textSecondary'
       }`}
     >
@@ -100,7 +100,7 @@ function NavIkona({ t, active, onClick }) {
           {t.icon}
         </span>
       </span>
-      <span className={`max-w-full truncate text-[11px] leading-none ${active ? 'font-extrabold' : 'font-semibold'}`}>
+      <span className={`w-full shrink-0 whitespace-nowrap text-center text-[11px] leading-tight ${active ? 'font-extrabold' : 'font-semibold'}`}>
         {t.label}
       </span>
       {/* Titik indikator aktif — sinyal kedua selain warna (ramah buta warna) */}
@@ -157,7 +157,7 @@ function SidebarInsightStatistik() {
       </p>
       <div className="h-px bg-slate-200/70"></div>
       <div className="flex items-start gap-2">
-        <span className="material-symbols-outlined icon-sm text-amber-500 shrink-0" style={{ fontVariationSettings: '"FILL" 1' }}>tips_and_updates</span>
+        <span className="material-symbols-outlined icon-sm text-amber-600 shrink-0" style={{ fontVariationSettings: '"FILL" 1' }}>tips_and_updates</span>
         <p className="text-[11px] leading-snug text-slate-600">{functionTipHarian()}</p>
       </div>
     </div>
@@ -181,7 +181,7 @@ function SidebarInsightBudget() {
 
   return (
     <div id="sidebarBudgetInsightCard" className="clay clay-card clay-key-blue bg-white mt-2 flex w-full min-w-0 flex-col gap-2 rounded-[18px] p-4">
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         <span className="material-symbols-outlined icon-sm text-blue-600 shrink-0" style={{ fontVariationSettings: '"FILL" 1' }}>insights</span>
         <p className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-500">Insight Budget</p>
       </div>
@@ -204,7 +204,7 @@ function SidebarInsightBudget() {
             <>
               <div className="h-px bg-slate-200/70"></div>
               <div className="flex min-w-0 items-start gap-2">
-                <span className="material-symbols-outlined icon-sm text-amber-500 shrink-0" style={{ fontVariationSettings: '"FILL" 1' }}>warning</span>
+                <span className="material-symbols-outlined icon-sm text-amber-600 shrink-0" style={{ fontVariationSettings: '"FILL" 1' }}>warning</span>
                 <p className="min-w-0 break-words text-[11px] leading-snug text-slate-600">
                   <span className="font-bold text-slate-700">{hampirHabis.nama}</span> hampir mencapai limit ({hampirHabis.persen}%)
                 </p>
@@ -245,8 +245,8 @@ function SidebarInsightUtang() {
       </div>
       <p className="text-[10px] font-medium text-textSecondary">{perkiraan}</p>
       <div className="h-px bg-slate-200/70"></div>
-      <div className="flex items-start gap-2">
-        <span className="material-symbols-outlined icon-sm text-amber-500 shrink-0" style={{ fontVariationSettings: '"FILL" 1' }}>warning</span>
+      <div className="flex min-w-0 items-start gap-2">
+        <span className="material-symbols-outlined icon-sm text-amber-600 shrink-0" style={{ fontVariationSettings: '"FILL" 1' }}>warning</span>
         <div className="min-w-0">
           <p className="truncate text-[11px] font-bold text-slate-700">{terbesar?.nama ?? '—'}</p>
           <p className="text-[10px] font-medium text-textSecondary">
@@ -277,7 +277,7 @@ function LokasiModal({ open, onClose, aktifCode, otomatis }) {
               {otomatis ? 'Saat ini terdeteksi otomatis dari perangkat' : 'Saat ini diatur manual'}
             </p>
           </div>
-          <button onClick={onClose} aria-label="Tutup" className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} aria-label="Tutup" className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:text-slate-600">
             <span className="material-symbols-outlined icon-lg">close</span>
           </button>
         </div>
@@ -325,6 +325,19 @@ export default function Shell({ user }) {
   const [filterLabel, setFilterLabel] = useState('Hari Ini')
   const aktif = TABS.find((t) => t.id === tab)
   const mainScrollRef = useRef(null)
+
+  // Mode "pas layar": dipakai tab Utang di mobile. Konten dikunci setinggi
+  // viewport dikurangi bottom-nav dan dilarang scroll — UtangMobile memakai
+  // pager satu kartu per halaman supaya semuanya muat tanpa menggeser layar.
+  const [lebarLayar, setLebarLayar] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1280,
+  )
+  useEffect(() => {
+    const onResize = () => setLebarLayar(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  const pasLayar = tab === 'utang' && lebarLayar < 1024
 
   // Info negara + mata uang untuk indikator lokasi di sidebar kiri.
   // Sumber: pilihan manual pengguna (localStorage) > timezone perangkat.
@@ -391,11 +404,28 @@ export default function Shell({ user }) {
     }
   }
 
+
+  // RESPONSIF - grid 2 sampai 3 kolom, sesuai jumlah panel yang tampil.
+  //
+  // Ada 3 grid item: aside (sidebar kiri), main (isi), dan panel kanan
+  // (RightPanel/StatistikAsidePanel/BudgetAsidePanel/UtangAsidePanel).
+  // Panel kanan itu punya `hidden xl:flex xl:w-[350px]` sendiri, jadi
+  // kolom ke-3 HARUS ada di lg ke atas atau panel kanan hilang.
+  //
+  //   <768px : 1 kolom, sidebar kiri jadi bottom-nav fixed
+  //   768+   : 2 kolom -> sidebar 240px + isi   (panel kanan masih hidden)
+  //   1024+  : 3 kolom -> sidebar 260px + isi + panel kanan 350px
+  //   1280+  : 3 kolom -> sidebar 300px + isi + panel kanan 350px
+  //   1536+  : 3 kolom -> sidebar 350px + isi + panel kanan 350px
+  //
+  // Kolom isi memakai minmax(0,1fr) + min-w-0 di main supaya angka rupiah
+  // dan tabel panjang tidak melebarkan kolom (sumber scroll horizontal).
+
   return (
-    <div className="min-h-full md:grid md:h-screen md:grid-cols-[260px_1fr] lg:grid-cols-[350px_1fr_350px]">
+    <div className="min-h-full md:grid md:h-screen md:grid-rows-[minmax(0,1fr)] md:overflow-hidden md:grid-cols-[240px_minmax(0,1fr)_0px] xl:grid-cols-[260px_minmax(0,1fr)_350px] 2xl:grid-cols-[300px_minmax(0,1fr)_350px]">
       {/* ===== SIDEBAR DESKTOP ===== */}
-      <aside className="hidden md:flex md:shrink-0 md:grow-0 md:w-[260px] md:min-w-[260px] md:max-w-[260px] lg:w-[350px] lg:min-w-[350px] lg:max-w-[350px] md:h-full md:p-4 md:pr-2 md:gap-4">
-        <div className={`clay ${sidebarTheme(tab).panel} bg-surfaceContainerLowest flex flex-col h-full w-full min-w-0 rounded-[28px] p-4 lg:p-5`}>
+      <aside className="hidden md:flex md:shrink-0 md:grow-0 md:w-[240px] md:min-w-[240px] md:max-w-[240px] xl:w-[260px] xl:min-w-[260px] xl:max-w-[260px] 2xl:w-[300px] 2xl:min-w-[300px] 2xl:max-w-[300px] md:h-full md:p-4 md:pr-2 md:gap-4">
+        <div className={`clay ${sidebarTheme(tab).panel} bg-surfaceContainerLowest flex flex-col h-full w-full min-w-0 overflow-y-auto hide-scrollbar rounded-[28px] p-4 xl:p-5`}>
           <div className="flex items-center gap-3 px-1 pb-4 pt-1">
             <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${sidebarTheme(tab).logo} text-white shadow-sm shrink-0`}>
               <span className="material-symbols-outlined icon-lg" style={{ fontVariationSettings: '"FILL" 1' }}>savings</span>
@@ -407,7 +437,7 @@ export default function Shell({ user }) {
           </div>
           <div className="mx-1 h-px bg-slate-200/70"></div>
 
-          <nav className="-mx-1 mt-4 flex flex-1 flex-col gap-2 px-1">
+          <nav className="-mx-1 mt-4 flex min-h-0 flex-1 flex-col gap-2 px-1">
             {TABS.map((t) => {
               const active = tab === t.id
               return (
@@ -450,7 +480,7 @@ export default function Shell({ user }) {
                 <button
                   type="button"
                   onClick={() => setLokasiOpen(true)}
-                  className="mt-0.5 block max-w-full truncate text-left text-[9px] text-textSecondary hover:text-slate-600"
+                  className="mt-0.5 block max-w-full truncate rounded-md text-left text-[9px] text-textSecondary hover:text-slate-600"
                 >
                   {countryFlag} {countryNama} · {currencySymbol}
                 </button>
@@ -474,10 +504,17 @@ export default function Shell({ user }) {
         </div>
       </aside>
 
-      {/* ===== KONTEN UTAMA ===== */}
-      <main className="flex-1 pb-24 md:flex md:flex-col md:h-full md:overflow-hidden md:pb-6 md:px-4 lg:px-6">
-  <div className="md:h-full md:overflow-hidden md:pr-2 md:rounded-[28px]">
-    <div ref={mainScrollRef} className="main-scroll max-w-3xl mx-auto min-h-screen relative px-4 md:max-w-none md:px-6 md:mx-0 md:bg-transparent md:h-full md:overflow-y-auto">
+      {/* ===== KONTEN UTAMA =====
+          min-w-0 wajib: sebagai anak grid, `1fr` = minmax(auto,1fr), jadi
+          konten panjang bisa melebarkan kolom dan memicu scroll horizontal.
+
+          Mode "pas layar" (mobile, tab utang): konten mengunci tinggi ke
+          100dvh - bottom-nav dan TIDAK boleh scroll. Tampilan utang mobile
+          memakai pager satu-kartu-per-halaman supaya semua muat. Di luar itu
+          (dan di desktop) tetap bisa scroll normal. */}
+            <main className={`flex-1 min-w-0 md:flex md:flex-col md:h-full md:overflow-hidden md:pb-6 md:px-6 ${pasLayar ? 'h-[calc(100dvh-76px)] overflow-hidden pb-0' : 'pb-24'}`}>
+        <div className={`min-w-0 md:h-full md:overflow-hidden md:pr-2 md:rounded-[28px] ${pasLayar ? 'h-full' : ''}`}>
+          <div ref={mainScrollRef} className={`main-scroll max-w-3xl mx-auto relative w-full min-w-0 overflow-x-hidden px-4 md:max-w-none md:px-6 md:mx-0 md:bg-transparent md:h-full md:overflow-y-auto ${pasLayar ? 'h-full overflow-hidden' : 'min-h-screen'}`}>
         {!online && (
           <div className="sticky top-0 z-10 flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-[11px] font-bold text-amber-900">
             <span className="material-symbols-outlined icon-xs">wifi_off</span>
@@ -498,7 +535,7 @@ export default function Shell({ user }) {
             >
               <span className="text-sm leading-none">{countryFlag}</span>
               <span className="font-extrabold text-slate-800">{currencySymbol}</span>
-              <span className="material-symbols-outlined icon-xs text-slate-400">expand_more</span>
+              <span className="material-symbols-outlined icon-xs text-slate-500">expand_more</span>
             </button>
 
             {/* Action buttons di kanan. Di layar sempit (<=360px) hanya yang
@@ -509,9 +546,9 @@ export default function Shell({ user }) {
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('myduit:buka-filter'))}
                 aria-label="Filter Transaksi"
-                className="clay-chip clay-key-primary flex h-9 shrink-0 items-center gap-1 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-emerald-50 active:scale-95"
+                className="clay-chip flex min-w-0 h-9 shrink-0 items-center gap-1 rounded-full bg-surfaceContainerLowest px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:scale-95"
               >
-                <span className="material-symbols-outlined icon-md text-emerald-600">tune</span>
+                <span className="material-symbols-outlined icon-md text-incomeText">tune</span>
                 <span className="truncate max-w-[70px]">{filterLabel}</span>
               </button>
               <button
@@ -556,7 +593,7 @@ export default function Shell({ user }) {
               <div className="clay-card-soft mt-4 flex flex-col items-center justify-center px-6 py-16 text-center">
               <span className="material-symbols-outlined mb-3 text-5xl text-primary/40">{aktif.icon}</span>
               <p className="text-sm font-bold text-slate-700">Modul {aktif.label} menyusul di {aktif.fase}.</p>
-              <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
+              <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-500">
                 Fondasi offline-first (Auth + Firestore persistence) sudah siap — konten modul dibangun bertahap sesuai roadmap.
               </p>
             </div>
@@ -591,8 +628,8 @@ export default function Shell({ user }) {
                   type="button"
                   onClick={() => { setFabDial(false); dispatchAksi('pemasukan') }}
                   aria-label="Catat Pemasukan"
-                  className="clay-fab clay-key-primary fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest bg-primary text-white"
-                  style={{ '--tx': '-72px', '--ty': '-38px', transitionDelay: '.02s' }}
+                  className="clay-fab clay-key-primary solid-primary fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest text-white"
+                  style={{ '--tx': '-52px', '--ty': '-34px', transitionDelay: '.02s' }}
                 >
                   <span className="material-symbols-outlined icon-sm">trending_up</span>
                 </button>
@@ -600,8 +637,8 @@ export default function Shell({ user }) {
                   type="button"
                   onClick={() => { setFabDial(false); dispatchAksi('pindah-saldo') }}
                   aria-label="Pindah Saldo"
-                  className="clay-fab clay-key-blue fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest bg-blue-600 text-white"
-                  style={{ '--tx': '0px', '--ty': '-86px', transitionDelay: '.07s' }}
+                  className="clay-fab clay-key-blue solid-blue fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest text-white"
+                  style={{ '--tx': '0px', '--ty': '-72px', transitionDelay: '.07s' }}
                 >
                   <span className="material-symbols-outlined icon-sm">sync_alt</span>
                 </button>
@@ -609,8 +646,8 @@ export default function Shell({ user }) {
                   type="button"
                   onClick={() => { setFabDial(false); dispatchAksi('pengeluaran') }}
                   aria-label="Catat Pengeluaran"
-                  className="clay-fab clay-key-danger fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest bg-red-600 text-white"
-                  style={{ '--tx': '72px', '--ty': '-38px', transitionDelay: '.12s' }}
+                  className="clay-fab clay-key-danger solid-danger fab-dial-btn flex items-center justify-center rounded-full border-4 border-surfaceContainerLowest text-white"
+                  style={{ '--tx': '52px', '--ty': '-34px', transitionDelay: '.12s' }}
                 >
                   <span className="material-symbols-outlined icon-sm">trending_down</span>
                 </button>

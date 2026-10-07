@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatRibuanInput, isoHariIni, parseNominal, simbolUang } from '../../lib/format.js'
-import { ambilAtauBuatKategori, simpanTransaksi, updateTransaksi } from '../../lib/db.js'
+import { ambilAtauBuatKategori, simpanTransaksi, tambahAkun, updateTransaksi } from '../../lib/db.js'
 import { ClayCombobox, ClayDateInput, ClaySelect } from '../../components/clay-ui.jsx'
 import { pesanErrorSimpan } from '../../lib/pesanError.js'
 import { bacaStruk, matikanOcr } from '../../lib/ocrStruk.js'
@@ -10,7 +10,7 @@ import { bacaStruk, matikanOcr } from '../../lib/ocrStruk.js'
 // speed-dial mengirim preset pemasukan|pengeluaran; default pengeluaran).
 // Grup Scan Struk (mode add) menjalankan OCR 100% di browser (lihat ocrStruk.js):
 // pengguna memilih/memfoto struk → total, tanggal, dan keterangan terisi otomatis.
-export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunList, kategoriList, mode, doc: sumber }) {
+export default function FormTransaksiModal({ uid, open, onClose, onSalin, onAkunBaru, akunList, kategoriList, mode, doc: sumber }) {
   const [jenis, setJenis] = useState('pengeluaran')
   const [jumlah, setJumlah] = useState('')
   const [kategoriNama, setKategoriNama] = useState('')
@@ -28,6 +28,13 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
   const [scanProgress, setScanProgress] = useState(0)
   const [scanHasil, setScanHasil] = useState(null) // hasil bacaStruk()
   const [scanPesan, setScanPesan] = useState('') // info/kesalahan OCR
+  // Sumber pembayaran yang terdeteksi dari struk tapi BELUM ada di akunList
+  // (mis. user punya struk SeaBank tapi belum menambah rekening SeaBank).
+  // null = tidak ada saran. Object = { nama, jenis } siap ditawarkan ke user.
+  const [sumberSaran, setSumberSaran] = useState(null)
+  const [sumberBaru, setSumberBaru] = useState('') // input nama rekening baru
+  const [sumberMenyimpan, setSumberMenyimpan] = useState(false)
+  const [tambahAkunBusy, setTambahAkunBusy] = useState(false)
   const masihTerpasang = useRef(true)
 
   useEffect(() => {
@@ -71,6 +78,28 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
   if (!open) return null
 
   // ===== Handler OCR Scan Struk =====
+  // Simpan rekening baru hasil deteksi struk, lalu PAKAI langsung sebagai
+  // akun transaksi. Sengaja tidak diam-diam menebak: user menekan tombol dulu.
+  async function tambahSumberBaru(saran, nama) {
+    const bersih = nama.trim()
+    if (!bersih || tambahAkunBusy) return
+    setTambahAkunBusy(true)
+    setError('')
+    try {
+      const tipe = saran?.tipe || 'Dompet Digital'
+      const id = await tambahAkun(uid, { nama: bersih, tipe, saldoAwal: 0 })
+      setAkunId(id)
+      onAkunBaru?.({ id, nama: bersih, tipe, saldo: 0 })
+      setSumberMenyimpan(false)
+      setSumberSaran(null)
+      setSumberBaru('')
+    } catch (e) {
+      setError(pesanErrorSimpan(e, 'Gagal menambah rekening.'))
+    } finally {
+      setTambahAkunBusy(false)
+    }
+  }
+
   async function prosesStruk(e) {
     const file = e.target.files?.[0]
     e.target.value = '' // izinkan pilih file yang sama dua kali
@@ -86,6 +115,9 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
 
     setScanPesan('')
     setScanHasil(null)
+    setSumberSaran(null)
+    setSumberBaru('')
+    setSumberMenyimpan(false)
     setScanProses(true)
     setScanProgress(0)
     setScan({ nama: file.name, url: URL.createObjectURL(file) })
@@ -102,12 +134,46 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
       if (hasil.total && hasil.total > 0) setJumlah(formatRibuanInput(String(hasil.total)))
       if (hasil.tanggal) setTanggal(hasil.tanggal)
       if (hasil.jenis) setJenis(hasil.jenis)
-      if (hasil.merchant) setCatatan((c) => c || hasil.merchant)
+
+      // Keterangan = NAMA BARANG yang dibeli, bukan nama merchant. Merchant
+      // dipindah ke kolom Sumber/Akun (dan dicadangkan di catatan hanya kalau
+      // tidak ada barang yang terbaca, supaya kolom tidak pernah kosong).
+      if (hasil.keterangan) setCatatan((c) => c || hasil.keterangan)
+      else if (hasil.merchant) setCatatan((c) => c || hasil.merchant)
+
+      // Kategori: pakai hasil pemetaan isi struk. Falls back ke Lainnya kalau
+      // tak ada keyword yang cocok, jadi kolom kategori TIDAK PERNAH kosong
+      // dan user tinggal menyetujui/koreksi lewat combobox.
+      if (hasil.kategoriNama) setKategoriNama(hasil.kategoriNama)
+
+      // Sumber/Akun: kalau struk menyebut dompet/bank pembayar, pakai rekening
+      // yang SUDAH ADA. Kalau belum ada rekening dengan nama itu, tawarkan ke
+      // user untuk menambah (bukan diam-diam menebak).
+      setSumberSaran(null)
+      if (hasil.sumberBayar?.nama) {
+        const cocok = akunList.find((a) => a.nama.toLowerCase().includes(hasil.sumberBayar.nama.toLowerCase()))
+        if (cocok) {
+          setAkunId(cocok.id)
+        } else {
+          setSumberSaran(hasil.sumberBayar)
+          setSumberBaru(hasil.sumberBayar.nama)
+        }
+      }
+
+      const bagian = []
+      if (hasil.total && hasil.total > 0) bagian.push(`Total ${formatRibuanInput(String(hasil.total))}.`)
+      if (hasil.kategoriNama) bagian.push(`Kategori disarankan: ${hasil.kategoriNama}.`)
+      if (hasil.keterangan) bagian.push(`Keterangan: ${hasil.keterangan}.`)
+      if (hasil.sumberBayar?.nama && !akunList.some((a) => a.nama.toLowerCase().includes(hasil.sumberBayar.nama.toLowerCase())))
+        bagian.push(`Rekening ${hasil.sumberBayar.nama} belum ada — bisa ditambah di bawah.`)
+      if (hasil.bayarTunai) bagian.push('Dibayar tunai, jadi tidak perlu pilih rekening? Tetap pilih rekening yang dipakai Receive.')
 
       if (!hasil.total || hasil.total <= 0) {
         setScanPesan('Total tidak terbaca otomatis. Isi nominal manual di bawah — teks struk tetap tersimpan untuk diperiksa.')
       } else if ((hasil.confidence ?? 0) < 55) {
-        setScanPesan(`Total terdeteksi: ${formatRibuanInput(String(hasil.total))}. Keyakinan OCR rendah — mohon periksa sebelum simpan.`)
+        setScanPesan(`${bagian.join(' ')} Keyakinan OCR rendah — mohon periksa sebelum simpan.`)
+      } else if (bagian.length) {
+        setScanPesan(bagian.join(' '))
       }
     } catch (err) {
       console.warn('[scan-struk] gagal:', err?.message ?? err)
@@ -199,7 +265,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
                 type="button"
                 onClick={() => onSalin?.(sumber)}
                 title="Salin transaksi"
-                className="clay-chip clay-key-primary inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-primary-light text-primary transition-colors hover:bg-emerald-100"
+                className="clay-chip clay-key-primary solid-primary inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full -light text-primary transition-colors hover:"
               >
                 <span className="material-symbols-outlined icon-sm">content_copy</span>
               </button>
@@ -208,7 +274,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
               type="button"
               onClick={tutupModal}
               aria-label="Tutup"
-              className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-600"
             >
               <span className="material-symbols-outlined icon-lg">close</span>
             </button>
@@ -269,7 +335,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
                         <p className="mt-0.5 text-[10px] text-textSecondary">Membaca struk… {scanProgress}%</p>
                       </>
                     ) : (
-                      <p className="mt-0.5 text-[10px] text-emerald-600">Selesai diproses</p>
+                      <p className="mt-0.5 text-[10px] text-incomeText">Selesai diproses</p>
                     )}
                   </div>
                 </div>
@@ -325,6 +391,92 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
               placeholder="Pilih Sumber/Akun"
               options={akunList.map((a) => ({ value: a.id, label: a.nama }))}
             />
+
+            {/* Strok terdeteksi provider pembayaran (GoPay/SeaBank/SPayLater/...)
+                yang BELUM ada di daftar rekening user. Bukan menebak diam-diam:
+                user dikonfirmasi dulu, dan rekening baru benar-benar tersimpan
+                ke Firestore sebelum dipakai sebagai akun transaksi. */}
+            {sumberSaran && !sumberMenyimpan && (
+              <div className="clay-key-info mt-1 rounded-2xl p-3">
+                <div className="flex items-start gap-2">
+                  <span
+                    className="material-symbols-outlined icon-sm shrink-0 text-info"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    account_balance
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold text-slate-700">
+                      Struk dibayar via {sumberSaran.nama}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                      Rekening ini belum ada di daftarmu. Tambahkan dulu supaya transaksi
+                      tercatat di sumber yang benar.
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSumberMenyimpan(true)}
+                        className="clay-chip-primary inline-flex min-h-11 items-center gap-1.5 rounded-full px-3.5 text-[11px] font-bold"
+                      >
+                        <span className="material-symbols-outlined icon-2xs">add</span>
+                        Tambah {sumberSaran.nama}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSumberSaran(null)
+                          setSumberBaru('')
+                        }}
+                        className="clay-chip clay-key-neutral inline-flex min-h-11 items-center rounded-full px-3.5 text-[11px] font-semibold text-slate-600"
+                      >
+                        Nanti saja
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {sumberMenyimpan && (
+              <div className="mt-1 flex flex-col gap-2">
+                <label
+                  htmlFor="tx-sumber-baru"
+                  className="block text-[11px] font-semibold text-slate-600"
+                >
+                  Nama rekening baru
+                </label>
+                <input
+                  id="tx-sumber-baru"
+                  type="text"
+                  value={sumberBaru}
+                  onChange={(e) => setSumberBaru(e.target.value)}
+                  placeholder="mis. GoPay"
+                  className="clay-input min-h-11 w-full rounded-2xl px-3 text-sm text-slate-800"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={!sumberBaru.trim() || tambahAkunBusy}
+                    onClick={() => tambahSumberBaru(sumberSaran, sumberBaru)}
+                    className="clay-chip-primary inline-flex min-h-11 items-center gap-1.5 rounded-full px-3.5 text-[11px] font-bold disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined icon-2xs">save</span>
+                    {tambahAkunBusy ? 'Menyimpan...' : 'Simpan & pakai'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSumberMenyimpan(false)
+                      setSumberSaran(null)
+                    }}
+                    className="clay-chip clay-key-neutral inline-flex min-h-11 items-center rounded-full px-3.5 text-[11px] font-semibold text-slate-600"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -395,7 +547,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, akunLi
           <button
             type="submit"
             disabled={saving}
-            className="clay-btn clay-key-primary btn-lg w-full bg-primary text-white transition-colors hover:bg-emerald-800 disabled:opacity-60"
+            className="clay-btn clay-key-primary solid-primary btn-lg w-full text-white transition-colors hover: disabled:opacity-60"
           >
             <span className="material-symbols-outlined icon-md">save</span>
             {saving ? 'Menyimpan…' : mode === 'edit' ? 'Simpan Perubahan' : 'Simpan Transaksi'}

@@ -34,6 +34,11 @@ export default function StatistikAsidePanel() {
         in: 0, out: 0, saldo: 0, rataHarian: 0, akunList: 0,
         jmlTransaksi: 0, kategoriAktif: 0,
         pengeluaranTerbesar: null,
+        hariAktif: 0, jumlahHariBulan: 0,
+        rataPengeluaranHariAktif: 0,
+        hariPalingBoros: null,
+        terbesarPemasukan: null,
+        topKategoriBoros: [],
       },
     [data],
   )
@@ -57,8 +62,8 @@ export default function StatistikAsidePanel() {
   }
 
   return (
-    <aside className="hidden lg:flex lg:h-full lg:w-[350px] lg:min-w-[350px] lg:max-w-[350px] lg:shrink-0 lg:grow-0 lg:flex-col lg:overflow-hidden lg:p-4 lg:pl-2">
-      <div className="clay clay-key-primary flex h-full flex-col overflow-hidden rounded-[28px] bg-surfaceContainerLowest p-5 w-full min-w-0">
+    <aside className="hidden xl:flex xl:h-full xl:w-[350px] xl:min-w-[350px] xl:max-w-[350px] xl:shrink-0 xl:grow-0 xl:flex-col xl:overflow-hidden xl:p-4 xl:pl-2">
+      <div className="clay clay-key-primary flex h-full flex-col overflow-y-auto hide-scrollbar rounded-[28px] bg-surfaceContainerLowest p-5 w-full min-w-0">
         {/* Header — judul "Statistik Cepat" + tombol Cetak PDF di kanan */}
         <div className="flex shrink-0 items-center justify-between px-1 pb-3">
           <h2 className="text-base font-extrabold tracking-tight text-slate-800">Statistik Cepat</h2>
@@ -73,16 +78,8 @@ export default function StatistikAsidePanel() {
         </div>
         <div className="mb-3 h-px shrink-0 bg-slate-200/70"></div>
 
-        {/* Update API Key AI — btn-md tinggi cukup, tidak gepeng */}
-        <button
-          onClick={() => alert('Buka modal Update API Key AI')}
-          className="clay-btn clay-key-blue btn-md mb-3 w-full shrink-0 rounded-xl bg-blue-50 text-[11px] font-bold text-blue-700 transition-colors hover:bg-blue-100"
-        >
-          Update API Key AI
-        </button>
-
         {/* Grup konten utama — overflow-hidden dicopot: memotong clay shadow kartu */}
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div className="flex shrink-0 flex-col gap-3">
           {/* Pengeluaran Terbesar — shadow hue merah (clay-key-danger) */}
           <div className="clay-card clay-key-danger shrink-0 rounded-[22px] bg-surfaceContainerLowest p-3">
             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Pengeluaran Terbesar</p>
@@ -96,7 +93,7 @@ export default function StatistikAsidePanel() {
                   {pengeluaranTerbesar ? `${((pengeluaranTerbesar.total / Math.max(1, ringkas.out)) * 100).toFixed(0)}% dari total` : 'Belum ada data periode ini'}
                 </p>
               </div>
-              <p className="shrink-0 font-mono text-xs font-bold text-expense">{formatRupiah(pengeluaranTerbesar?.total ?? 0)}</p>
+              <p className="shrink-0 font-mono text-xs font-bold text-expenseText">{formatRupiah(pengeluaranTerbesar?.total ?? 0)}</p>
             </div>
           </div>
 
@@ -104,7 +101,7 @@ export default function StatistikAsidePanel() {
           <div className="clay-card clay-key-primary shrink-0 rounded-[22px] bg-surfaceContainerLowest p-3">
             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Rasio Tabungan</p>
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="font-mono text-xl font-extrabold text-emerald-600">{rasioTabungan}%</span>
+              <span className="font-mono text-xl font-extrabold text-incomeText">{rasioTabungan}%</span>
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">{rasioBadge}</span>
             </div>
             <div
@@ -120,9 +117,96 @@ export default function StatistikAsidePanel() {
           </div>
         </div>
 
+        {/* ===== INSIGHT PENGELUARAN (mengisi ruang kosong yang terukur 294px) =====
+            Sebelum ini blok `flex-1` di atas dipaksa setinggi sisa ruang panel,
+            sementara isinya hanya "Pengeluaran Terbesar" + "Rasio Tabungan"
+            (dua kartu fixed-size). Sisa ~294px jadi rongga kosong. Semua angka
+            di bawah ini SUDAH dihitung StatistikView (dari data periode aktif)
+            tapi sebelumnya tidak pernah dikirim ke panel — jadi dihitung lalu
+            dibuang. Sekarang dikirim lewat `myduit:statistik-update` dan
+            ditampilkan: pola aktivitas, bukan cuma total. */}
+        <div className="clay-card clay-key-primary shrink-0 rounded-[22px] bg-surfaceContainerLowest p-3">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Pola Pengeluaran</p>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-textSecondary">
+                <span className="material-symbols-outlined icon-sm text-blue-600">event_available</span>
+                Hari aktif catat
+              </span>
+              <span className="shrink-0 font-mono text-[11px] font-bold text-slate-800">
+                {ringkas.hariAktif}
+                {ringkas.jumlahHariBulan > 0 && (
+                  <span className="font-sans font-medium text-textSecondary">
+                    {' '}/ {ringkas.jumlahHariBulan}
+                  </span>
+                )}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-textSecondary">
+                <span className="material-symbols-outlined icon-sm text-amber-600">local_fire_department</span>
+                Rata-rata / hari aktif
+              </span>
+              <span className="shrink-0 font-mono text-[11px] font-bold text-slate-800">
+                {formatRupiah(ringkas.rataPengeluaranHariAktif)}
+              </span>
+            </div>
+          </div>
+          {ringkas.hariPalingBoros && (
+            <>
+              <div className="my-2 h-px bg-slate-200/70" />
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-textSecondary">
+                  <span className="material-symbols-outlined icon-sm text-red-600">trending_up</span>
+                  Hari paling boros
+                </span>
+                <span className="shrink-0 font-mono text-[11px] font-bold text-expenseText">
+                  {formatRupiah(ringkas.hariPalingBoros.total)}
+                </span>
+              </div>
+              <p className="mt-0.5 text-[10px] font-medium text-textSecondary">
+                {new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(
+                  new Date(`${ringkas.hariPalingBoros.tgl}T00:00:00`),
+                )}
+                {ringkas.terbesarPemasukan && (
+                  <> · pemasukan terbesar {ringkas.terbesarPemasukan.nama}</>
+                )}
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Top 3 kategori boros — daftar, bukan cuma total, supaya panel
+            memberi tempat bertanya "ke mana uang pergi bulan ini". */}
+        {ringkas.topKategoriBoros.length > 0 && (
+          <div className="clay-card clay-key-danger shrink-0 rounded-[22px] bg-surfaceContainerLowest p-3">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              Kategori Paling Boros
+            </p>
+            <div className="space-y-1.5">
+              {ringkas.topKategoriBoros.map((k, i) => {
+                const bagian = ringkas.out > 0 ? Math.round((k.total / ringkas.out) * 100) : 0
+                return (
+                  <div key={k.id} className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-textSecondary">
+                      <span className="w-3 shrink-0 font-mono text-[10px] font-bold text-slate-500">
+                        {i + 1}.
+                      </span>
+                      <span className="truncate">{k.nama}</span>
+                    </span>
+                    <span className="shrink-0 font-mono text-[11px] font-bold text-slate-800">
+                      {bagian}%
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Divider + Aksi Cepat section */}
         <div className="mt-3 h-px shrink-0 bg-slate-200/70"></div>
-        <p className="mb-2 shrink-0 px-1 pt-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Aksi Cepat</p>
+        <p className="mb-2 shrink-0 px-1 pt-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Aksi Cepat</p>
         <div className="mt-0 space-y-2">
           <div className="clay-card clay-key-primary flex items-center justify-between rounded-[16px] bg-surfaceContainerLowest px-3 py-2.5">
             <div className="flex min-w-0 items-center gap-2.5">

@@ -161,7 +161,7 @@ function garis(doc, x1, y, x2, warna = C.garis, lebar = 0.25) {
 
 /** Judul section: huruf kapital berspasi + garis bawah tipis. */
 function judulSection(doc, str, x, y, lebar, { kanan = '' } = {}) {
-  teks(doc, str.toUpperCase(), x, y, { size: 8.5, bold: true, warna: C.aksen, spasi: 0.6 })
+  teks(doc, str.toUpperCase(), x, y, { size: 8, bold: true, warna: C.aksen, spasi: 0.3 })
   if (kanan) teks(doc, kanan, x + lebar, y, { size: 8, warna: C.redup, align: 'right' })
   garis(doc, x, y + 2, x + lebar, C.garis)
   return y + 7
@@ -197,9 +197,9 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
   y += 11
 
   // Judul dokumen
-  teks(doc, 'Laporan Keuangan Bulanan', M, y, { size: 17, bold: true, warna: C.tinta })
+  teks(doc, 'Laporan Keuangan Bulanan', M, y, { size: 16, bold: true, warna: C.tinta })
   y += 6.5
-  teks(doc, `Periode ${data.label}`, M, y, { size: 9.5, warna: C.redup })
+  teks(doc, `Periode ${data.label}`, M, y, { size: 10.5, warna: C.redup })
   y += 11
 
   // ================= RINGKASAN (3 metrik, tanpa kotak warna) =================
@@ -217,8 +217,8 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
       doc.setLineWidth(0.25)
       doc.line(x - gap / 2, y - 2, x - gap / 2, y + 12)
     }
-    teks(doc, label.toUpperCase(), x, y, { size: 7.5, bold: true, warna: C.redup, spasi: 0.4 })
-    teks(doc, nilai, x, y + 8, { size: 14, bold: true, warna })
+    teks(doc, label.toUpperCase(), x, y, { size: 7.5, bold: true, warna: C.redup, spasi: 0.2 })
+    teks(doc, nilai, x, y + 8, { size: 13, bold: true, warna })
   })
   y += 16
   garis(doc, M, y, W - M, C.garis)
@@ -234,15 +234,15 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
 
   const hUtang = 14
   // Total utang aktif (satu angka besar, bukan blok merah penuh)
-  teks(doc, 'TOTAL UTANG AKTIF', M, y, { size: 7.5, bold: true, warna: C.redup, spasi: 0.4 })
+  teks(doc, 'TOTAL UTANG AKTIF', M, y, { size: 7.5, bold: true, warna: C.redup, spasi: 0.2 })
   teks(doc, rp(u.totalAktif), M, y + 7, { size: 13, bold: true, warna: C.merah })
   teks(doc, `Cicilan rutin ${rp(u.cicilanPerBulan)} / bulan`, M, y + 11.5, { size: 8, warna: C.redup })
 
   // Dua metrik kanan
   const xKan = M + lebar * 0.52
-  teks(doc, 'TERLAMBAT', xKan, y, { size: 7.5, bold: true, warna: C.redup, spasi: 0.4 })
+  teks(doc, 'TERLAMBAT', xKan, y, { size: 7.5, bold: true, warna: C.redup, spasi: 0.2 })
   teks(doc, String(u.terlambat.length), xKan, y + 7, { size: 13, bold: true, warna: u.terlambat.length ? C.merah : C.tinta })
-  teks(doc, 'MENDEKATI (H-14)', xKan + lebar * 0.24, y, { size: 7.5, bold: true, warna: C.redup, spasi: 0.4 })
+  teks(doc, 'MENDEKATI (H-14)', xKan + lebar * 0.24, y, { size: 7.5, bold: true, warna: C.redup, spasi: 0.2 })
   teks(doc, String(u.mendekati.length), xKan + lebar * 0.24, y + 7, { size: 13, bold: true, warna: u.mendekati.length ? C.amber : C.tinta })
   y += hUtang + 3
   garis(doc, M, y, W - M, C.garis)
@@ -257,8 +257,8 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
       body: daftarUtang.map((x) => [String(x.namaPihak ?? '—'), labelJatuhTempo(x.hari), rp(x.sisa)]),
       margin: { left: M, right: M, bottom: 20 },
       theme: 'plain',
-      styles: { font: 'helvetica', fontSize: 8, cellPadding: { top: 1.8, right: 2, bottom: 1.8, left: 0 }, textColor: C.tinta, lineColor: C.garis, lineWidth: { top: 0, bottom: 0.1, left: 0, right: 0 } },
-      headStyles: { fontStyle: 'bold', fontSize: 7.5, textColor: C.redup, fillColor: false },
+      styles: { font: 'helvetica', fontSize: 9, cellPadding: { top: 1.8, right: 2, bottom: 1.8, left: 0 }, textColor: C.tinta, lineColor: C.garis, lineWidth: { top: 0, bottom: 0.1, left: 0, right: 0 } },
+      headStyles: { fontStyle: 'bold', fontSize: 8, textColor: C.redup, fillColor: false },
       columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 45 }, 2: { cellWidth: 32, halign: 'right', fontStyle: 'bold' } },
       didParseCell: (hook) => {
         if (hook.section === 'body' && hook.column.index === 1) {
@@ -276,7 +276,7 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
 
   // ================= ARUS PER KATEGORI =================
   const Hhal = doc.internal.pageSize.getHeight()
-  const tinggiKat = 12 + Math.max(1, Math.max(data.topIn.length, data.topOut.length)) * 6.5
+  const tinggiKat = 12 + Math.max(1, Math.max(data.topIn.length, data.topOut.length)) * 7.2
   if (y + tinggiKat + 12 > Hhal - 20) {
     doc.addPage()
     y = M
@@ -298,8 +298,8 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
     }
     const maks = Math.max(...kol.items.map(([, n]) => n))
     kol.items.forEach(([namaKat, total]) => {
-      teks(doc, String(namaKat).slice(0, 24), x, ky + 2.6, { size: 7.6 })
-      teks(doc, rp(total), x + kolomKat, ky + 2.6, { size: 7.6, warna: C.tinta, align: 'right' })
+      teks(doc, String(namaKat).slice(0, 24), x, ky + 2.6, { size: 8.2 })
+      teks(doc, rp(total), x + kolomKat, ky + 2.6, { size: 8.2, warna: C.tinta, align: 'right' })
       const wTrack = kolomKat
       bulatIsi(doc, x, ky + 4, wTrack, 1.1, 0.55, C.track)
       bulatIsi(doc, x, ky + 4, Math.max(1.1, (total / maks) * wTrack), 1.1, 0.55, kol.warna)
@@ -324,8 +324,8 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
       body: data.anggaran.map((a) => [String(a.nama).slice(0, 26), rp(a.terpakai), rp(a.limit), a.lewat ? `+${a.persen - 100}%` : `${a.persen}%`]),
       margin: { left: M, right: M, bottom: 20 },
       theme: 'plain',
-      styles: { font: 'helvetica', fontSize: 8, cellPadding: { top: 1.8, right: 2, bottom: 1.8, left: 0 }, textColor: C.tinta, lineColor: C.garis, lineWidth: { top: 0, bottom: 0.1, left: 0, right: 0 } },
-      headStyles: { fontStyle: 'bold', fontSize: 7.5, textColor: C.redup, fillColor: false },
+      styles: { font: 'helvetica', fontSize: 9, cellPadding: { top: 1.8, right: 2, bottom: 1.8, left: 0 }, textColor: C.tinta, lineColor: C.garis, lineWidth: { top: 0, bottom: 0.1, left: 0, right: 0 } },
+      headStyles: { fontStyle: 'bold', fontSize: 8, textColor: C.redup, fillColor: false },
       columnStyles: {
         0: { cellWidth: 'auto' },
         1: { cellWidth: 34, halign: 'right' },
@@ -363,15 +363,18 @@ export async function buatPdfLaporan(data, pakaiAI, nama = 'Pengguna') {
     theme: 'plain',
     styles: {
       font: 'helvetica',
-      fontSize: 7.8,
-      cellPadding: { top: 2, right: 2, bottom: 2, left: 0 },
+      // 7.8pt terlalu kecil untuk laporan cetak: batas baca yang nyaman
+      // untuk teks Continuity 9pt. 8.6pt masih muat 6 kolom pada A4 dengan
+      // margin 16mm (lebar kolom paling rapat "Tanggal" tetap muat "20 Okt").
+      fontSize: 8.6,
+      cellPadding: { top: 2.3, right: 2, bottom: 2.3, left: 0 },
       textColor: C.tinta,
       lineColor: C.garis,
       lineWidth: { top: 0, bottom: 0.1, left: 0, right: 0 },
       overflow: 'linebreak',
       valign: 'middle',
     },
-    headStyles: { fillColor: C.kepalaTabel, textColor: C.tinta, fontStyle: 'bold', fontSize: 7.2, cellPadding: { top: 2.2, bottom: 2.2, left: 0, right: 2 } },
+    headStyles: { fillColor: C.kepalaTabel, textColor: C.tinta, fontStyle: 'bold', fontSize: 7.8, cellPadding: { top: 2.5, bottom: 2.5, left: 0, right: 2 } },
     columnStyles: {
       0: { cellWidth: 17 },
       1: { cellWidth: 21 },

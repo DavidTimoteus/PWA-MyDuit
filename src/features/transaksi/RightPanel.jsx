@@ -68,8 +68,8 @@ export default function RightPanel({ uid }) {
   }
 
   return (
-    <aside className="hidden lg:flex lg:h-full lg:w-[350px] lg:min-w-[350px] lg:max-w-[350px] lg:shrink-0 lg:grow-0 lg:flex-col lg:overflow-hidden lg:p-4 lg:pl-2">
-      <div className="clay clay-key-primary flex h-full flex-col overflow-hidden rounded-[28px] bg-surfaceContainerLowest p-5 w-full min-w-0">
+    <aside className="hidden xl:flex xl:h-full xl:w-[350px] xl:min-w-[350px] xl:max-w-[350px] xl:shrink-0 xl:grow-0 xl:flex-col xl:overflow-hidden xl:p-4 xl:pl-2">
+      <div className="clay clay-key-primary flex h-full flex-col overflow-y-auto hide-scrollbar rounded-[28px] bg-surfaceContainerLowest p-5 w-full min-w-0">
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between px-1 pb-3">
           <h2 className="text-base font-extrabold tracking-tight text-slate-800">Ringkasan</h2>
@@ -84,12 +84,12 @@ export default function RightPanel({ uid }) {
         </div>
         <div className="mb-3 h-px shrink-0 bg-slate-200/70"></div>
 
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-0 flex-1 flex-col gap-2">
+        <div className="flex shrink-0 flex-col">
+          <div className="flex shrink-0 flex-col gap-2">
             {/* Total Saldo */}
-            <div className="clay clay-card clay-key-primary flex flex-col gap-0.5 rounded-[18px] bg-primary p-4 text-white">
+            <div className="clay clay-card clay-key-primary solid-primary flex flex-col gap-0.5 rounded-[18px] p-4 text-white">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined icon-sm opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
+                <span className="material-symbols-outlined icon-sm text-white" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
                 <p className="text-[10px] font-semibold uppercase tracking-wider opacity-90">Total Saldo</p>
               </div>
               <p className="mt-0.5 font-mono text-xl font-extrabold tracking-tight">{rp(totalSaldo)}</p>
@@ -102,17 +102,17 @@ export default function RightPanel({ uid }) {
             {/* Pengeluaran Hari Ini */}
             <div className="clay clay-card clay-key-danger flex flex-col gap-0.5 rounded-[18px] bg-surfaceContainerLowest p-4">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined icon-sm text-expense" style={{ fontVariationSettings: "'FILL' 1" }}>today</span>
+                <span className="material-symbols-outlined icon-sm text-expenseText" style={{ fontVariationSettings: "'FILL' 1" }}>today</span>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Pengeluaran Hari Ini</p>
               </div>
-              <p className="mt-0.5 font-mono text-lg font-extrabold tracking-tight text-expense">{rp(pengeluaranHariIni)}</p>
+              <p className="mt-0.5 font-mono text-lg font-extrabold tracking-tight text-expenseText">{rp(pengeluaranHariIni)}</p>
               <p className="text-[10px] font-medium text-textSecondary">{transHariIni.length} transaksi · Hari ini</p>
             </div>
 
             {/* Top Kategori */}
             <div className="clay clay-card clay-key-primary flex flex-col gap-0.5 rounded-[18px] bg-surfaceContainerLowest p-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined icon-sm text-emerald-600" style={{ fontVariationSettings: "'FILL' 1" }}>category</span>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="material-symbols-outlined icon-sm text-incomeText" style={{ fontVariationSettings: "'FILL' 1" }}>category</span>
                 <p className="flex-1 truncate text-[10px] font-semibold uppercase tracking-wider text-slate-500">Top Kategori</p>
                 {topKategori && (
                   <span
@@ -127,7 +127,7 @@ export default function RightPanel({ uid }) {
               <p className="mt-0.5 truncate text-base font-extrabold tracking-tight text-slate-800">
                 {topKategori ? topKategori.nama : '-'}
               </p>
-              <p className={`font-mono text-sm font-extrabold tracking-tight ${topKategori?.jenis === 'pengeluaran' ? 'text-expense' : 'text-emerald-600'}`}>
+              <p className={`font-mono text-sm font-extrabold tracking-tight ${topKategori?.jenis === 'pengeluaran' ? 'text-expenseText' : 'text-incomeText'}`}>
                 {rp(topKategori ? topKategori.total : 0)}
               </p>
             </div>
@@ -137,25 +137,25 @@ export default function RightPanel({ uid }) {
 
           {/* Aksi Cepat */}
           <div className="shrink-0">
-            <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Aksi Cepat</p>
+            <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Aksi Cepat</p>
             <div className="flex flex-col gap-1.5">
               <button
                 onClick={() => aksi('pemasukan')}
-                className="clay-btn clay-key-primary btn-lg w-full bg-primary text-white"
+                className="clay-btn clay-key-primary solid-primary btn-lg w-full text-white"
               >
                 <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
                 Tambah Pemasukan
               </button>
               <button
                 onClick={() => aksi('pengeluaran')}
-                className="clay-btn clay-key-danger btn-lg w-full bg-red-600 text-white"
+                className="clay-btn clay-key-danger solid-danger btn-lg w-full text-white"
               >
                 <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>remove_circle</span>
                 Tambah Pengeluaran
               </button>
               <button
                 onClick={() => aksi('pindah-saldo')}
-                className="clay-btn clay-key-blue btn-lg w-full bg-blue-600 text-white"
+                className="clay-btn clay-key-blue solid-blue btn-lg w-full text-white"
               >
                 <span className="material-symbols-outlined icon-sm" style={{ fontVariationSettings: "'FILL' 1" }}>swap_horiz</span>
                 Pindah Saldo

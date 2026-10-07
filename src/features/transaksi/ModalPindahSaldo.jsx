@@ -85,7 +85,7 @@ export default function ModalPindahSaldo({ uid, open, onClose, akunList }) {
             type="button"
             onClick={onClose}
             aria-label="Tutup"
-            className="clay-chip clay-key-neutral flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="clay-chip clay-key-neutral flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
             <span className="material-symbols-outlined icon-lg">close</span>
           </button>
@@ -156,7 +156,7 @@ export default function ModalPindahSaldo({ uid, open, onClose, akunList }) {
             <button
               type="submit"
               disabled={saving || sama}
-              className="clay-btn clay-key-blue btn-md bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+              className="clay-btn clay-key-blue solid-blue btn-md text-white transition-colors hover: disabled:opacity-60"
             >
               <span className="material-symbols-outlined icon-sm">sync_alt</span>
               {saving ? 'Memproses…' : 'Pindahkan Saldo'}

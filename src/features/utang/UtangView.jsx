@@ -5,6 +5,7 @@ import { hapusUtang } from '../../lib/db.js'
 import { getFirebase } from '../../lib/firebase.js'
 import { useAkunKategori } from '../../lib/useAkunKategori.js'
 import { BayarUtangModal, FormUtangModal } from './UtangModals.jsx'
+import UtangMobile from './UtangMobile.jsx'
 
 const FILTERS = [
   { id: 'semua', label: 'Semua' },
@@ -37,12 +38,12 @@ function selisihHari(iso) {
 }
 
 function infoJatuhTempo(iso) {
-  if (!iso) return { teks: 'Tanpa jatuh tempo', cls: 'text-slate-400', hari: null }
+  if (!iso) return { teks: 'Tanpa jatuh tempo', cls: 'text-slate-500', hari: null }
   const d = selisihHari(iso)
-  if (d < 0) return { teks: `Terlambat ${-d} hari`, cls: 'text-expense font-bold', hari: d }
-  if (d === 0) return { teks: 'Jatuh tempo hari ini!', cls: 'text-expense font-bold', hari: d }
-  if (d <= 7) return { teks: `Jatuh tempo ${tanggalPendek(iso)} (H-${d})`, cls: 'text-amber-500 font-bold', hari: d }
-  return { teks: `Jatuh tempo ${tanggalPendek(iso)} (${d} hari lagi)`, cls: 'text-slate-400', hari: d }
+  if (d < 0) return { teks: `Terlambat ${-d} hari`, cls: 'text-expenseText font-bold', hari: d }
+  if (d === 0) return { teks: 'Jatuh tempo hari ini!', cls: 'text-expenseText font-bold', hari: d }
+  if (d <= 7) return { teks: `Jatuh tempo ${tanggalPendek(iso)} (H-${d})`, cls: 'text-warning font-bold', hari: d }
+  return { teks: `Jatuh tempo ${tanggalPendek(iso)} (${d} hari lagi)`, cls: 'text-slate-500', hari: d }
 }
 
 export function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
@@ -55,7 +56,7 @@ export function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
   const hari = lunas ? null : selisihHari(t.tglJatuhTempo)
   const terlambat = hari !== null && hari < 0
   const mendekati = hari !== null && hari >= 0 && hari <= 7
-  const jatuh = lunas ? { teks: 'Sudah lunas', cls: 'text-slate-400' } : infoJatuhTempo(t.tglJatuhTempo)
+  const jatuh = lunas ? { teks: 'Sudah lunas', cls: 'text-slate-500' } : infoJatuhTempo(t.tglJatuhTempo)
   const clayKey = lunas ? 'clay-key-primary' : terlambat ? 'clay-key-danger' : 'clay-key-neutral'
   // Warna aksen kiri sebagai penanda status utama (satu sinyal kuat, bukan
   // tumpukan badge). Terlambat=merah, mendekati=amber, aktif=netral, lunas=hijau.
@@ -75,33 +76,33 @@ export function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
       <span className={`absolute inset-y-0 left-0 w-1.5 ${aksen}`} aria-hidden="true" />
 
       {/* Baris atas: nama + status + aksi */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex min-w-0 items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-[15px] font-bold leading-snug text-slate-800">{t.namaPihak}</p>
-          <p className="mt-0.5 text-[11px] font-medium text-slate-400">
+          <p className="mt-0.5 truncate text-[11px] font-medium text-slate-500">
             {t.tipe}
             {t.tipe === 'Cicilan' && t.cicilanPerBulan > 0 ? ` · ${formatRupiah(t.cicilanPerBulan)}/bln` : ''}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <span className={`rounded-md px-2 py-0.5 text-[11px] font-bold ${warnaStatus}`}>{labelStatus}</span>
-          <button onClick={onEdit} aria-label="Edit utang" className="flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
+          <button onClick={onEdit} aria-label="Edit utang" className="flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-600">
             <span className="material-symbols-outlined icon-sm">edit</span>
           </button>
-          <button onClick={onHapus} aria-label="Hapus utang" className="flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600">
+          <button onClick={onHapus} aria-label="Hapus utang" className="flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600">
             <span className="material-symbols-outlined icon-sm">delete</span>
           </button>
         </div>
       </div>
 
       {/* Fokus utama: sisa utang */}
-      <div className="mt-3 flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Sisa utang</p>
-          <p className={`text-[26px] font-extrabold leading-none tracking-tight ${lunas ? 'text-emerald-600' : 'text-slate-900'}`}>
+      <div className="mt-3 flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 shrink-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Sisa utang</p>
+          <p className={`whitespace-nowrap text-2xl font-extrabold leading-none tracking-tight tabular-nums ${lunas ? 'text-incomeText' : 'text-slate-900'}`}>
             {formatRupiah(t.sisa || 0)}
           </p>
-          <p className="mt-1 text-[11px] font-medium text-slate-400">dari {formatRupiah(t.total || 0)}</p>
+          <p className="mt-1 whitespace-nowrap text-[11px] font-medium text-slate-500">dari {formatRupiah(t.total || 0)}</p>
         </div>
         {!lunas && (
           <div className="flex shrink-0 items-center gap-2">
@@ -116,8 +117,8 @@ export function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
           <div className={`h-full rounded-full transition-all ${lunas ? 'bg-primary' : terlambat ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(100, persen)}%` }} />
         </div>
-        <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px]">
-          <span className="font-medium text-slate-400">Terbayar {formatRupiah(terbayar)} ({persen}%)</span>
+        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[11px]">
+          <span className="whitespace-nowrap font-medium text-slate-500">Terbayar {formatRupiah(terbayar)} ({persen}%)</span>
           <span className={`inline-flex items-center gap-0.5 font-semibold ${jatuh.cls}`}>
             {terlambat && <span className="material-symbols-outlined icon-xs">error</span>}
             {lunas ? 'Sudah lunas' : jatuh.teks}
@@ -261,45 +262,49 @@ export default function UtangView({ user }) {
     }
   }
 
+  // Aksi bersama untuk kartu desktop maupun mobile — satu sumber agar
+  // perilaku kedua tampilan tidak pernah menyimpang.
+  const aksiKartu = {
+    onBayar: (t) => setBayarModal({ open: true, utang: t, lunasin: false }),
+    onLunasin: (t) => setBayarModal({ open: true, utang: t, lunasin: true }),
+    onEdit: (t) => setFormModal({ open: true, edit: t, mode: t.tipe === 'Cicilan' ? 'cicilan' : 'utang' }),
+    onHapus: (t) => setHapusTarget(t),
+  }
+
   return (
-    <section className="mx-auto max-w-3xl px-5 pb-32 md:pb-10 md:pt-4">
-      {/* Header mobile-only */}
-      <header className="flex items-center gap-2 pt-3 pb-4 md:hidden">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white">
-          <span className="material-symbols-outlined icon-lg" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
-        </div>
-        <h2 className="text-2xl font-extrabold leading-tight tracking-tight">Utang & Cicilan</h2>
-      </header>
+    <>
+      {/* ===== TAMPILAN MOBILE (dipisah, pakai pager 1 kartu/halaman) =====
+          Desain berbeda dari desktop dengan sengaja: di mobile layar sempit,
+          jadi daftar memakai penggal supaya seluruh layar pas tanpa scroll. */}
+      <UtangMobile
+        ringkasan={ringkasan}
+        terurut={terurut}
+        filter={filter}
+        setFilter={setFilter}
+        onBayar={aksiKartu.onBayar}
+        onLunasin={aksiKartu.onLunasin}
+        onEdit={aksiKartu.onEdit}
+        onHapus={aksiKartu.onHapus}
+      />
 
-      {/* Mobile hero */}
-      <div className="hero-card hero-danger mb-4 p-5 md:hidden">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-xs opacity-90 sm:text-sm">Total Sisa Utang Aktif</p>
-          <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: 'rgba(255,255,255,.18)' }}>{ringkasan.aktifCount} aktif</span>
-        </div>
-        <p className="mb-3 text-2xl font-bold sm:text-3xl">{formatRupiah(ringkasan.totalSisa)}</p>
-        <div className="flex items-center gap-1.5 text-[11px] opacity-90">
-          <span className="material-symbols-outlined icon-xs">event</span>
-          <span>{ringkasan.jatuhTempo[0] ? `${ringkasan.jatuhTempo[0].nama} · ${ringkasan.jatuhTempo[0].hari} hari` : 'Tidak ada jatuh tempo dekat'}</span>
-        </div>
-      </div>
-
-      {/* Desktop summary 3 cards */}
-      <div className="mb-4 hidden grid-cols-3 gap-3 md:grid">
+      {/* ===== TAMPILAN DESKTOP (grid 2 kolom, semua kartu tampil) ===== */}
+      <section className="mx-auto hidden max-w-3xl px-5 pb-10 pt-4 md:block">
+      {/* Ringkasan 3 kartu (desktop) */}
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className="hero-card hero-danger p-4">
-          <div className="mb-2 flex items-center gap-2"><span className="material-symbols-outlined icon-md opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span><p className="text-xs font-semibold uppercase tracking-wider opacity-90">Total Utang</p></div>
-          <p className="font-mono text-2xl font-extrabold">{formatRupiah(ringkasan.totalSisa)}</p>
-          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-80"><span className="material-symbols-outlined icon-xs">trending_up</span>{ringkasan.aktifCount} aktif</p>
+          <div className="mb-2 flex items-center gap-2"><span className="material-symbols-outlined icon-md text-danger" style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span><p className="text-xs font-bold uppercase tracking-wider text-slate-600">Total Utang</p></div>
+          <p className="font-mono text-xl font-extrabold tracking-tight text-slate-900 tabular-nums lg:text-2xl">{formatRupiah(ringkasan.totalSisa)}</p>
+          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-slate-500"><span className="material-symbols-outlined icon-xs text-slate-500">trending_up</span>{ringkasan.aktifCount} aktif</p>
         </div>
         <div className="hero-card hero-primary p-4">
-          <div className="mb-2 flex items-center gap-2"><span className="material-symbols-outlined icon-md opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span><p className="text-xs font-semibold uppercase tracking-wider opacity-90">Lunas</p></div>
-          <p className="font-mono text-2xl font-extrabold">{formatRupiah(ringkasan.totalLunasNominal)}</p>
-          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-80"><span className="material-symbols-outlined icon-xs">check</span>{ringkasan.lunasCount} item lunas</p>
+          <div className="mb-2 flex items-center gap-2"><span className="material-symbols-outlined icon-md text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span><p className="text-xs font-bold uppercase tracking-wider text-slate-600">Lunas</p></div>
+          <p className="font-mono text-xl font-extrabold tracking-tight text-slate-900 tabular-nums lg:text-2xl">{formatRupiah(ringkasan.totalLunasNominal)}</p>
+          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-slate-500"><span className="material-symbols-outlined icon-xs text-slate-500">check</span>{ringkasan.lunasCount} item lunas</p>
         </div>
         <div className="hero-card hero-blue p-4">
-          <div className="mb-2 flex items-center gap-2"><span className="material-symbols-outlined icon-md opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>schedule</span><p className="text-xs font-semibold uppercase tracking-wider opacity-90">Cicilan Aktif</p></div>
-          <p className="font-mono text-2xl font-extrabold">{ringkasan.cicilanAktif}</p>
-          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-80"><span className="material-symbols-outlined icon-xs">calendar_month</span>{formatRupiah(ringkasan.totalCicilanPerBulan)}/bln</p>
+          <div className="mb-2 flex items-center gap-2"><span className="material-symbols-outlined icon-md text-info" style={{ fontVariationSettings: "'FILL' 1" }}>schedule</span><p className="text-xs font-bold uppercase tracking-wider text-slate-600">Cicilan Aktif</p></div>
+          <p className="font-mono text-xl font-extrabold tracking-tight text-slate-900 tabular-nums lg:text-2xl">{ringkasan.cicilanAktif}</p>
+          <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-slate-500"><span className="material-symbols-outlined icon-xs text-slate-500">calendar_month</span>{formatRupiah(ringkasan.totalCicilanPerBulan)}/bln</p>
         </div>
       </div>
 
@@ -311,8 +316,8 @@ export default function UtangView({ user }) {
             onClick={() => setFilter(f.id)}
             className={`clay-chip h-9 px-4 text-xs font-semibold transition-colors ${
               filter === f.id
-                ? 'clay-key-danger bg-red-600 text-white hover:bg-red-700'
-                : 'clay-key-neutral bg-surfaceContainerLowest text-textSecondary hover:bg-slate-100 hover:text-slate-800'
+                ? 'clay-chip-active-danger'
+                : 'clay-key-neutral text-textSecondary hover:bg-slate-100 hover:text-slate-800'
             }`}
           >
             {f.label}
@@ -320,30 +325,33 @@ export default function UtangView({ user }) {
         ))}
       </div>
 
-      {/* Daftar utang: mobile satu kolom (scroll), desktop grid 2 kolom.
-          Pager "2 kartu/halaman" dihapus — di mobile itu memaksa user menekan
-          panah berulang untuk daftar yang seharusnya cukup di-scroll. */}
-      <div className="grid gap-3 md:grid-cols-2">
+      {/* Daftar utang (desktop): 2 kolom. Tampilan mobile ada di
+          UtangMobile.jsx — sengaja dipisah karena di mobile memakai pager
+          satu-kartu-per-halaman agar seluruh layar pas tanpa scroll. */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {terurut.length === 0 ? (
-          <div className="clay-card-soft flex flex-col items-center px-6 py-14 text-center md:col-span-2">
+          <div className="clay-card-soft flex flex-col items-center px-6 py-14 text-center col-span-2">
             <span className="material-symbols-outlined mb-2 text-5xl text-primary/30">payments</span>
             <p className="text-sm font-bold text-slate-700">Belum ada utang/cicilan</p>
-            <p className="mt-1 text-xs text-slate-400">Tekan tombol + untuk mencatat yang pertama.</p>
+            <p className="mt-1 text-xs text-slate-500">Tekan tombol + untuk mencatat yang pertama.</p>
           </div>
         ) : (
           terurut.map((t) => (
             <KartuUtang
               key={t.id}
               t={t}
-              onBayar={() => setBayarModal({ open: true, utang: t, lunasin: false })}
-              onLunasin={() => setBayarModal({ open: true, utang: t, lunasin: true })}
-              onEdit={() => setFormModal({ open: true, edit: t, mode: t.tipe === 'Cicilan' ? 'cicilan' : 'utang' })}
-              onHapus={() => setHapusTarget(t)}
+              onBayar={() => aksiKartu.onBayar(t)}
+              onLunasin={() => aksiKartu.onLunasin(t)}
+              onEdit={() => aksiKartu.onEdit(t)}
+              onHapus={() => aksiKartu.onHapus(t)}
             />
           ))
         )}
       </div>
+    </section>
 
+      {/* Modal & dialog dipakai BERSAMA oleh tampilan mobile dan desktop,
+          jadi letaknya di luar <section> desktop. */}
       <FormUtangModal
         key={`utang-form-${formModal.open ? formModal.edit?.id ?? formModal.mode : 'closed'}`}
         open={formModal.open}
@@ -365,9 +373,9 @@ export default function UtangView({ user }) {
       {hapusTarget && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm" onClick={() => setHapusTarget(null)}>
           <div className="clay-card w-full max-w-xs rounded-[24px] p-5 text-center" onClick={(e) => e.stopPropagation()}>
-            <span className="material-symbols-outlined text-4xl text-expense">delete</span>
+            <span className="material-symbols-outlined text-4xl text-expenseText">delete</span>
             <p className="mt-2 text-sm font-bold text-slate-800">Hapus “{hapusTarget.namaPihak}”?</p>
-            <p className="mt-1 text-xs text-slate-400">Riwayat pembayaran yang sudah tercatat tetap ada.</p>
+            <p className="mt-1 text-xs text-slate-500">Riwayat pembayaran yang sudah tercatat tetap ada.</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={() => setHapusTarget(null)} className="clay-btn-soft btn-md text-xs font-bold text-slate-600">Batal</button>
               <button onClick={konfirmHapus} className="clay-btn-danger btn-md text-xs font-bold">Hapus</button>
@@ -375,6 +383,6 @@ export default function UtangView({ user }) {
           </div>
         </div>
       )}
-    </section>
+    </>
   )
 }

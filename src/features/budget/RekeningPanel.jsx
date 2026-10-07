@@ -116,32 +116,70 @@ export default function RekeningPanel({ uid }) {
 
   return (
     <div>
-      {/* Hero Total Semua Saldo — gradient biru persis ViewBudget.html #totalSaldoBudget */}
-      <div className="clay clay-key-blue mt-4 rounded-2xl bg-blue-600 p-5 text-white md:flex md:items-center md:justify-between md:gap-6 min-h-[100px] md:min-h-[170px]">
+      {/* Total Semua Saldo — kartu CLAY (bukan gradient biru).
+          `bg-blue-600 text-white` dulu menimpa .clay dan merusak claymorphism
+          (menjadi blok rata tanpa inset) serta berisiko white-on-white bila
+          utility lain ikut menimpa. Sekarang identitas warna dibawa hero-blue
+          (strip aksen) sementara teks tetap gelap di atas putih. */}
+      <div className="hero-card hero-blue mt-4 rounded-2xl p-5 md:flex md:items-center md:justify-between md:gap-6 min-h-[100px] md:min-h-[170px]">
         <div className="min-w-0">
-          <p className="mb-1 text-xs opacity-90 sm:text-sm">Total Semua Saldo</p>
-          <p className="font-mono mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">{formatRupiah(total)}</p>
-          <div className="flex items-center gap-1.5 text-[11px] opacity-80">
-            <span className="material-symbols-outlined icon-xs">schedule</span>
-            <span>Terakhir diperbarui: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'numeric', year: 'numeric' })} {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+          <div className="mb-1 flex items-center gap-2">
+            <span
+              className="material-symbols-outlined icon-md text-info"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              account_balance_wallet
+            </span>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-600 sm:text-sm">
+              Total Semua Saldo
+            </p>
+          </div>
+          <p className="font-mono mb-3 text-2xl font-extrabold tracking-tight text-slate-900 tabular-nums md:text-3xl lg:text-4xl">
+            {formatRupiah(total)}
+          </p>
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+            <span className="material-symbols-outlined icon-xs text-slate-500">schedule</span>
+            <span>
+              Terakhir diperbarui:{' '}
+              {new Date().toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'numeric',
+                year: 'numeric',
+              })}{' '}
+              {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+            </span>
           </div>
         </div>
         {/* Arus kas bulan berjalan — Pemasukan/Pengeluaran */}
         <div className="mt-3 grid shrink-0 grid-cols-2 gap-x-4 gap-y-1 md:mt-0 md:text-right md:grid-cols-1">
           <div>
-            <p className="text-[11px] font-medium opacity-80">Pemasukan bulan ini</p>
-            <p className="font-mono text-sm font-bold">{formatRupiah(arusBulan.masuk)}</p>
+            <p className="text-[11px] font-medium text-slate-500">Pemasukan bulan ini</p>
+            <p className="font-mono text-sm font-bold text-incomeText tabular-nums">
+              {formatRupiah(arusBulan.masuk)}
+            </p>
           </div>
           <div>
-            <p className="text-[11px] font-medium opacity-80">Pengeluaran bulan ini</p>
-            <p className="font-mono text-sm font-bold">{formatRupiah(arusBulan.keluar)}</p>
+            <p className="text-[11px] font-medium text-slate-500">Pengeluaran bulan ini</p>
+            <p className="font-mono text-sm font-bold text-expenseText tabular-nums">
+              {formatRupiah(arusBulan.keluar)}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Pager horizontal (pola persis GAS rekeningPaginationControls) */}
+      {/* Pager horizontal — MOBILE ONLY.
+          Di web rekening dirender sebagai grid penuh (lihat blok `rekeningList`
+          di bawah: `hidden md:grid`), jadi pengguna sudah melihat SEMUA kartu
+          tanpa perlu berpindah halaman. Pager "Halaman 1/7" di desktop hanya
+          ruang kosong yang membingungkan — tombol panah dipakai tapi tidak ada
+          "halaman" berikutnya karena semuanya sudah tampil. Swipe/gesture juga
+          tidak ada di desktop (hanya touch), jadi paginator jadi
+          one-way trap.
+          Di mobile card-stack 1-kartu-per-layar, swipe adalah cara navigasi
+          utama — pager menjadi penanda posisi yang berguna.
+          Breakpoint: `md` (768px), sama dengan grid rekening. */}
       {totalCards > 1 && (
-        <div className="mt-4 mb-2 flex items-center justify-center gap-2">
+        <div className="mt-4 mb-2 flex items-center justify-center gap-2 md:hidden">
           <button
             type="button"
             onClick={() => setHalaman((h) => (h > 1 ? h - 1 : totalCards))}
@@ -163,18 +201,23 @@ export default function RekeningPanel({ uid }) {
       )}
 
       {/* ===== MOBILE ONLY: CARD-STACK SLIDER (Persis ViewBudget.html GAS #rekeningList) ===== */}
+      {/* Wrapper card-stack: tinggi OTOMATIS mengikuti kartu TERDALAM
+          (paling depan di stack), bukan angka tetap. Fixed 225px memotong
+          kartu saat isi kartu tumbuh (nama panjang / saldo besar / log
+          mutasi banyak baris) —card terdalam translateY(24px) sehingga butuh
+          height = tinggiKartu + offsetStack. min-height tetap dipakai sebagai
+          lantai supaya area tidak kolaps saat data kosong. */}
       <div
         id="rekeningList"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="relative mt-2 md:hidden"
-        style={{ height: '225px', overflow: 'hidden' }}
+        className="rekening-stack-wrap relative mt-2 min-h-[225px] md:hidden"
       >
         {akunList.length === 0 ? (
           <div className="clay-card-soft flex flex-col items-center px-6 py-12 text-center">
             <span className="material-symbols-outlined mb-2 text-5xl text-primary/30">account_balance_wallet</span>
             <p className="text-sm font-bold text-slate-700">Belum ada rekening</p>
-            <p className="mt-1 text-xs text-slate-400">Tekan tombol + untuk menambah.</p>
+            <p className="mt-1 text-xs text-slate-500">Tekan tombol + untuk menambah.</p>
           </div>
         ) : (
           akunList.map((a, i) => {
@@ -220,7 +263,7 @@ export default function RekeningPanel({ uid }) {
                 key={a.id}
                 className={`rekening-stack-card clay clay-card ${
                   negatif ? 'clay-key-danger' : 'clay-key-blue'
-                } absolute inset-x-1.5 top-1.5 rounded-[22px] bg-white p-3.5 select-none transition-all duration-300 ease-out`}
+                } ${delta === 0 ? 'relative' : 'absolute'} inset-x-1.5 top-1.5 rounded-[22px] bg-white p-3.5 select-none transition-all duration-300 ease-out`}
                 style={{
                   transform,
                   opacity,
@@ -250,7 +293,7 @@ export default function RekeningPanel({ uid }) {
                     onClick={(e) => { e.stopPropagation(); setModal({ open: true, edit: a }) }}
                     title="Edit rekening"
                     aria-label="Edit rekening"
-                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors shrink-0"
+                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-600 transition-colors shrink-0"
                   >
                     <span className="material-symbols-outlined icon-xs">edit</span>
                   </button>
@@ -259,7 +302,7 @@ export default function RekeningPanel({ uid }) {
                     onClick={(e) => { e.stopPropagation(); setHapusTarget(a) }}
                     title="Hapus rekening"
                     aria-label="Hapus rekening"
-                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
+                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
                   >
                     <span className="material-symbols-outlined icon-xs">delete</span>
                   </button>
@@ -267,15 +310,15 @@ export default function RekeningPanel({ uid }) {
 
                 {/* Saldo Akhir */}
                 <div className="mb-2">
-                  <p className="text-xs text-slate-400">Saldo Akhir</p>
-                  <p className={`font-mono text-lg font-bold ${negatif ? 'text-expense' : 'text-slate-800'}`}>
+                  <p className="text-xs text-slate-500">Saldo Akhir</p>
+                  <p className={`font-mono text-lg font-bold ${negatif ? 'text-expenseText' : 'text-slate-800'}`}>
                     {formatRupiah(a.saldo)}
                   </p>
                 </div>
 
                 {/* Perubahan Terakhir (full width box persis GAS rek-last-change-box) */}
                 <div className="bg-slate-50 rounded-lg px-2.5 py-2">
-                  <p className="text-xs font-semibold text-slate-400 mb-1">Perubahan Terakhir</p>
+                  <p className="text-xs font-semibold text-slate-500 mb-1">Perubahan Terakhir</p>
                   {log ? (
                     <>
                       <p className={`text-xs ${log.warna} font-mono truncate`}>{log.teks}</p>
@@ -285,7 +328,7 @@ export default function RekeningPanel({ uid }) {
                       </p>
                     </>
                   ) : (
-                    <p className="text-[10px] text-slate-400">Belum ada riwayat</p>
+                    <p className="text-[10px] text-slate-500">Belum ada riwayat</p>
                   )}
                 </div>
               </div>
@@ -295,7 +338,7 @@ export default function RekeningPanel({ uid }) {
       </div>
 
       {/* ===== DESKTOP ONLY: GRID LIST ===== */}
-      <div className="hidden md:grid md:grid-cols-2 gap-3 mt-4">
+      <div className="hidden md:grid gap-3 mt-4 lg:grid-cols-2">
         {akunList.map((a) => {
           const negatif = (Number(a.saldo) || 0) < 0
           const log = a.mutasiTerakhir ? logMutasi(a.mutasiTerakhir) : null
@@ -319,27 +362,27 @@ export default function RekeningPanel({ uid }) {
                 <button
                   type="button"
                   onClick={() => setModal({ open: true, edit: a })}
-                  className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-600"
                 >
                   <span className="material-symbols-outlined icon-xs">edit</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setHapusTarget(a)}
-                  className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500"
+                  className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500"
                 >
                   <span className="material-symbols-outlined icon-xs">delete</span>
                 </button>
               </div>
               <div className="mb-2">
-                <p className="text-xs text-slate-400">Saldo Akhir</p>
-                <p className={`font-mono text-lg font-bold ${negatif ? 'text-expense' : 'text-slate-800'}`}>
+                <p className="text-xs text-slate-500">Saldo Akhir</p>
+                <p className={`font-mono text-lg font-bold ${negatif ? 'text-expenseText' : 'text-slate-800'}`}>
                   {formatRupiah(a.saldo)}
                 </p>
               </div>
               <div className="bg-slate-50 rounded-lg px-2.5 py-2">
-                <p className="text-xs font-semibold text-slate-400 mb-0.5">Perubahan Terakhir</p>
-                <p className={`text-xs font-mono truncate ${log ? log.warna : 'text-slate-400'}`}>
+                <p className="text-xs font-semibold text-slate-500 mb-0.5">Perubahan Terakhir</p>
+                <p className={`text-xs font-mono truncate ${log ? log.warna : 'text-slate-500'}`}>
                   {log ? log.teks : 'Belum ada riwayat'}
                 </p>
               </div>
@@ -358,9 +401,9 @@ export default function RekeningPanel({ uid }) {
       {hapusTarget && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm" onClick={() => setHapusTarget(null)}>
           <div className="clay-card w-full max-w-xs rounded-[24px] p-5 text-center" onClick={(e) => e.stopPropagation()}>
-            <span className="material-symbols-outlined text-4xl text-expense">delete</span>
+            <span className="material-symbols-outlined text-4xl text-expenseText">delete</span>
             <p className="mt-2 text-sm font-bold text-slate-800">Hapus rekening “{hapusTarget.nama}”?</p>
-            <p className="mt-1 text-xs text-slate-400">Riwayat transaksi lama tetap tersimpan.</p>
+            <p className="mt-1 text-xs text-slate-500">Riwayat transaksi lama tetap tersimpan.</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={() => setHapusTarget(null)} className="clay-btn-soft btn-md text-xs font-bold text-slate-600">Batal</button>
               <button onClick={konfirmHapus} className="clay-btn-danger btn-md text-xs font-bold">Hapus</button>

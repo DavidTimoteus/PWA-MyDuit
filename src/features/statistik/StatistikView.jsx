@@ -5,6 +5,7 @@ import { getFirebase } from '../../lib/firebase.js'
 import { useAkunKategori } from '../../lib/useAkunKategori.js'
 import { detectCurrency, detectLocale, formatCurrency, formatNominal, formatRupiah, simbolUang, EVENT_LOKASI } from '../../lib/format.js'
 
+import { aturanAnalitik } from './_aturan.js'
 const NAMA_BULAN_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const NAMA_BULAN_SINGKAT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
@@ -43,6 +44,43 @@ function hitungStreak_(tanggalList) {
   return { streak, last }
 }
 
+
+// Rata-rata pengeluaran per HARI AKTIF (hari yang benar ada transaksinya),
+// bukan per hari kalender. Kalau dibagi jumlah hari kalender, hari kosong ikut
+// Trilogy lowering the average — days with no transactions also dilute the
+// denominator, making actual overspending days look unremarkable.
+function hitungRataPerHariAktif(harian, kunci) {
+  const hari = Object.entries(harian).filter(([, v]) => v[kunci] > 0)
+  if (!hari.length) return 0
+  return Math.round(hari.reduce((s, [, v]) => s + v[kunci], 0) / hari.length)
+}
+
+// Hari dengan pengeluaran tertinggi pada periode aktif.
+function cariPuncakHari(harian, kunci) {
+  let terbaik = null
+  for (const [tgl, v] of Object.entries(harian)) {
+    if (v[kunci] > 0 && (!terbaik || v[kunci] > terbaik.total)) {
+      terbaik = { tgl, total: v[kunci] }
+    }
+  }
+  return terbaik
+}
+
+
+// ============================================================================
+// ANALITIK KEUANGAN DETERMINISTIK (pengganti "Rekomendasi AI")
+// ----------------------------------------------------------------------------
+// Kenapa diganti: kartu "Rekomendasi AI" lama adalah placeholder mati —
+// double-click hanya memicu `alert('...akan segera diaktifkan')`. Tidak ada
+// panggilan API, tidak ada model, tidak ada output. Jadi Label "AI" hanya
+// ilusi; yang dilihat user adalah angka nyata yang SUDAH dihitung di view
+// ini tapi tidak pernah ditampilkan.
+//
+// Prinsip penggantinya (dari skill `myduit` — "Data yang DIHITUNG tapi tidak
+// dirender = fitur hilang"): pakai angka yang sudah ada, aturan murni &
+// deterministik, tanpa jaringan, tanpa kunci API, tanpa kondisi acak. Hasilnya
+// bisa diverifikasi user (tertanya "kenapa?" → aturan jelas) dan bisa
+// dit Says(assert) di test — sesuatu yang tidak bisa dijanjikan LLM.
 export default function StatistikView({ user }) {
   const uid = user.uid
   const { akunList, kategoriList } = useAkunKategori(uid)
@@ -232,6 +270,23 @@ export default function StatistikView({ user }) {
   const pctOut = pctBaru(ringkas.out, trend.out)
   const pctSaldo = pctBaru(ringkas.saldo, trend.saldo)
   const labelBanding = mode === 'bulanan' ? 'vs bulan sebelumnya' : 'vs tahun sebelumnya'
+  // Temuan analitik untuk kartu "Analisis Keuangan". Memakai mesin aturan
+  // deterministik (src/features/statistik/_aturan.js), bukan LLM: angka yang
+  // sama selalu menghasilkan saran yang sama, dan setiap saran bisa ditelusuri
+  // ke aturan yang menghasilkannya.
+  const saran = useMemo(
+    () =>
+      aturanAnalitik({
+        mode,
+        ringkas: { ...ringkas, jmlTransaksi: docs.length },
+        tren: trend,
+        jumlahHariBulan: totalHari,
+        bulan,
+        tahun,
+      }),
+    [mode, ringkas, trend, totalHari, bulan, tahun, docs.length],
+  )
+
 
   // Period navigator — batas: tidak bisa masa depan (sesuai GAS), retensi 1 tahun ke belakang
   // (tahun ini + 1 tahun sebelum; mis. 2026 → maksimal mundur ke 2025). Halaman detail
@@ -258,7 +313,12 @@ export default function StatistikView({ user }) {
     }
   }
 
-  // Chart.js line chart
+  // Chart.js — desain "area + bar" yang lebih halus:
+  //   - Saldo digambar sebagai AREA gradient (bukan garis polos) → tren terbaca jelas
+  //   - Pemasukan/Pengeluaran sebagai BAR membulat (radius 6) yang lebih tipis & rapi
+  //   - Grid Y sangat tipis, sumbu X tanpa garis (fokus ke data)
+  //   - Tooltip kaya dengan judul + nilai berformat
+  // Semua tetap Chart.js (MIT, gratis) — tidak menambah dependensi berbayar.
   const chartRef = useRef(null)
   const chartInst = useRef(null)
   useEffect(() => {
@@ -270,13 +330,34 @@ export default function StatistikView({ user }) {
     const ctx = chartRef.current.getContext('2d')
     const kur = typeof window !== 'undefined' ? window.__MYDUIT_CURRENCY__ || 'IDR' : 'IDR'
     const loc = typeof window !== 'undefined' ? window.__MYDUIT_LOCALE__ || 'id-ID' : 'id-ID'
+
+    // Gradient vertikal untuk area Saldo (dibuat dari kanvas).
+    const grad = ctx.createLinearGradient(0, 0, 0, 300)
+    grad.addColorStop(0, 'rgba(29,78,216,.28)')
+    grad.addColorStop(1, 'rgba(29,78,216,.02)')
+
     chartInst.current = new Chart(ctx, {
       data: {
         labels: tren.labels,
         datasets: [
-          { type: 'bar', label: 'Pemasukan', data: tren.dataIn, backgroundColor: 'rgba(16,185,129,.55)', hoverBackgroundColor: 'rgba(16,185,129,.75)', borderRadius: 4, borderSkipped: false, maxBarThickness: 22, order: 2 },
-          { type: 'bar', label: 'Pengeluaran', data: tren.dataOut.map((v) => -v), backgroundColor: 'rgba(229,62,62,.55)', hoverBackgroundColor: 'rgba(229,62,62,.75)', borderRadius: 4, borderSkipped: false, maxBarThickness: 22, order: 2 },
-          { type: 'line', label: 'Saldo', data: tren.dataSaldo, borderColor: '#1d4ed8', backgroundColor: 'rgba(29,78,216,.12)', tension: 0.35, pointRadius: mode === 'bulanan' ? 2 : 3, pointHoverRadius: 5, pointBackgroundColor: '#1d4ed8', borderWidth: 2, order: 1 },
+          {
+            type: 'bar', label: 'Pemasukan', data: tren.dataIn,
+            backgroundColor: 'rgba(16,185,129,.72)', hoverBackgroundColor: 'rgba(16,185,129,.95)',
+            borderRadius: 6, borderSkipped: false, maxBarThickness: 16, order: 2,
+          },
+          {
+            type: 'bar', label: 'Pengeluaran', data: tren.dataOut.map((v) => -v),
+            backgroundColor: 'rgba(229,62,62,.72)', hoverBackgroundColor: 'rgba(229,62,62,.95)',
+            borderRadius: 6, borderSkipped: false, maxBarThickness: 16, order: 2,
+          },
+          {
+            type: 'line', label: 'Saldo', data: tren.dataSaldo,
+            borderColor: '#1d4ed8', backgroundColor: grad, fill: true,
+            tension: 0.4, borderWidth: 2.5,
+            pointRadius: mode === 'bulanan' ? 0 : 3, pointHoverRadius: 5,
+            pointBackgroundColor: '#1d4ed8', pointBorderColor: '#fff', pointBorderWidth: 2,
+            order: 1,
+          },
         ],
       },
       options: {
@@ -289,6 +370,13 @@ export default function StatistikView({ user }) {
             mode: 'index',
             intersect: false,
             position: 'nearest',
+            backgroundColor: 'rgba(15,23,42,.94)',
+            padding: 10,
+            cornerRadius: 12,
+            titleFont: { size: 12, weight: '700' },
+            bodyFont: { size: 11 },
+            displayColors: true,
+            boxPadding: 4,
             callbacks: {
               title: (items) => (items?.[0] ? tren.titles[items[0].dataIndex] ?? items[0].label ?? '' : ''),
               label: (item) => {
@@ -300,11 +388,26 @@ export default function StatistikView({ user }) {
           },
         },
         scales: {
-          x: { stacked: false, grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } },
-          y: {
-            grid: { color: 'rgba(148,163,184,.15)' },
+          x: {
+            stacked: false,
+            grid: { display: false },
+            border: { display: false },
             ticks: {
-              color: '#94a3b8', font: { size: 10 },
+              color: '#94a3b8',
+              font: { size: 10 },
+              autoSkip: false,
+              maxRotation: 0,
+              callback(value, index) {
+                if (mode !== 'bulanan') return tren.labels[index]
+                return tren.labels[index] % 2 === 1 ? tren.labels[index] : ''
+              },
+            },
+          },
+          y: {
+            grid: { color: 'rgba(148,163,184,.12)' },
+            border: { display: false },
+            ticks: {
+              color: '#94a3b8', font: { size: 10 }, maxTicksLimit: 6,
               callback: (v) => formatCurrency(Math.abs(v), kur, loc, { compact: true }),
             },
           },
@@ -349,6 +452,17 @@ export default function StatistikView({ user }) {
           ...ringkas.pengeluaran.map((i) => i.id),
         ]).size,
         jmlTransaksi: docs.length,
+        // Metrik turunan yang TIDAK pernah dikirim ke panel sebelumnya.
+        // Penyebab panel "Statistik Cepat" punya ~294px ruang kosong: blok
+        // `flex-1` dipaksa setinggi sisa ruang sementara isinya hanya dua
+        // kartu fixed-size. Data-data ini SUDAH dihitung di atas, cuma tak
+        // pernah dirender — fitur hilang. Sekarang dikirim & ditampilkan.
+        hariAktif: Object.keys(ringkas.harian).length,
+        jumlahHariBulan: mode === 'bulanan' ? new Date(tahun, bulan + 1, 0).getDate() : 12,
+        rataPengeluaranHariAktif: hitungRataPerHariAktif(ringkas.harian, 'out'),
+        hariPalingBoros: cariPuncakHari(ringkas.harian, 'out'),
+        terbesarPemasukan: ringkas.pemasukan[0] || null,
+        topKategoriBoros: ringkas.pengeluaran.slice(0, 3),
         akunById,
         pengeluaranTerbesar: topExpense
           ? { nama: topExpense.nama, total: topExpense.total }
@@ -356,7 +470,7 @@ export default function StatistikView({ user }) {
       },
     })
     window.dispatchEvent(event)
-  }, [mode, bulan, tahun, ringkas.in_, ringkas.out, ringkas.saldo, rataHarian, akunList, akunById, ringkas.pemasukan, ringkas.pengeluaran, docs])
+  }, [mode, bulan, tahun, ringkas.in_, ringkas.out, ringkas.saldo, rataHarian, akunList, akunById, ringkas.pemasukan, ringkas.pengeluaran, ringkas.harian, docs])
 
   // Streak Pencatatan -> sidebar kiri. Hitung dari SEMUA tanggal transaksi user
   // (bukan hanya periode aktif) supaya akurat lintas bulan. Fetch sekali per mount.
@@ -385,43 +499,28 @@ export default function StatistikView({ user }) {
 
   return (
     <section className="mx-auto max-w-3xl px-5 pb-32 md:pb-10">
-      {/* Header mobile-only (logo + judul + navigator ringkas) — di desktop judul dihilangkan */}
-      <header className="flex items-center justify-between pt-4 pb-4 md:hidden">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="clay-icon-tile clay-key-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-white">
+      {/* Header mobile-only (logo + judul) — navigator periode ada di baris
+          terpisah di bawah (pola sama dengan BudgetView) supaya judul tidak
+          pernah terpotong. Di desktop header ini tersembunyi. */}
+      <header className="stat-header-mobile pt-4 pb-3 md:hidden">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="clay-icon-tile clay-key-primary solid-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white">
             <span className="material-symbols-outlined icon-lg" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
           </div>
-          <h2 className="font-display whitespace-nowrap text-2xl font-extrabold leading-tight sm:icon-2xl">Statistik</h2>
-        </div>
-        <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Navigasi periode">
-          <button
-            onClick={() => navigate(-1)}
-            disabled={!bisaMundur}
-            aria-label="Periode sebelumnya"
-            className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full bg-white"
-          >
-            <span className="material-symbols-outlined icon-sm text-slate-600">chevron_left</span>
-          </button>
-          <span className="min-w-[68px] text-center text-xs font-bold leading-tight text-slate-800">{labelPeriode}</span>
-          <button
-            onClick={() => navigate(1)}
-            disabled={!bisaMaju}
-            aria-label="Periode berikutnya"
-            className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full bg-white"
-          >
-            <span className="material-symbols-outlined icon-sm text-slate-600">chevron_right</span>
-          </button>
+          <h2 className="font-display text-2xl font-extrabold leading-tight">Statistik</h2>
         </div>
       </header>
 
-      {/* Periode bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-4 md:pt-5">
-        <div className="flex justify-center gap-2">
+      {/* Periode bar — mobile: segmented (Bulanan|Tahunan) baris-1, stepper
+          periode baris-2 (tidak berdesakan; header tak terpotong).
+          Desktop: sebaris (segmented kiri, stepper kanan). */}
+      <div className="flex flex-col gap-2.5 pb-4 md:flex-row md:items-center md:justify-between md:gap-3 md:pt-5">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setMode('bulanan')}
-            className={`stat-pill-tab clay-chip flex h-9 items-center px-4 text-xs font-semibold transition-colors ${
+            className={`stat-pill-tab flex h-9 flex-1 items-center justify-center px-4 text-xs font-semibold transition-colors md:flex-none ${
               mode === 'bulanan'
-                ? 'clay-key-primary bg-primary text-white'
+                ? 'clay-chip-primary'
                 : 'clay-key-neutral bg-surfaceContainerLowest text-textSecondary hover:bg-gray-100'
             }`}
           >
@@ -429,30 +528,30 @@ export default function StatistikView({ user }) {
           </button>
           <button
             onClick={() => setMode('tahunan')}
-            className={`stat-pill-tab clay-chip flex h-9 items-center px-4 text-xs font-semibold transition-colors ${
+            className={`stat-pill-tab flex h-9 flex-1 items-center justify-center px-4 text-xs font-semibold transition-colors md:flex-none ${
               mode === 'tahunan'
-                ? 'clay-key-primary bg-primary text-white'
+                ? 'clay-chip-primary'
                 : 'clay-key-neutral bg-surfaceContainerLowest text-textSecondary hover:bg-gray-100'
             }`}
           >
             Tahunan
           </button>
         </div>
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="flex items-center justify-center gap-3 md:justify-end">
           <button
             onClick={() => navigate(-1)}
             disabled={!bisaMundur}
             aria-label="Periode sebelumnya"
-            className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full bg-white"
+            className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white"
           >
             <span className="material-symbols-outlined icon-md text-slate-600">chevron_left</span>
           </button>
-          <span className="min-w-[120px] text-center text-sm font-bold text-slate-800">{labelPeriode}</span>
+          <span className="stat-periode-label text-sm font-bold text-slate-800">{labelPeriode}</span>
           <button
             onClick={() => navigate(1)}
             disabled={!bisaMaju}
             aria-label="Periode berikutnya"
-            className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full bg-white"
+            className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white"
           >
             <span className="material-symbols-outlined icon-md text-slate-600">chevron_right</span>
           </button>
@@ -461,14 +560,14 @@ export default function StatistikView({ user }) {
 
       <div className="space-y-5 pb-20 md:pb-4 md:pr-3">
         {/* SUMMARY CARDS (gradient) */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <SummaryCard
             icon="trending_up"
             label="Pemasukan"
             value={ringkas.in_}
             pct={pctIn}
             banding={labelBanding}
-            cls="clay-key-primary bg-primary"
+            cls="clay-key-primary" aksenCls="text-primary"
           />
           <SummaryCard
             icon="trending_down"
@@ -476,7 +575,7 @@ export default function StatistikView({ user }) {
             value={ringkas.out}
             pct={pctOut}
             banding={labelBanding}
-            cls="clay-key-danger bg-red-600"
+            cls="clay-key-danger" aksenCls="text-danger"
           />
           <SummaryCard
             icon="savings"
@@ -484,7 +583,7 @@ export default function StatistikView({ user }) {
             value={ringkas.saldo}
             pct={pctSaldo}
             banding={labelBanding}
-            cls="clay-key-blue bg-blue-600"
+            cls="clay-key-blue" aksenCls="text-info"
           />
         </div>
 
@@ -501,7 +600,7 @@ export default function StatistikView({ user }) {
           <div className="relative h-64 md:h-72">
             <canvas ref={chartRef}></canvas>
             {loading ? (
-              <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">Memuat...</div>
+              <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">Memuat...</div>
             ) : error ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center">
                 <span className="material-symbols-outlined icon-2xl text-red-400">error</span>
@@ -509,7 +608,7 @@ export default function StatistikView({ user }) {
                 <p className="max-w-md text-[11px] leading-snug text-slate-500">{error}</p>
               </div>
             ) : ringkas.in_ + ringkas.out === 0 ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-slate-400">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-slate-500">
                 <span className="material-symbols-outlined icon-2xl text-slate-300">query_stats</span>
                 <p className="text-sm text-slate-500">Belum ada data transaksi untuk periode ini.</p>
               </div>
@@ -519,13 +618,18 @@ export default function StatistikView({ user }) {
 
         {/* BREAKDOWN KATEGORI */}
         <div className="flex flex-wrap items-center justify-between gap-1 px-1">
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Breakdown Kategori</h3>
-          <span className="hidden text-[10px] text-slate-400 sm:inline">Klik 2x kategori utk detail</span>
+          {/* slate-400 hanya 2.51:1 di surface #f8faf9 — di bawah WCAG AA 4.5:1.
+              slate-500 terukur 4.76:1. Ukuran 10px -> 11px (batas minimum
+              teks kecil di skill UI/UX). */}
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Breakdown Kategori</h3>
+          <span className="hidden text-[11px] font-medium text-slate-500 sm:inline">
+            Klik 2x kategori utk detail
+          </span>
         </div>
         <div className="-mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
           <KategoriCard
             icon="trending_up"
-            iconColor="text-emerald-600"
+            iconColor="text-incomeText"
             title="Pemasukan per Kategori"
             items={ringkas.pemasukan}
             total={ringkas.in_}
@@ -543,32 +647,57 @@ export default function StatistikView({ user }) {
           />
         </div>
 
-        {/* AI RECOMMENDATION */}
-        <div
-          onDoubleClick={() => alert('Rekomendasi AI akan segera diaktifkan (Fase AI).')}
-          className="clay clay-card clay-key-primary cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5"
-          title="Ketuk/klik dua kali untuk memuat rekomendasi AI"
-        >
-          <div className="flex items-center gap-3 px-5 py-4" style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)' }}>
+        {/* INSIGHT KEUANGAN — hasil dari aturan deterministik.
+           Kartu "Rekomendasi AI" lama (double-click -> alert) dihapus:
+            tidak ada model, tidak ada API, tidak ada output. Yang tampil
+            sekarang adalah hasil aturan murni atas angka yang sudah dihitung,
+            jadi bisa diverifikasi dan diuji. Lihat src/features/statistik/_aturan.js */}
+        <div className="clay clay-card clay-key-primary overflow-hidden">
+          <div
+            className="flex items-center gap-3 px-5 py-4"
+            style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)' }}
+          >
             <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-              style={{ background: 'rgba(255,255,255,0.15)' }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15"
             >
-              <span className="material-symbols-outlined icon-lg text-white">psychology</span>
+              <span className="material-symbols-outlined icon-lg text-white">insights</span>
             </div>
             <div className="min-w-0">
-              <h4 className="text-sm font-bold text-white">Rekomendasi AI</h4>
-              <p className="mt-0.5 text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                Analisis otomatis dari data keuangan periode ini
+              <h4 className="text-sm font-bold text-white">Analisis Keuangan</h4>
+              <p className="mt-0.5 text-xs text-white/70">
+                {saran.length} temuan dari data {mode === 'bulanan' ? 'bulan ini' : 'tahun ini'}
               </p>
             </div>
           </div>
-          <div className="bg-white px-5 py-4">
-            <div className="flex items-center gap-2 py-2 text-sm text-slate-500">
-              <span className="material-symbols-outlined icon-md">touch_app</span>
-              Ketuk/klik dua kali pada kartu ini untuk memuat rekomendasi AI.
-            </div>
-          </div>
+          <ul className="divide-y divide-slate-100 bg-white">
+            {saran.map((s_, idx) => (
+              <li key={idx} className="flex gap-3 px-5 py-3">
+                <span
+                  className={`material-symbols-outlined icon-md mt-0.5 shrink-0 ${
+                    s_.level === 'kritis'
+                      ? 'text-red-600'
+                      : s_.level === 'peringatan'
+                        ? 'text-amber-600'
+                        : s_.level === 'bagus'
+                          ? 'text-incomeText'
+                          : 'text-slate-500'
+                  }`}
+                >
+                  {s_.level === 'kritis'
+                    ? 'error'
+                    : s_.level === 'peringatan'
+                      ? 'warning'
+                      : s_.level === 'bagus'
+                        ? 'check_circle'
+                        : 'info'}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold leading-snug text-slate-800">{s_.judul}</p>
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-slate-500">{s_.detail}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
@@ -579,28 +708,28 @@ export default function StatistikView({ user }) {
           onClick={() => setDetail(null)}
         >
           <div className="clay-sheet clay-key-primary flex max-h-[85vh] w-full max-w-md flex-col bg-white" onClick={(e) => e.stopPropagation()}>
-            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-5 pb-3 pt-5">
+            <div className="flex min-w-0 shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-5 pb-3 pt-5">
               <div className="min-w-0">
                 <h3 className="truncate text-base font-bold text-slate-800">{detail.kategori}</h3>
                 <p className="mt-0.5 text-xs text-slate-500">{detail.labelPeriode}</p>
               </div>
-              <button onClick={() => setDetail(null)} className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:text-slate-600">
+              <button onClick={() => setDetail(null)} className="clay-chip clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:text-slate-600">
                 <span className="material-symbols-outlined icon-lg">close</span>
               </button>
             </div>
             <div className="flex-1 space-y-1 overflow-y-auto px-5 py-3">
               {detail.items.length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-400">Belum ada transaksi.</p>
+                <p className="py-6 text-center text-sm text-slate-500">Belum ada transaksi.</p>
               ) : (
                 detail.items.map((t) => {
                   const ak = akunById[t.akunId]
                   return (
-                    <div key={t.id} className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 hover:bg-slate-50">
+                    <div key={t.id} className="flex min-w-0 items-center justify-between gap-3 rounded-xl px-3 py-2 hover:bg-slate-50">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-slate-800">{t.catatan || t.kategoriNama || detail.kategori}</p>
-                        <p className="text-[11px] text-slate-400">{ak?.nama || 'Tunai'} · {t.tanggal}</p>
+                        <p className="text-[11px] text-slate-500">{ak?.nama || 'Tunai'} · {t.tanggal}</p>
                       </div>
-                      <p className={`shrink-0 font-mono text-sm font-bold ${detail.jenis === 'pemasukan' ? 'text-emerald-600' : 'text-red-500'}`}>
+                      <p className={`shrink-0 font-mono text-sm font-bold ${detail.jenis === 'pemasukan' ? 'text-incomeText' : 'text-expenseText'}`}>
                         {detail.jenis === 'pemasukan' ? '+' : '−'}{simbolUang()}{formatNominal(t.jumlah || 0)}
                       </p>
                     </div>
@@ -610,7 +739,7 @@ export default function StatistikView({ user }) {
             </div>
             <div className="flex shrink-0 items-center justify-between rounded-b-2xl border-t border-slate-100 bg-slate-50 px-5 py-3">
               <span className="text-xs font-semibold text-slate-500">Total {detail.jenis === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'}</span>
-              <span className={`text-sm font-bold ${detail.jenis === 'pemasukan' ? 'text-emerald-600' : 'text-expense'}`}>{formatRupiah(detail.total || 0)}</span>
+              <span className={`text-sm font-bold ${detail.jenis === 'pemasukan' ? 'text-incomeText' : 'text-expenseText'}`}>{formatRupiah(detail.total || 0)}</span>
             </div>
           </div>
         </div>
@@ -619,21 +748,25 @@ export default function StatistikView({ user }) {
   )
 }
 
-function SummaryCard({ icon, label, value, pct, cls, banding }) {
+function SummaryCard({ icon, label, value, pct, cls, aksenCls, banding }) {
   // pct null = tidak ada data pembanding (periode sebelumnya kosong) — jangan
   // menampilkan persen palsu "+100%", ganti teks netral.
   const positif = (pct ?? 0) >= 0
   const iconTrend = pct === null ? 'trending_flat' : positif ? 'trending_up' : 'trending_down'
   return (
-    <div className={`clay clay-card ${cls} rounded-[22px] p-4 text-white transition-all hover:-translate-y-0.5`}>
+    // `cls` hanya bawa clay-key (menentukan --clay-h untuk shadow) DAN token
+    // warna aksen lewat `aksenCls`. Kartu tetap BERPUTIH seperti .clay-card —
+    // teks gelap di atasnya.Dulu: `text-white` + background yang bisa
+    // tertimpa utility lain = teks putih di atas putih (kontras 1.00).
+    <div className={`clay clay-card ${cls} rounded-[22px] p-4 transition-all hover:-translate-y-0.5`}>
       <div className="mb-2 flex items-center gap-2">
-        <span className="material-symbols-outlined icon-md opacity-90" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
-        <p className="text-xs font-semibold uppercase tracking-wider opacity-90">{label}</p>
+        <span className={`material-symbols-outlined icon-md ${aksenCls}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-600">{label}</p>
       </div>
-      <p className="font-mono text-2xl font-extrabold tracking-tight" style={{ fontVariantNumeric: 'tabular-nums' }}>
+      <p className="font-mono text-lg font-extrabold tracking-tight text-slate-900 tabular-nums sm:text-xl lg:text-2xl">
         {simbolUang()} {formatNominal(value || 0)}
       </p>
-      <p className="mt-1 flex items-center gap-1 text-[11px] font-medium opacity-85">
+      <p className={`mt-1 flex items-center gap-1 text-[11px] font-semibold ${aksenCls}`}>
         <span className="material-symbols-outlined icon-2xs">{iconTrend}</span>
         {pct === null ? 'Belum ada data sebelumnya' : `${pct === 0 ? '0%' : `${positif ? '+' : ''}${pct}%`} ${banding}`}
       </p>
@@ -674,7 +807,7 @@ function KategoriCard({ icon, iconColor, title, items, total, jenis, onDblClick 
                 className="cursor-pointer rounded-lg px-2 py-1 transition-colors hover:bg-slate-50"
                 title="Klik 2x untuk melihat detail transaksi"
               >
-                <div className="flex items-center justify-between text-[11px] font-semibold">
+                <div className="flex min-w-0 items-center justify-between text-[11px] font-semibold">
                   <span className="truncate text-slate-700">{it.nama}</span>
                   <span className="text-slate-500">{pctTotal}%</span>
                 </div>

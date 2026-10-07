@@ -33,15 +33,15 @@ export default function BudgetPanel({
 
   return (
     <div>
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2">
         {budgets.length === 0 ? (
-          <div className="clay-card-soft flex flex-col items-center px-6 py-12 text-center md:col-span-2">
+          <div className="clay-card-soft flex flex-col items-center px-6 py-12 text-center lg:col-span-2">
             <span className="material-symbols-outlined mb-3 text-5xl text-blue-400/50" style={{ fontVariationSettings: "'FILL' 0" }}>savings</span>
             <p className="text-sm font-bold text-slate-700">Belum ada budget untuk periode ini</p>
-            <p className="mt-1 text-xs text-slate-400">Tekan tombol + di bawah untuk membatasi pengeluaran.</p>
+            <p className="mt-1 text-xs text-slate-500">Tekan tombol + di bawah untuk membatasi pengeluaran.</p>
             <button
               onClick={() => setModal({ open: true, edit: null })}
-              className="clay-btn clay-key-blue mt-4 bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
+              className="clay-btn clay-key-blue solid-blue mt-4 px-4 py-2.5 text-xs font-semibold text-white hover:"
             >
               + Tambah Budget
             </button>
@@ -61,20 +61,20 @@ export default function BudgetPanel({
             return (
               <div key={b.id} className="clay-card relative overflow-hidden p-4 pl-5">
                 <span className={`absolute inset-y-0 left-0 w-1.5 ${warnaBar}`} aria-hidden="true" />
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-[15px] font-bold leading-snug text-slate-800">{kategoriNama}</p>
-                    <p className="mt-0.5 text-[11px] font-medium text-slate-400">Limit {formatRupiah(b.limitNominal)}</p>
+                    <p className="mt-0.5 text-[11px] font-medium text-slate-500">Limit {formatRupiah(b.limitNominal)}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <span className={`inline-flex items-center gap-0.5 rounded-md px-2 py-0.5 text-[11px] font-bold ${warnaTeks} ${status === 'lewat' ? 'bg-red-50' : status === 'waspada' ? 'bg-amber-50' : 'bg-blue-50'}`}>
                       <span className="material-symbols-outlined icon-xs">{ikonStatus}</span>
                       {labelStatus}
                     </span>
-                    <button onClick={() => setModal({ open: true, edit: b })} aria-label={`Edit budget ${kategoriNama}`} className="flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
+                    <button onClick={() => setModal({ open: true, edit: b })} aria-label={`Edit budget ${kategoriNama}`} className="flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-600">
                       <span className="material-symbols-outlined icon-sm">edit</span>
                     </button>
-                    <button onClick={() => setHapusTarget(b)} aria-label={`Hapus budget ${kategoriNama}`} className="flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600">
+                    <button onClick={() => setHapusTarget(b)} aria-label={`Hapus budget ${kategoriNama}`} className="flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600">
                       <span className="material-symbols-outlined icon-sm">delete</span>
                     </button>
                   </div>
@@ -84,7 +84,7 @@ export default function BudgetPanel({
                   <p className={`text-[26px] font-extrabold leading-none tracking-tight ${sisa < 0 ? 'text-red-600' : 'text-slate-900'}`}>
                     {sisa < 0 ? formatRupiah(-sisa) : formatRupiah(sisa)}
                   </p>
-                  <p className="mt-1 text-[11px] font-medium text-slate-400">
+                  <p className="mt-1 text-[11px] font-medium text-slate-500">
                     {sisa < 0 ? 'melebihi limit' : 'sisa dari limit'}
                   </p>
                 </div>
@@ -94,7 +94,7 @@ export default function BudgetPanel({
                     <div className={`h-full rounded-full transition-all ${warnaBar}`} style={{ width: `${lebarBar}%` }} />
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px]">
-                    <span className="font-medium text-slate-400">Terpakai {formatRupiah(b.terpakai)}</span>
+                    <span className="font-medium text-slate-500">Terpakai {formatRupiah(b.terpakai)}</span>
                     <span className={`font-extrabold ${warnaTeks}`}>{b.lewat ? `+${b.persen - 100}%` : `${b.persen}%`}</span>
                   </div>
                 </div>
@@ -118,7 +118,7 @@ export default function BudgetPanel({
       {hapusTarget && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm" onClick={() => setHapusTarget(null)}>
           <div className="clay-card w-full max-w-xs rounded-[24px] p-5 text-center" onClick={(e) => e.stopPropagation()}>
-            <span className="material-symbols-outlined text-4xl text-expense">delete</span>
+            <span className="material-symbols-outlined text-4xl text-expenseText">delete</span>
             <p className="mt-2 text-sm font-bold text-slate-800">
               Hapus budget "{kategoriList.find((k) => k.id === hapusTarget.kategoriId)?.nama ?? hapusTarget.kategoriNama ?? '?'}"?
             </p>

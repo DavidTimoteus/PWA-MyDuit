@@ -23,6 +23,8 @@
  * Modul ini murni fungsi (tanpa React) supaya bisa diuji terpisah.
  */
 
+import { cariBarang, petakanKategori, cariPembayar, cariTunai } from './strukMeta.js'
+
 // ===================== PRA-PROSES GAMBAR =====================
 
 /**
@@ -668,13 +670,32 @@ export async function bacaStruk(file, onProgress) {
   const teks = hasil.teks || ''
 
   const { total, sumber } = cariTotal(teks)
+  const merchant = cariMerchant(teks)
+  const jenis = cariJenis(teks)
+
+  // Pemetaan tingkat lanjut: isi struk -> kategori, keterangan (nama BARANG,
+  // bukan merchant), dan sumber pembayaran. Modul murni strukMeta.js dipisah
+  // agar bisa diuji tanpa canvas/Tesseract.
+  const barang = cariBarang(teks)
+  const peta = petakanKategori({ barang, merchant, jenis })
+  const pembayar = cariPembayar(teks)
+  const tunai = cariTunai(teks)
+
   return {
     teks,
     total,
     totalSumber: sumber,
     tanggal: cariTanggal(teks),
-    jenis: cariJenis(teks),
-    merchant: cariMerchant(teks),
+    jenis,
+    merchant,
+    // --- kolom baru ---
+    barang,
+    kategoriNama: peta.kategoriNama,
+    kategoriDari: peta.kategoriDari,
+    kategoriYakin: peta.yakin,
+    keterangan: peta.keterangan,
+    sumberBayar: pembayar, // { nama, jenis:'dompet'|'bank' } atau null
+    bayarTunai: tunai,
     confidence: hasil.conf,
     psm: hasil.psm,
   }

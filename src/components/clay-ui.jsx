@@ -106,10 +106,10 @@ export function ClaySelect({ id, value, onChange, options, placeholder = 'Pilih'
         }}
         className={`${TRIGGER_BASE} clay-select-trigger flex items-center justify-between gap-2 text-left ${className}`}
       >
-        <span className={`truncate ${selected ? 'font-medium text-slate-800' : 'text-slate-400'}`}>
+        <span className={`truncate ${selected ? 'font-medium text-slate-800' : 'text-slate-500'}`}>
           {selected ? selected.label : placeholder}
         </span>
-        <span className="material-symbols-outlined icon-md text-slate-400 shrink-0">expand_more</span>
+        <span className="material-symbols-outlined icon-md text-slate-500 shrink-0">expand_more</span>
       </button>
       {open &&
         pos &&
