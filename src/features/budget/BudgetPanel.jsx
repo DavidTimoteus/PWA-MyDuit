@@ -40,7 +40,7 @@ export default function BudgetPanel({
             <p className="mt-1 text-xs text-slate-500">Tekan tombol + di bawah untuk membatasi pengeluaran.</p>
             <button
               onClick={() => setModal({ open: true, edit: null })}
-              className="clay-btn clay-key-blue solid-blue mt-4 px-4 py-2.5 text-xs font-semibold text-white hover:"
+              className="clay-btn clay-key-blue solid-blue mt-4 px-4 py-2.5 text-xs font-semibold text-white"
             >
               + Tambah Budget
             </button>

@@ -79,7 +79,7 @@ export default function AuthScreen() {
           </p>
         )}
       </div>
-      <p className="mt-6 text-xs font-semibold text-white/70">
+      <p className="mt-6 text-xs font-semibold text-white">
         Data hanya bisa diakses oleh akunmu — dijaga Firebase Security Rules.
       </p>
     </div>

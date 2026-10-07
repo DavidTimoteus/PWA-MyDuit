@@ -156,7 +156,7 @@ export default function ModalPindahSaldo({ uid, open, onClose, akunList }) {
             <button
               type="submit"
               disabled={saving || sama}
-              className="clay-btn clay-key-blue solid-blue btn-md text-white transition-colors hover: disabled:opacity-60"
+              className="clay-btn clay-key-blue solid-blue btn-md text-white transition-colors disabled:opacity-60"
             >
               <span className="material-symbols-outlined icon-sm">sync_alt</span>
               {saving ? 'Memproses…' : 'Pindahkan Saldo'}

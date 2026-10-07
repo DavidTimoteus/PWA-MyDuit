@@ -609,7 +609,7 @@ export default function StatistikView({ user }) {
               </div>
             ) : ringkas.in_ + ringkas.out === 0 ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-slate-500">
-                <span className="material-symbols-outlined icon-2xl text-slate-300">query_stats</span>
+                <span className="material-symbols-outlined icon-2xl text-slate-400">query_stats</span>
                 <p className="text-sm text-slate-500">Belum ada data transaksi untuk periode ini.</p>
               </div>
             ) : null}
@@ -664,7 +664,7 @@ export default function StatistikView({ user }) {
             </div>
             <div className="min-w-0">
               <h4 className="text-sm font-bold text-white">Analisis Keuangan</h4>
-              <p className="mt-0.5 text-xs text-white/70">
+              <p className="mt-0.5 text-xs text-white">
                 {saran.length} temuan dari data {mode === 'bulanan' ? 'bulan ini' : 'tahun ini'}
               </p>
             </div>

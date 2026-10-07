@@ -125,13 +125,13 @@ export default function BackupModal({ open, onClose, uid }) {
         <button
           onClick={ekspor}
           disabled={loading}
-          className="clay-btn clay-key-primary solid-primary btn-lg mb-2 w-full text-white hover:-dark disabled:opacity-60"
+          className="clay-btn clay-key-primary solid-primary btn-lg mb-2 w-full text-white disabled:opacity-60"
         >
           <span className="material-symbols-outlined icon-md">download</span>
           Ekspor Data Sekarang
         </button>
 
-        <div className="my-3 flex items-center gap-3 text-[11px] font-bold uppercase tracking-wide text-slate-300">
+        <div className="my-3 flex items-center gap-3 text-[11px] font-bold uppercase tracking-wide text-slate-500">
           <span className="h-px flex-1 bg-slate-200" /> atau <span className="h-px flex-1 bg-slate-200" />
         </div>
 

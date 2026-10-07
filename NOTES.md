@@ -5,7 +5,7 @@ Repo: folder ini. Detail operasional singkat supaya sesi berikutnya tidak nebak.
 
 ## Perintah wajib
 
-- `npm run check` = format + uji OCR (28) + struk (34) + offline (offlineSync) + **filter transaksi (11)** + **riwayat mutasi rekening (24)** + **render panel budget & modal riwayat (16)** + **kontrak event bus (4)** + **prefill utang (11)** + lint `--max-warnings=0` + build. Hijau = layak deploy.
+- `npm run check` = format + uji OCR (28) + struk (34) + offline (offlineSync) + **filter transaksi (11)** + **riwayat mutasi rekening (24)** + **render panel budget & modal riwayat (22)** + **kontrak event bus (4)** + **kontrak kelas CSS (7)** + **prefill utang (11)** + lint `--max-warnings=0` + build. Hijau = layak deploy.
 - Deploy: `./node_modules/.bin/firebase deploy --only hosting --project myduit001`. Verifikasi setelah deploy: hash `assets/index-*.{js,css}` di `https://myduit001.web.app/` HARUS = `dist/index.html`.
 - Uji login tidak bisa di localhost: Firebase → Authentication → Authorized domains TIDAK memuat `127.0.0.1` (error "Domain ini belum diizinkan"). Login hanya bisa dari domain live / harness dengan user tiruan.
 
@@ -18,6 +18,7 @@ Repo: folder ini. Detail operasional singkat supaya sesi berikutnya tidak nebak.
 5. `.mjs` tidak ikut lint ESLint (`src/**/*.{js,jsx}`) — file `.jsx` uji tetap harus bersih `--max-warnings=0`.
 6. **Event bus tanpa pendengar = tombol diam** (bug 2 tombol Aksi Cepat panel kanan Budget): `myduit:budget-add-rekening` / `myduit:budget-add-budget` di-dispatch oleh `BudgetAsidePanel` tapi tidak didengar siapa pun — tidak ada error, hanya tombol yang tidak bereaksi. Dua keputusan: (a) pendengarnya ditaruh di `BudgetView` (punya `setModal` + bisa ganti sub-tab), (b) `myduit:rekening-add` lama hanya mewakili sub-tab Rekening → handler-nya sekarang ganti sub-tab dulu baru buka modal, dan sub-tab Rekening yang belum pernah tampil punya state tertunda (`myduit:buka-tambah-rekening` -> siapkan lalu buka saat aktif). Dikunci uji `test:events` (`src/lib/eventContract.test.mjs`): SEMUA event `myduit:*` yang di-dispatch wajib punya listener.
 7. **Guard `if (sub !== X) return` di dalam useEffect emit ringkasan itu berbahaya**: `BudgetAsidePanel` / sidebar dirender per **TAB**, bukan per sub-tab. Guard lama bikin panel kanan menampilkan angka Rp0 placeholder saat sub-tab Rekening. Emit ringkasan selalu jalan tanpa guard sub-tab.
+8. **Phantom class = CSS yang dipakai JSX tapi tidak pernah didefinisikan** (bug filter aktif modal riwayat jadi putih-di-atas-putih): `clay-chip ... solid-blue` dipakai di `RiwayatMutasiModal` tetapi `.clay-chip.solid-blue` tidak ada — chip tetap `.clay-chip` (putih), teks `text-white` → tulisan hilang total, tanpa error di console dan tanpa gagal test render. Varian biru kini didefinisikan, dan pill filter pindah ke class dedicated `.mutasi-tab` + `.is-aktif` (bidang + bayangan + kontrasnya dikunci di CSS). Dikunci `test:classes` (`src/styles/classContract.test.mjs`): (a) setiap `<komponen>.solid-*` yang dipakai JSX wajib ada di CSS, (b) setiap token `mutasi-*`/`is-*` wajib ada di CSS, (c) larangan token cacat (`hover:` menggantung, `xxx:-dark`, `-light` yatim). Jangan tambah class kustom di JSX tanpa pasangan di `index.css` — uji ini yang akan menangkapnya.
 
 ## Uji render tanpa login
 

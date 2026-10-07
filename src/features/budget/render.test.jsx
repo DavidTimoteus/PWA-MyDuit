@@ -47,6 +47,20 @@ cek(
   (s) => (s.match(/aria-pressed="true"/g) ?? []).length === 1,
 )
 cek('modal: state loading terlihat', html, 'Memuat riwayat...')
+
+// Redesign clay: struktur baru harus ikut ter-render, dan pill filter
+// aktif tidak lagi membawa `text-white` di atas latar putih — kontrasnya
+// dikunci lewat class .mutasi-tab.is-aktif (dicek classContract.test.mjs).
+cek('modal: header punya ikon identitas rekening', html, 'mutasi-identitas')
+cek('modal: hero saldo + badge tipe rekening', html, 'mutasi-hero')
+cek('modal: label saldo pakai class hero', html, 'mutasi-hero__label')
+cek('modal: eyebrow filter + ringkasan ter-render', html, 'mutasi-eyebrow')
+cek(
+  'modal: tepat SATU pill .mutasi-tab.is-aktif (filter aktif tidak putih-hilang)',
+  html,
+  (s) => (s.match(/mutasi-tab is-aktif/g) || []).length === 1,
+)
+cek('modal: pill filter tidak lagi memakai text-white', html, (s) => !/mutasi-tab[^>]*text-white/.test(s))
 cek(
   'modal: tanpa akun -> tidak merender apa pun',
   renderToString(h(RiwayatMutasiModal, { uid: 'u1', akun: null, onClose: () => {} })),

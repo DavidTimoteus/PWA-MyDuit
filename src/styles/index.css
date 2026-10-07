@@ -1397,6 +1397,33 @@ button:active {
       rgba(255, 255, 255, 0.26);
 }
 
+/* FIX BUG: chip filter aktif di RiwayatMutasiModal memakai
+   `clay-chip ... solid-blue text-white` tetapi varian biru TIDAK PERNAH
+   ada -> background tetap putih, teks putih -> tulisan filter hilang
+   (kontras 1.0). Titik terang gradient dijaga gelap (#2563eb) supaya
+   putih di atasnya tetap >= 4.7:1. */
+.clay-chip.solid-blue {
+  background-color: #1d4ed8;
+  background-image: linear-gradient(145deg, #2563eb 0%, #1d4ed8 65%, #1e3a8a 100%);
+  color: #ffffff;
+  --clay-r: 4px;
+  --clay-blur: 10px;
+  box-shadow:
+    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h), 0.30),
+    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
+      rgba(0, 0, 0, 0.22),
+    inset calc(var(--clay-r) * 0.5) calc(var(--clay-r) * 0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.30);
+}
+.clay-chip.solid-blue:hover { filter: brightness(1.06); }
+.clay-chip.solid-blue:active {
+  box-shadow:
+    inset calc(var(--clay-r) * 0.8) calc(var(--clay-r) * 0.8) var(--clay-blur)
+      rgba(0, 0, 0, 0.34),
+    inset calc(var(--clay-r) * -0.5) calc(var(--clay-r) * -0.5) var(--clay-blur)
+      rgba(255, 255, 255, 0.26);
+}
+
 /* ============================================================
    CLASS YANG SEBELUMNYA HILANG (phantom class)
    ------------------------------------------------------------
@@ -1614,4 +1641,312 @@ button:active {
   min-width: 96px;
   text-align: center;
   white-space: nowrap;
+}
+
+/* ============================================================
+   MODAL RIWAYAT MUTASI (detail "Perubahan Terakhir" rekening)
+   ------------------------------------------------------------
+   Akar bug yang diperbaiki di sini: filter aktif memakai
+   `clay-chip ... solid-blue text-white` tetapi `.clay-chip.solid-blue`
+   tidak pernah ada -> background chip tetap putih, teks putih ->
+   tulisan filter HILANG (kontras 1.0). Pill filter kini punya class
+   sendiri (.mutasi-tab) dengan tiga state nyata (rest / hover /
+   aktif), masing-masing membawa bidang + 3 shadow clay sendiri,
+   jadi kontrasnya terkunci di CSS dan tidak bisa jatuh putih-hilang.
+
+   Semua aturan di bawah sengaja DI LUAR @layer components:
+   `.clay-sheet` (di dalam layer) harus bisa ditimpa `.mutasi-sheet`.
+   ============================================================ */
+
+/* Bidang modal BERBEDA dari kartu mutasi (putih) supaya feed menonjol */
+.mutasi-sheet {
+  border-radius: var(--clay-r-card);
+  background-color: var(--color-surfaceContainerLow);
+}
+
+/* Ikon identitas rekening (header) */
+.mutasi-identitas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 20px;
+  color: #ffffff;
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #35795a 0%, #2d6a4f 60%, #1b4332 100%);
+  box-shadow:
+    5px 5px 14px rgba(var(--clay-h-primary), 0.34),
+    inset -3px -3px 8px rgba(0, 0, 0, 0.24),
+    inset 3px 3px 8px rgba(255, 255, 255, 0.26);
+}
+
+/* Hero saldo — bidang solid brand; teks putih di atasnya >= 5.2:1 */
+.mutasi-hero {
+  border-radius: 20px;
+  padding: 14px 16px 15px;
+  color: #ffffff;
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #35795a 0%, #2d6a4f 55%, #1b4332 100%);
+  box-shadow:
+    6px 6px 16px rgba(var(--clay-h-primary), 0.35),
+    inset -4px -4px 10px rgba(0, 0, 0, 0.26),
+    inset 4px 4px 10px rgba(255, 255, 255, 0.22);
+}
+.mutasi-hero__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+}
+.mutasi-hero__tipe {
+  flex-shrink: 0;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+.mutasi-hero__saldo {
+  margin-top: 6px;
+  font-size: 1.625rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.mutasi-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-textSecondary);
+}
+.mutasi-ringkas {
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-textSecondary);
+}
+
+/* Pill filter clay: rest (terangkat) -> hover (naik + kontras naik)
+   -> .is-aktif (terbenam + bidang solid brand, teks putih >= 5.2:1) */
+.mutasi-tab {
+  --clay-r: 4px;
+  --clay-blur: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 13px;
+  border: none;
+  border-radius: var(--clay-r-chip);
+  background-color: var(--color-surfaceContainerLowest);
+  color: var(--color-textSecondary);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow:
+    3px 3px 9px rgba(var(--clay-h-neutral), 0.2),
+    inset -2px -2px 6px rgba(var(--clay-h-neutral), 0.14),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.65);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+.mutasi-tab:hover {
+  transform: translateY(-1px);
+  color: var(--color-textPrimary);
+  box-shadow:
+    4px 4px 12px rgba(var(--clay-h-neutral), 0.26),
+    inset -2px -2px 6px rgba(var(--clay-h-neutral), 0.16),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.75);
+}
+.mutasi-tab.is-aktif {
+  background-color: #2d6a4f;
+  background-image: linear-gradient(145deg, #35795a 0%, #2d6a4f 60%, #1b4332 100%);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, 0.3),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.26),
+    2px 3px 9px rgba(var(--clay-h-primary), 0.35);
+}
+.mutasi-tab.is-aktif:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+.mutasi-tab:active {
+  transform: scale(0.95);
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, 0.3),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.22);
+}
+
+/* Feed mutasi premium */
+.mutasi-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 20px;
+  background-color: var(--color-surfaceContainerLowest);
+  box-shadow:
+    4px 4px 12px rgba(var(--clay-h-neutral), 0.16),
+    inset -3px -3px 8px rgba(var(--clay-h-neutral), 0.1),
+    inset 3px 3px 8px rgba(255, 255, 255, 0.85);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.18s ease;
+}
+.mutasi-item:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    5px 6px 14px rgba(var(--clay-h-neutral), 0.22),
+    inset -3px -3px 8px rgba(var(--clay-h-neutral), 0.1),
+    inset 3px 3px 8px rgba(255, 255, 255, 0.9);
+}
+/* Ikon kategori: lingkaran lembut, warna tint datang dari b.kelas.
+   3 bayangan (1 outset + 2 inset) sesuai checklist claymorphism. */
+.mutasi-item__ikon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 999px;
+  box-shadow:
+    4px 4px 10px rgba(var(--clay-h-neutral), 0.18),
+    inset -2px -2px 6px rgba(0, 0, 0, 0.1),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.75);
+}
+.mutasi-item__judul {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-textPrimary);
+}
+.mutasi-item__nominal {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.mutasi-item__nominal.is-masuk { color: var(--color-incomeText); }
+.mutasi-item__nominal.is-keluar { color: var(--color-expenseText); }
+.mutasi-item__nominal.is-datar { color: var(--color-textSecondary); }
+
+.mutasi-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background-color: #eef2f6;
+  color: var(--color-textSecondary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.mutasi-badge.is-transfer {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+.mutasi-badge.is-masuk {
+  background-color: var(--color-success-light);
+  color: var(--color-primary);
+}
+.mutasi-badge.is-keluar {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.mutasi-item__tanggal {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-textSecondary);
+  white-space: nowrap;
+}
+.mutasi-item__catatan {
+  margin-top: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-style: italic;
+  color: #64748b;
+}
+.mutasi-item__saldo {
+  margin-top: 6px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Empty state — bidang clay + ikon lingkaran, bukan teks telanjang */
+.mutasi-kosong {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 28px 20px;
+  border-radius: 20px;
+  background-color: var(--color-surfaceContainerLowest);
+  text-align: center;
+  box-shadow:
+    4px 4px 12px rgba(var(--clay-h-neutral), 0.14),
+    inset -3px -3px 8px rgba(var(--clay-h-neutral), 0.08),
+    inset 3px 3px 8px rgba(255, 255, 255, 0.85);
+}
+.mutasi-kosong__ikon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  color: var(--color-primary);
+  background-color: var(--color-success-light);
+  box-shadow:
+    4px 4px 12px rgba(var(--clay-h-primary), 0.25),
+    inset -3px -3px 8px rgba(45, 106, 79, 0.16),
+    inset 3px 3px 8px rgba(255, 255, 255, 0.9);
+}
+.mutasi-kosong__judul {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-textPrimary);
+}
+.mutasi-kosong__teks {
+  font-size: 12px;
+  color: var(--color-textSecondary);
+}
+.mutasi-kosong__chip {
+  margin-top: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background-color: var(--color-success-light);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 800;
 }

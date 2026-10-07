@@ -95,7 +95,7 @@ export default function FormBudgetModal({ open, onClose, uid, kategoriList, exis
           />
         </div>
         {error && <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
-        <button disabled={saving} className="clay-btn clay-key-blue solid-blue btn-lg w-full text-sm font-extrabold text-white transition-colors hover: disabled:opacity-60">
+        <button disabled={saving} className="clay-btn clay-key-blue solid-blue btn-lg w-full text-sm font-extrabold text-white transition-colors disabled:opacity-60">
           <span className="material-symbols-outlined icon-sm">save</span>
           {saving ? 'Menyimpan…' : 'Simpan'}
         </button>

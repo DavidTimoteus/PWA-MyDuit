@@ -265,7 +265,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, onAkun
                 type="button"
                 onClick={() => onSalin?.(sumber)}
                 title="Salin transaksi"
-                className="clay-chip clay-key-primary solid-primary inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full -light text-primary transition-colors hover:"
+                className="clay-chip clay-key-primary solid-primary inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-primary transition-colors "
               >
                 <span className="material-symbols-outlined icon-sm">content_copy</span>
               </button>
@@ -547,7 +547,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, onAkun
           <button
             type="submit"
             disabled={saving}
-            className="clay-btn clay-key-primary solid-primary btn-lg w-full text-white transition-colors hover: disabled:opacity-60"
+            className="clay-btn clay-key-primary solid-primary btn-lg w-full text-white transition-colors disabled:opacity-60"
           >
             <span className="material-symbols-outlined icon-md">save</span>
             {saving ? 'Menyimpan…' : mode === 'edit' ? 'Simpan Perubahan' : 'Simpan Transaksi'}

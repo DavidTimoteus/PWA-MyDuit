@@ -91,7 +91,7 @@ export default function FilterTransaksiModal({ open, chip, rentang, onClose, onA
           </button>
           <button
             onClick={terapkan}
-            className="clay-btn clay-key-primary solid-primary btn-md flex-1 text-white transition-colors hover:"
+            className="clay-btn clay-key-primary solid-primary btn-md flex-1 text-white transition-colors"
           >
             Terapkan
           </button>

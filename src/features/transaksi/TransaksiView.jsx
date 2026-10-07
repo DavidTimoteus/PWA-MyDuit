@@ -344,7 +344,7 @@ async function konfirmHapus() {
             <button
               onClick={() => setBulkHapusOpen(true)}
               disabled={selected.size === 0}
-              className="clay-btn clay-key-danger solid-danger btn-sm text-white transition-colors hover: disabled:opacity-60"
+              className="clay-btn clay-key-danger solid-danger btn-sm text-white transition-colors disabled:opacity-60"
             >
               <span className="material-symbols-outlined icon-sm">delete</span>
               Hapus
@@ -404,7 +404,7 @@ async function konfirmHapus() {
               <button
                 onClick={konfirmHapus}
                 disabled={hapusLoading}
-                className="clay-btn clay-key-danger solid-danger btn-md flex-1 text-white transition-colors hover: disabled:opacity-60"
+                className="clay-btn clay-key-danger solid-danger btn-md flex-1 text-white transition-colors disabled:opacity-60"
               >
                 {hapusLoading ? 'Menghapus…' : 'Ya, Hapus'}
               </button>
@@ -430,7 +430,7 @@ async function konfirmHapus() {
               <button
                 onClick={konfirmHapusMassal}
                 disabled={hapusLoading}
-                className="clay-btn clay-key-danger solid-danger btn-md flex-1 text-white transition-colors hover: disabled:opacity-60"
+                className="clay-btn clay-key-danger solid-danger btn-md flex-1 text-white transition-colors disabled:opacity-60"
               >
                 {hapusLoading ? 'Menghapus…' : 'Ya, Hapus Semua'}
               </button>
