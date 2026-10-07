@@ -35,6 +35,7 @@ bridge.out.log
 # Test/tooling cache
 .pytest-cache/
 *.bak_*
+src/.sentrux/
 
 # Jejak harness uji render (screenshot + harness versi lama) — bukan bagian aplikasi
 snapshots/

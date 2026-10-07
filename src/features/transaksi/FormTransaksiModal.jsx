@@ -94,7 +94,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, onAkun
       setSumberSaran(null)
       setSumberBaru('')
     } catch (e) {
-      setError(pesanErrorSimpan(e, 'Gagal menambah rekening.'))
+      setError(pesanErrorSimpan('Menambah rekening', e))
     } finally {
       setTambahAkunBusy(false)
     }

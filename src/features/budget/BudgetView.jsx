@@ -39,7 +39,10 @@ export default function BudgetView({ user }) {
   // Data bersama
   const range = useMemo(() => rangeBulan(tahun, bulan), [bulan, tahun])
   const budgets = useBudgetBulan(uid, bulan, tahun)
-  const { docs: transBulan } = useTransaksi(uid, { jenis: 'pengeluaran', range })
+  // Jenis 'semua' -> satu langganan dipakai untuk DUA kebutuhan: terpakai per
+  // budget (hanya pengeluaran, difilter saat agregasi) dan kartu
+  // "Pemasukan/Pengeluaran bulan ini" (sebelumnya cuma placeholder '—').
+  const { docs: transBulan } = useTransaksi(uid, { jenis: 'semua', range })
   const { akunList, kategoriList } = useAkunKategori(uid)
   const akunById = useMemo(() => Object.fromEntries(akunList.map((a) => [a.id, a])), [akunList])
   const katById = useMemo(() => Object.fromEntries(kategoriList.map((k) => [k.id, k.nama])), [kategoriList])
@@ -62,10 +65,56 @@ export default function BudgetView({ user }) {
     return () => window.removeEventListener('myduit:buka-tambah-budget-rekening', handler)
   }, [sub])
 
+  // Tombol "Aksi Cepat" di panel kanan (BudgetAsidePanel) mengirim event ini.
+  // BUG LAMA: eventnya tidak punya pendengar SATU PUN sehingga kedua tombol
+  // diam saat diklik. Modal rekening dimiliki RekeningPanel (hanya mount di
+  // sub-tab Rekening) dan modal budget dimiliki komponen ini, jadi handlernya
+  // harus di sini — lengkap dengan penyesuaian sub-tab dulu bila perlu.
+  const [tambahRekeningTertunda, setTambahRekeningTertunda] = useState(false)
+  useEffect(() => {
+    function onTambahRekening() {
+      if (sub === 'rekening') {
+        window.dispatchEvent(new CustomEvent('myduit:buka-tambah-rekening'))
+      } else {
+        setSub('rekening')
+        setTambahRekeningTertunda(true)
+      }
+    }
+    function onTambahBudget() {
+      setSub('budget')
+      setModal({ open: true, edit: null })
+    }
+    window.addEventListener('myduit:budget-add-rekening', onTambahRekening)
+    window.addEventListener('myduit:budget-add-budget', onTambahBudget)
+    return () => {
+      window.removeEventListener('myduit:budget-add-rekening', onTambahRekening)
+      window.removeEventListener('myduit:budget-add-budget', onTambahBudget)
+    }
+  }, [sub])
+
+  // RekeningPanel baru mount SETELAH sub-tab berganti, jadi event buka modal
+  // ditunda sampai sub-tab 'rekening' aktif (kalau tidak, eventnya hilang
+  // karena pendengarnya belum terpasang).
+  useEffect(() => {
+    if (!tambahRekeningTertunda || sub !== 'rekening') return
+    setTambahRekeningTertunda(false)
+    window.dispatchEvent(new CustomEvent('myduit:buka-tambah-rekening'))
+  }, [tambahRekeningTertunda, sub])
+
   // Hitung agregat budget (mirip dengan yang lama, untuk kirim ke panel kanan)
   const ringkasan = useMemo(() => {
     const terpakaiPerKategori = {}
+    let totalPemasukan = 0
+    let totalPengeluaran = 0
     for (const t of transEnriched) {
+      if (t.jenis === 'pemasukan') {
+        totalPemasukan += t.jumlah || 0
+        continue
+      }
+      if (t.jenis !== 'pengeluaran') continue
+      totalPengeluaran += t.jumlah || 0
+      // Hanya pengeluaran BERKATEGORI yang menagih budget; pindah saldo punya
+      // kategoriId '' (falsy) dan tetap terlewati.
       if (t.kategoriId) terpakaiPerKategori[t.kategoriId] = (terpakaiPerKategori[t.kategoriId] || 0) + (t.jumlah || 0)
     }
     const list = budgets.map((b) => {
@@ -74,7 +123,10 @@ export default function BudgetView({ user }) {
       const persen = limit > 0 ? Math.min(999, Math.round((terpakai / limit) * 100)) : 0
       const hampirHabis = persen >= 80
       const kategoriNama = b.kategoriNama ?? katById[b.kategoriId] ?? '?'
-      return { ...b, kategoriNama, terpakai, persen, hampirHabis }
+      // `lewat` PER budget — tanpa ini kartu BudgetPanel tidak pernah
+      // menampilkan status "Lewat"/"+N%" karena b.lewat selalu undefined.
+      const lewat = terpakai > limit
+      return { ...b, kategoriNama, terpakai, persen, hampirHabis, lewat }
     })
     const totalLimit = budgets.reduce((s, b) => s + (b.limitNominal || 0), 0)
     const totalTerpakai = Object.values(terpakaiPerKategori).reduce((s, n) => s + n, 0)
@@ -91,12 +143,14 @@ export default function BudgetView({ user }) {
       limit: b.limitNominal,
       persen: b.persen,
     }))
-    return { totalLimit, totalTerpakai, sisa, persen, lewat: totalTerpakai > totalLimit, hariTersisa, burnPerHari, hampirHabis, list }
+    return { totalLimit, totalTerpakai, sisa, persen, lewat: totalTerpakai > totalLimit, hariTersisa, burnPerHari, hampirHabis, list, totalPemasukan, totalPengeluaran }
   }, [budgets, transEnriched, katById, tahun, bulan, today])
 
-  // Emit ringkasan ke panel kanan Budget
+  // Emit ringkasan ke panel kanan Budget.
+  // TANPA guard `sub === 'budget'`: panel kanan ikut tampil saat sub-tab
+  // Rekening (Shell merendernya per TAB), jadi tanpa emit di sini panel
+  // menampilkan angka placeholder Rp0 sampai user berpindah sub-tab.
   useEffect(() => {
-    if (sub !== 'budget') return
     const event = new CustomEvent('myduit:budget-update', {
       detail: {
         totalLimit: ringkasan.totalLimit,
@@ -113,9 +167,9 @@ export default function BudgetView({ user }) {
     window.dispatchEvent(event)
   }, [sub, ringkasan, akunList])
 
-  // Emit ringkasan ke sidebar kiri (Insight Budget)
+  // Emit ringkasan ke sidebar kiri (Insight Budget) — juga tanpa guard sub-tab
+  // karena sidebar kiri dirender per TAB, bukan per sub-tab.
   useEffect(() => {
-    if (sub !== 'budget') return
     const event = new CustomEvent('myduit:sidebar-insight-budget', {
       detail: {
         kategoriTerdikit: ringkasan.hampirHabis[0] || null,
@@ -249,13 +303,17 @@ export default function BudgetView({ user }) {
               />
             </div>
             <div className="mt-3 grid grid-cols-2 gap-x-3 border-t border-slate-200 pt-3">
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] font-medium text-slate-500">Pemasukan bulan ini</p>
-                <p className="font-mono text-xs font-bold text-slate-800">—</p>
+                <p className="font-mono truncate text-xs font-bold text-incomeText tabular-nums">
+                  {formatRupiah(ringkasan.totalPemasukan)}
+                </p>
               </div>
-              <div className="text-right">
+              <div className="min-w-0 text-right">
                 <p className="text-[10px] font-medium text-slate-500">Pengeluaran bulan ini</p>
-                <p className="font-mono text-xs font-bold text-slate-800">—</p>
+                <p className="font-mono truncate text-xs font-bold text-expenseText tabular-nums">
+                  {formatRupiah(ringkasan.totalPengeluaran)}
+                </p>
               </div>
             </div>
           </div>
@@ -264,10 +322,7 @@ export default function BudgetView({ user }) {
           <BudgetPanel
             uid={uid}
             kategoriList={kategoriList}
-            bulan={bulan}
-            tahun={tahun}
             budgets={ringkasan.list}
-            modal={modal}
             setModal={setModal}
             hapusTarget={hapusTarget}
             setHapusTarget={setHapusTarget}

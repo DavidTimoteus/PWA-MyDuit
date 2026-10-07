@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import { formatRupiah } from '../../lib/format.js'
 import { hapusBudget } from '../../lib/db.js'
-import FormBudgetModal from './FormBudgetModal.jsx'
 
 // Daftar budget — paritas dengan ViewBudget.html #budgetLimitList.
 // Terima props dari BudgetView: budgets (sudah dihitung dengan terpakai/persen),
-// bulan, tahun, modal, setModal, hapusTarget, setHapusTarget, kategoriList.
+// modal, setModal, hapusTarget, setHapusTarget, kategoriList.
+// Catatan: FormBudgetModal dirender SATU KALI di BudgetView — modal yang sama
+// dirender dua kali (di sini + di BudgetView) membuat dua overlay identik
+// menumpuk tiap kali modal dibuka.
 export default function BudgetPanel({
   uid,
   kategoriList,
-  bulan,
-  tahun,
   budgets = [],
-  modal,
   setModal,
   hapusTarget,
   setHapusTarget,
@@ -103,17 +102,6 @@ export default function BudgetPanel({
           })
         )}
       </div>
-
-      <FormBudgetModal
-        open={modal.open}
-        edit={modal.edit}
-        uid={uid}
-        kategoriList={kategoriList}
-        existing={budgets}
-        bulan={bulan}
-        tahun={tahun}
-        onClose={() => setModal({ open: false, edit: null })}
-      />
 
       {hapusTarget && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm" onClick={() => setHapusTarget(null)}>

@@ -4,6 +4,7 @@ import { hapusAkun } from '../../lib/db.js'
 import { useAkunKategori } from '../../lib/useAkunKategori.js'
 import { useTransaksi } from '../transaksi/useTransaksi.js'
 import FormRekeningModal from './FormRekeningModal.jsx'
+import RiwayatMutasiModal from './RiwayatMutasiModal.jsx'
 
 // Sub-tab Rekening: hero Total Saldo + pagination card-stack + daftar rekening.
 // Paritas dengan GAS ViewBudget.html #budgetRekeningPanel + #rekeningPaginationControls.
@@ -39,7 +40,8 @@ function logMutasi(m) {
 }
 
 export default function RekeningPanel({ uid }) {
-  const { akunList } = useAkunKategori(uid)
+  const { akunList, kategoriList } = useAkunKategori(uid)
+  const katById = useMemo(() => Object.fromEntries(kategoriList.map((k) => [k.id, k.nama])), [kategoriList])
   const rangeBulan = useMemo(rangeBulanIni, [])
 
   // Arus kas bulan berjalan (untuk hero)
@@ -62,6 +64,13 @@ export default function RekeningPanel({ uid }) {
     return () => window.removeEventListener('myduit:buka-tambah-rekening', handler)
   }, [])
   const [hapusTarget, setHapusTarget] = useState(null)
+  // Detail perubahan (riwayat mutasi) per rekening — simpan id saja, akun
+  // di-resolve ulang dari akunList supaya saldo yang dipakai selalu terkini.
+  const [riwayatId, setRiwayatId] = useState(null)
+  const akunRiwayat = useMemo(
+    () => (riwayatId ? akunList.find((a) => a.id === riwayatId) ?? null : null),
+    [riwayatId, akunList],
+  )
   const [halaman, setHalaman] = useState(1)
 
   // Listen event global
@@ -290,6 +299,15 @@ export default function RekeningPanel({ uid }) {
                   )}
                   <button
                     type="button"
+                    onClick={(e) => { e.stopPropagation(); setRiwayatId(a.id) }}
+                    title="Detail perubahan rekening"
+                    aria-label={`Detail perubahan ${a.nama}`}
+                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors shrink-0"
+                  >
+                    <span className="material-symbols-outlined icon-xs">history</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); setModal({ open: true, edit: a }) }}
                     title="Edit rekening"
                     aria-label="Edit rekening"
@@ -316,21 +334,37 @@ export default function RekeningPanel({ uid }) {
                   </p>
                 </div>
 
-                {/* Perubahan Terakhir (full width box persis GAS rek-last-change-box) */}
-                <div className="bg-slate-50 rounded-lg px-2.5 py-2">
-                  <p className="text-xs font-semibold text-slate-500 mb-1">Perubahan Terakhir</p>
+                {/* Perubahan Terakhir (full width box persis GAS rek-last-change-box).
+                    Kotak ini sekaligus tombol -> buka detail riwayat mutasi rekening. */}
+                <button
+                  type="button"
+                  onClick={() => setRiwayatId(a.id)}
+                  aria-label={`Lihat detail perubahan ${a.nama}`}
+                  className="block w-full rounded-lg bg-slate-50 px-2.5 py-2 text-left transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                >
+                  <span className="block text-xs font-semibold text-slate-500 mb-1">Perubahan Terakhir</span>
                   {log ? (
                     <>
-                      <p className={`text-xs ${log.warna} font-mono truncate`}>{log.teks}</p>
-                      <p className="text-[10px] text-blue-700/70 mt-1 flex items-center gap-1">
+                      <span className={`block text-xs ${log.warna} font-mono truncate`}>{log.teks}</span>
+                      <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-700/70">
+                        <span className="material-symbols-outlined icon-2xs">history</span>
+                        Ketuk utk lihat semua perubahan
+                      </span>
+                      <span className="mt-1 flex items-center gap-1 text-[10px] text-blue-700/50">
                         <span className="material-symbols-outlined icon-2xs">touch_app</span>
                         Geser kartu utk ganti rekening
-                      </p>
+                      </span>
                     </>
                   ) : (
-                    <p className="text-[10px] text-slate-500">Belum ada riwayat</p>
+                    <>
+                      <span className="block text-[10px] text-slate-500">Belum ada riwayat</span>
+                      <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-700/70">
+                        <span className="material-symbols-outlined icon-2xs">history</span>
+                        Ketuk utk lihat detail rekening
+                      </span>
+                    </>
                   )}
-                </div>
+                </button>
               </div>
             )
           })
@@ -361,6 +395,14 @@ export default function RekeningPanel({ uid }) {
                 )}
                 <button
                   type="button"
+                  onClick={() => setRiwayatId(a.id)}
+                  aria-label={`Detail perubahan ${a.nama}`}
+                  className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <span className="material-symbols-outlined icon-xs">history</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setModal({ open: true, edit: a })}
                   className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-600"
                 >
@@ -380,12 +422,19 @@ export default function RekeningPanel({ uid }) {
                   {formatRupiah(a.saldo)}
                 </p>
               </div>
-              <div className="bg-slate-50 rounded-lg px-2.5 py-2">
-                <p className="text-xs font-semibold text-slate-500 mb-0.5">Perubahan Terakhir</p>
-                <p className={`text-xs font-mono truncate ${log ? log.warna : 'text-slate-500'}`}>
-                  {log ? log.teks : 'Belum ada riwayat'}
-                </p>
-              </div>
+              {/* Kotak "Perubahan Terakhir" sekaligus tombol detail riwayat mutasi */}
+              <button
+                type="button"
+                onClick={() => setRiwayatId(a.id)}
+                aria-label={`Lihat detail perubahan ${a.nama}`}
+                className="block w-full rounded-lg bg-slate-50 px-2.5 py-2 text-left transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              >
+                <span className="block text-xs font-semibold text-slate-500 mb-0.5">Perubahan Terakhir</span>
+                <span className={`flex items-center justify-between gap-2 text-xs font-mono ${log ? log.warna : 'text-slate-500'}`}>
+                  <span className="truncate">{log ? log.teks : 'Belum ada riwayat'}</span>
+                  <span className="material-symbols-outlined icon-xs shrink-0 text-blue-600/70">history</span>
+                </span>
+              </button>
             </div>
           )
         })}
@@ -397,6 +446,17 @@ export default function RekeningPanel({ uid }) {
         uid={uid}
         onClose={() => setModal({ open: false, edit: null })}
       />
+
+      {/* Detail perubahan rekening — mount hanya saat terbuka (state filter
+          segar tiap kali dibuka, tanpa jebakan key+useState). */}
+      {akunRiwayat && (
+        <RiwayatMutasiModal
+          uid={uid}
+          akun={akunRiwayat}
+          kategoriById={katById}
+          onClose={() => setRiwayatId(null)}
+        />
+      )}
 
       {hapusTarget && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-5 backdrop-blur-sm" onClick={() => setHapusTarget(null)}>
