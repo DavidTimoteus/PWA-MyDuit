@@ -21,8 +21,15 @@ export function FormUtangModal({ open, onClose, uid, edit, mode = 'utang' }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const kunci = open ? open + (edit?.id ?? '') : 'tutup'
-  const [kunciLama, setKunciLama] = useState(kunci)
+  // Reset isi form mengikuti kunci pembuka (id edit + mode).
+  // kunciLama DIINISIASI null, BUKAN kunci: UtangView memakai `key`, jadi
+  // instance modal selalu BARU tiap dibuka — dengan useState(kunci) kunci
+  // selalu sama saat mount, reset tak pernah jalan, dan form edit terbuka
+  // kosong. Dengan null, reset jalan tepat di render pertama (isi terisi
+  // sebelum paint, tanpa kedip) sekaligus tetap menangani pergantian target
+  // bila suatu saat `key` dilepas.
+  const kunci = open ? `buka|${edit?.id ?? ''}|${mode}` : 'tutup'
+  const [kunciLama, setKunciLama] = useState(null)
   if (kunci !== kunciLama) {
     setKunciLama(kunci)
     setNamaPihak(edit?.namaPihak ?? '')
@@ -90,7 +97,7 @@ export function FormUtangModal({ open, onClose, uid, edit, mode = 'utang' }) {
 
         <div className="mb-3 grid grid-cols-2 gap-2">
           <div>
-            <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Nama pihak</label>
+            <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Nama pihak</label>
             <input
               value={namaPihak}
               onChange={(e) => setNamaPihak(e.target.value)}
@@ -108,45 +115,45 @@ export function FormUtangModal({ open, onClose, uid, edit, mode = 'utang' }) {
           </div>
         </div>
 
-        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Total</label>
+        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Total</label>
         <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
-          <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
+          <span className="text-sm font-bold text-slate-500">{simbolUang()}</span>
           <input
             value={total}
             onChange={(e) => setTotal(formatRibuanInput(e.target.value))}
             inputMode="numeric"
             placeholder="0"
-            className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400"
+            className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-500"
           />
         </div>
 
         {tipe === 'Cicilan' && (
           <>
-            <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Cicilan per bulan</label>
+            <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Cicilan per bulan</label>
             <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
-              <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
+              <span className="text-sm font-bold text-slate-500">{simbolUang()}</span>
               <input
                 value={cicilan}
                 onChange={(e) => setCicilan(formatRibuanInput(e.target.value))}
                 inputMode="numeric"
                 placeholder="0"
-                className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400"
+                className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-500"
               />
             </div>
           </>
         )}
 
-        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Jatuh tempo</label>
+        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Jatuh tempo</label>
         <div className="mb-3">
           <ClayDateInput value={tgl} onChange={setTgl} />
         </div>
 
-        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Catatan</label>
+        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Catatan</label>
         <input
           value={deskripsi}
           onChange={(e) => setDeskripsi(e.target.value)}
           placeholder="opsional"
-          className="clay-field mb-4 w-full rounded-xl px-3 py-2.5 text-sm font-semibold placeholder:font-normal placeholder:text-slate-400"
+          className="clay-field mb-4 w-full rounded-xl px-3 py-2.5 text-sm font-semibold placeholder:font-normal placeholder:text-slate-500"
         />
 
         {error && <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
@@ -166,8 +173,10 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const kunci = open ? open + (utang?.id ?? '') + (lunasin ? 'l' : '') : 'tutup'
-  const [kunciLama, setKunciLama] = useState(kunci)
+  // Sama seperti FormUtangModal: kunciLama mulai dari null supaya reset
+  // berjalan saat mount (pemanggil memakai `key`, instance baru tiap buka).
+  const kunci = open ? `bayar|${utang?.id ?? ''}|${lunasin ? 'l' : ''}` : 'tutup'
+  const [kunciLama, setKunciLama] = useState(null)
   if (kunci !== kunciLama) {
     setKunciLama(kunci)
     const defaultNominal = utang ? (lunasin ? utang.sisa : utang.cicilanPerBulan || utang.sisa) : 0
@@ -223,21 +232,21 @@ export function BayarUtangModal({ open, onClose, uid, utang, akunList, lunasin }
           Sisa saat ini: <strong className="text-slate-700">{formatRupiah(utang.sisa || 0)}</strong>
         </p>
 
-        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Nominal bayar</label>
+        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Nominal bayar</label>
         <div className="clay-field mb-3 flex items-center gap-2 rounded-xl px-3 py-2.5">
-          <span className="text-sm font-bold text-slate-400">{simbolUang()}</span>
+          <span className="text-sm font-bold text-slate-500">{simbolUang()}</span>
           <input
             value={jumlah}
             onChange={(e) => setJumlah(formatRibuanInput(e.target.value))}
             inputMode="numeric"
             placeholder="0"
-            className="w-full bg-transparent text-lg font-extrabold outline-none placeholder:text-slate-400"
+            className="w-full bg-transparent text-lg font-extrabold outline-none placeholder:text-slate-500"
           />
         </div>
 
         <div className="mb-3 grid grid-cols-2 gap-2">
           <div>
-            <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Tanggal</label>
+            <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Tanggal</label>
             <ClayDateInput value={tanggal} onChange={setTanggal} />
           </div>
           <div>

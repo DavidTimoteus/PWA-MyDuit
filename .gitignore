@@ -35,3 +35,7 @@ bridge.out.log
 # Test/tooling cache
 .pytest-cache/
 *.bak_*
+
+# Jejak harness uji render (screenshot + harness versi lama) — bukan bagian aplikasi
+snapshots/
+node_modules/.myduit-test/

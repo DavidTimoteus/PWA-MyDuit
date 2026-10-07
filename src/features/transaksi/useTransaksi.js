@@ -1,13 +1,19 @@
 import { getDocs, onSnapshot } from 'firebase/firestore'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import { buildTransQuery, docKeTransaksi } from '../../lib/db.js'
+import { RIWAYAT_AWAL, kurangRiwayat } from './mergeRiwayat.js'
 
 const PAGE_SIZE = 50
 
+// Kunci langganan = uid + jenis + rentang. Berganti kunci = ganti filter.
+const kunciQuery = (uid, jenis, range) => `${uid}|${jenis}|${range?.start ?? ''}|${range?.end ?? ''}`
+
 // Langganan live riwayat transaksi sesuai filter + pagination kursor ("Muat lagi").
 // Dokumen pertama selalu live (onSnapshot) -> tulis offline tampil instan.
+// Logika daftar (kapan dokumen lama dibuang, kapan halaman lanjutan dipertahankan)
+// hidup di mergeRiwayat.js dan diuji terpisah tanpa Firestore.
 export function useTransaksi(uid, { jenis, range }) {
-  const [docs, setDocs] = useState([])
+  const [riwayat, dispatch] = useReducer(kurangRiwayat, RIWAYAT_AWAL)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
@@ -16,10 +22,16 @@ export function useTransaksi(uid, { jenis, range }) {
 
   useEffect(() => {
     if (!uid) return
+    const kunci = kunciQuery(uid, jenis, range)
+    // 'mulai' membuang dokumen filter sebelumnya (bila kuncinya berbeda).
+    // Tanpa langkah ini, merge halaman-lanjut menyuntikkan dokumen filter
+    // lama ke daftar baru — tampilan "Hari Ini" tidak pernah berubah setelah
+    // melewati "Semua Transaksi".
+    dispatch({ type: 'mulai', kunci })
     setLoading(true)
     setError('')
-    lastDocRef.current = null
     setHasMore(false)
+    lastDocRef.current = null
 
     const q = buildTransQuery(uid, { jenis, range, pageSize: PAGE_SIZE })
     const unsub = onSnapshot(
@@ -27,16 +39,9 @@ export function useTransaksi(uid, { jenis, range }) {
       (snap) => {
         const list = snap.docs.map(docKeTransaksi)
         lastDocRef.current = snap.docs[snap.docs.length - 1] ?? null
-        // Halaman lanjutan yang sudah dimuat lewat "Muat lagi" TIDAK boleh
-        // hilang: snapshot ini hanya mencakup PAGE_SIZE dokumen pertama, jadi
-        // mengganti `docs` begitu saja akan memangkas riwayat yang sudah
-        // ditampilkan setiap kali ada satu transaksi baru.
-        setDocs((prev) => {
-          if (prev.length <= list.length) return list
-          const idsBaru = new Set(list.map((t) => t.id))
-          const lanjutan = prev.filter((t) => !idsBaru.has(t.id))
-          return [...list, ...lanjutan]
-        })
+        // Snapshot hanya mencakup PAGE_SIZE dokumen pertama; reducer yang
+        // memutuskan apakah halaman "Muat lagi" ikut dipertahankan.
+        dispatch({ type: 'snapshot', kunci, list })
         setHasMore(snap.docs.length === PAGE_SIZE)
         setLoading(false)
       },
@@ -61,12 +66,9 @@ export function useTransaksi(uid, { jenis, range }) {
       const snap = await getDocs(q)
       const list = snap.docs.map(docKeTransaksi)
       lastDocRef.current = snap.docs[snap.docs.length - 1] ?? lastDocRef.current
-      // Dedupe: dokumen di batas halaman bisa muncul lagi kalau ada penulisan
-      // baru di antara dua permintaan.
-      setDocs((prev) => {
-        const ada = new Set(prev.map((t) => t.id))
-        return [...prev, ...list.filter((t) => !ada.has(t.id))]
-      })
+      // Dedupe + penanda halaman lanjutan: dokumen di batas halaman bisa
+      // muncul lagi kalau ada penulisan baru di antara dua permintaan.
+      dispatch({ type: 'lanjut', kunci: kunciQuery(uid, jenis, range), list })
       setHasMore(snap.docs.length === PAGE_SIZE)
     } catch (e) {
       setError(e?.message ?? String(e))
@@ -75,5 +77,5 @@ export function useTransaksi(uid, { jenis, range }) {
     }
   }
 
-  return { docs, loading, loadingMore, hasMore, error, muatLagi, pageSize: PAGE_SIZE }
+  return { docs: riwayat.docs, loading, loadingMore, hasMore, error, muatLagi, pageSize: PAGE_SIZE }
 }
