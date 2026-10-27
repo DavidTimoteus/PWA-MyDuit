@@ -104,11 +104,18 @@ body,
   min-height: 100%;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 767px) {
   html,
   body,
   #root {
-    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .main-scroll {
+    height: calc(100dvh - 76px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 }
 

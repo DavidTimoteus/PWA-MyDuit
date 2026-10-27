@@ -346,18 +346,11 @@ export default function RekeningPanel({ uid }) {
                 >
                   <span className="block text-xs font-semibold text-slate-500 mb-1">Perubahan Terakhir</span>
                   {log ? (
-                    <>
-                      <span className={`block text-xs ${log.warna} font-mono truncate`}>{log.teks}</span>
-                      <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-700/70">
-                        <span className="material-symbols-outlined icon-2xs">history</span>
-                        Ketuk utk lihat semua perubahan
-                      </span>
-                      <span className="mt-1 flex items-center gap-1 text-[10px] text-blue-700/50">
-                        <span className="material-symbols-outlined icon-2xs">touch_app</span>
-                        <sup className="mt-1 flex items-center gap-1 text-[10px] text-blue-700/60 font-medium"><span className="material-symbols-outlined icon-2xs">touch_app</span>Ketuk riwayat • Geser ganti kartu</sup>
-                      </span>
-                    </>
-                  ) : (
+                                      <>
+                                        <span className={`block text-xs ${log.warna} font-mono truncate`}>{log.teks}</span>
+                                        <span className="mt-1 flex items-center gap-1 text-[10px] text-blue-700/70 font-medium"><span className="material-symbols-outlined icon-2xs">touch_app</span>Ketuk riwayat • Geser ganti kartu</span>
+                                      </>
+                                    ) : (
                     <>
                       <span className="block text-[10px] text-slate-500">Belum ada riwayat</span>
                       <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-700/70">
