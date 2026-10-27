@@ -211,21 +211,16 @@ export default function BudgetView({ user }) {
         </h2>
       </header>
 
-      {/* Sub-tab toggle pill (Rekening | Budget) — pola persis GAS budgetSubTab */}
-      <div className="mb-4 flex items-center gap-1 rounded-xl bg-slate-100 p-1 md:mt-5">
+      {/* Sub-tab toggle pill (Rekening | Budget) — High-end Tactile Neumorphism */}
+      <div className="mb-5 flex items-center gap-1.5 rounded-xl bg-white/80 p-2.5 shadow-md">
         <button
           onClick={() => setSub('rekening')}
           aria-pressed={sub === 'rekening'}
-          className={`budget-subtab-btn flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-colors ${
+          className={`budget-subtab-btn flex flex-1 items-center justify-center gap-2 rounded-[9999px] py-2.5 text-xs font-bold transition-all duration-200 ${
             sub === 'rekening'
-              ? 'bg-white text-blue-700'
-              : 'text-textSecondary hover:text-textPrimary'
+              ? 'bg-white text-blue-700 shadow-[3px_3px_8px_rgba(0,0,0,0.12),_-2px_-2px_6px_rgba(255,255,255,0.9)]'
+              : 'text-textSecondary hover:text-textPrimary active:scale-98'
           }`}
-          style={
-            sub === 'rekening'
-              ? { boxShadow: 'inset 3px 3px 7px rgba(0,0,0,.18), inset -3px -3px 7px rgba(255,255,255,.9)' }
-              : undefined
-          }
         >
           <span className="material-symbols-outlined icon-md" style={{ fontVariationSettings: sub === 'rekening' ? "'FILL' 1" : "'FILL' 0" }}>account_balance</span>
           Rekening
@@ -233,16 +228,11 @@ export default function BudgetView({ user }) {
         <button
           onClick={() => setSub('budget')}
           aria-pressed={sub === 'budget'}
-          className={`budget-subtab-btn flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-colors ${
+          className={`budget-subtab-btn flex flex-1 items-center justify-center gap-2 rounded-[9999px] py-2.5 text-xs font-bold transition-all duration-200 ${
             sub === 'budget'
-              ? 'bg-white text-blue-700'
-              : 'text-textSecondary hover:text-textPrimary'
+              ? 'bg-white text-blue-700 shadow-[3px_3px_8px_rgba(0,0,0,0.12),_-2px_-2px_6px_rgba(255,255,255,0.9)]'
+              : 'text-textSecondary hover:text-textPrimary active:scale-98'
           }`}
-          style={
-            sub === 'budget'
-              ? { boxShadow: 'inset 3px 3px 7px rgba(0,0,0,.18), inset -3px -3px 7px rgba(255,255,255,.9)' }
-              : undefined
-          }
         >
           <span className="material-symbols-outlined icon-md" style={{ fontVariationSettings: sub === 'budget' ? "'FILL' 1" : "'FILL' 0" }}>savings</span>
           Budget
@@ -302,7 +292,7 @@ export default function BudgetView({ user }) {
                 style={{ width: `${Math.min(100, ringkasan.persen)}%` }}
               />
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-x-3 border-t border-slate-200 pt-3">
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 border-t border-slate-200 pt-3">
               <div className="min-w-0">
                 <p className="text-[10px] font-medium text-slate-500">Pemasukan bulan ini</p>
                 <p className="font-mono truncate text-xs font-bold text-incomeText tabular-nums">

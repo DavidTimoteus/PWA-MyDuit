@@ -5,8 +5,16 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import './styles/index.css'
 
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  // Cek update service worker dan auto refresh jika versi baru terdeteksi
+  navigator.serviceWorker.ready.then((reg) => {
+    reg.update().catch(() => {})
+  })
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload()
+    // Hindari infinite loop saat reload
+    if (!window._swReloading) {
+      window._swReloading = true
+      window.location.reload()
+    }
   })
 }
 

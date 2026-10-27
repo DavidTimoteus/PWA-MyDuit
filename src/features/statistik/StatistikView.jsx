@@ -515,23 +515,23 @@ export default function StatistikView({ user }) {
           periode baris-2 (tidak berdesakan; header tak terpotong).
           Desktop: sebaris (segmented kiri, stepper kanan). */}
       <div className="flex flex-col gap-2.5 pb-4 md:flex-row md:items-center md:justify-between md:gap-3 md:pt-5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 rounded-[9999px] bg-slate-200/70 p-1 shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1),_inset_-2px_-2px_4px_rgba(255,255,255,0.9)]">
           <button
             onClick={() => setMode('bulanan')}
-            className={`stat-pill-tab flex h-9 flex-1 items-center justify-center px-4 text-xs font-semibold transition-colors md:flex-none ${
+            className={`stat-pill-tab flex h-9 flex-1 items-center justify-center rounded-[9999px] px-4 text-xs font-bold transition-all duration-200 md:flex-none ${
               mode === 'bulanan'
-                ? 'clay-chip-primary'
-                : 'clay-key-neutral bg-surfaceContainerLowest text-textSecondary hover:bg-gray-100'
+                ? 'bg-primary text-white shadow-[2px_2px_6px_rgba(38,90,67,0.35)]'
+                : 'text-textSecondary hover:text-textPrimary'
             }`}
           >
             Bulanan
           </button>
           <button
             onClick={() => setMode('tahunan')}
-            className={`stat-pill-tab flex h-9 flex-1 items-center justify-center px-4 text-xs font-semibold transition-colors md:flex-none ${
+            className={`stat-pill-tab flex h-9 flex-1 items-center justify-center rounded-[9999px] px-4 text-xs font-bold transition-all duration-200 md:flex-none ${
               mode === 'tahunan'
-                ? 'clay-chip-primary'
-                : 'clay-key-neutral bg-surfaceContainerLowest text-textSecondary hover:bg-gray-100'
+                ? 'bg-primary text-white shadow-[2px_2px_6px_rgba(38,90,67,0.35)]'
+                : 'text-textSecondary hover:text-textPrimary'
             }`}
           >
             Tahunan
@@ -758,7 +758,7 @@ function SummaryCard({ icon, label, value, pct, cls, aksenCls, banding }) {
     // warna aksen lewat `aksenCls`. Kartu tetap BERPUTIH seperti .clay-card —
     // teks gelap di atasnya.Dulu: `text-white` + background yang bisa
     // tertimpa utility lain = teks putih di atas putih (kontras 1.00).
-    <div className={`clay clay-card ${cls} rounded-[22px] p-4 transition-all hover:-translate-y-0.5`}>
+    <div className={`clay clay-card ${cls} rounded-[24px] border border-white/60 p-4 transition-all hover:-translate-y-0.5`}>
       <div className="mb-2 flex items-center gap-2">
         <span className={`material-symbols-outlined icon-md ${aksenCls}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
         <p className="text-xs font-bold uppercase tracking-wider text-slate-600">{label}</p>

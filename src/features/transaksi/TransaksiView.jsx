@@ -179,12 +179,11 @@ async function konfirmHapus() {
     <section className="mx-auto max-w-3xl px-5 pb-32 md:pb-10">
       <div className="view-section active min-w-0">
 
-        {/* Toolbar: 2 kartu sejajar — persis GAS (mb-4) */}
-        <div className="mb-4 mt-2 flex flex-wrap items-center gap-2 md:mt-4">
-          {/* Kartu 1: pencarian + filter jenis + pilih banyak.
-              min-w dikurangi agar muat di layar 320px (320 - padding 40 = 280). */}
-          <div className="clay clay-card clay-key-primary min-w-0 flex-auto rounded-[22px] bg-surfaceContainerLowest p-2 sm:min-w-[280px]">
-            <div className="flex items-center gap-2">
+        {/* Toolbar: responsif mobile — di layar kecil input search baris 1, filter baris 2 */}
+        <div className="mb-4 mt-2 flex flex-col gap-2.5 sm:flex-row sm:items-center md:mt-4">
+          {/* Kartu pencarian & filter */}
+          <div className="clay clay-card clay-key-primary w-full rounded-[24px] bg-surfaceContainerLowest p-2.5 sm:p-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative min-w-0 flex-1">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 icon-lg text-textSecondary">search</span>
                 <input
@@ -192,7 +191,7 @@ async function konfirmHapus() {
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Cari transaksi..."
                   type="text"
-                  className="clay-input w-full border-none bg-surface py-2.5 pl-10 pr-10 text-sm outline-none transition-all placeholder:text-textSecondary focus:bg-white focus:ring-1 focus:ring-primary"
+                  className="clay-input w-full border-none bg-surface py-2.5 pl-10 pr-10 text-sm outline-none transition-all placeholder:text-textSecondary focus:bg-white focus:ring-1 focus:ring-primary rounded-[16px]"
                 />
                 {keyword && (
                   <button
@@ -210,33 +209,35 @@ async function konfirmHapus() {
                 )}
               </div>
 
-              <div className="flex shrink-0 items-center gap-1.5">
-                {JENIS_ICONS.map((j) => (
-                  <button
-                    key={j.id}
-                    onClick={() => setJenis(j.id)}
-                    aria-label={j.title}
-                    title={j.title}
-                    className={`chip-btn clay-chip flex h-10 w-10 shrink-0 items-center justify-center transition-colors ${
-                      jenis === j.id
-                        ? 'clay-key-blue bg-blue-700 text-white'
-                        : 'clay-key-neutral bg-surface text-textSecondary hover:bg-gray-100 hover:text-slate-800'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined icon-lg">{j.icon}</span>
-                  </button>
-                ))}
+              <div className="flex items-center justify-between sm:justify-start gap-1.5 shrink-0 pt-0.5 sm:pt-0">
+                <div className="flex items-center gap-1.5">
+                  {JENIS_ICONS.map((j) => (
+                    <button
+                      key={j.id}
+                      onClick={() => setJenis(j.id)}
+                      aria-label={j.title}
+                      title={j.title}
+                      className={`chip-btn clay-chip flex h-10 w-10 sm:h-11 sm:w-11 rounded-full shrink-0 items-center justify-center transition-all active:scale-95 ${
+                        jenis === j.id
+                          ? 'clay-key-blue bg-blue-700 text-white shadow-md'
+                          : 'clay-key-neutral bg-surface text-textSecondary hover:bg-gray-100 hover:text-slate-800'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined icon-md">{j.icon}</span>
+                    </button>
+                  ))}
+                </div>
                 <button
                   onClick={toggleBulk}
                   aria-label="Pilih banyak transaksi"
                   title="Pilih banyak transaksi"
-                  className={`chip-btn clay-chip flex h-10 w-10 shrink-0 items-center justify-center transition-colors ${
+                  className={`chip-btn clay-chip flex h-10 w-10 sm:h-11 sm:w-11 rounded-full shrink-0 items-center justify-center transition-all active:scale-95 ${
                     bulkMode
-                      ? 'clay-key-blue bg-blue-700 text-white'
+                      ? 'clay-key-blue bg-blue-700 text-white shadow-md'
                       : 'clay-key-neutral bg-surface text-textSecondary hover:bg-gray-100 hover:text-slate-800'
                   }`}
                 >
-                  <span className="material-symbols-outlined icon-lg">checklist</span>
+                  <span className="material-symbols-outlined icon-md">checklist</span>
                 </button>
               </div>
             </div>
@@ -306,7 +307,15 @@ async function konfirmHapus() {
             <span>Memuat riwayat kas...</span>
           </div>
         ) : pageItems.length === 0 ? (
-          <div className="py-10 text-center text-sm text-slate-500">Data transaksi tidak ditemukan.</div>
+          <div className="clay clay-card-soft mx-auto my-6 flex max-w-sm flex-col items-center justify-center rounded-[28px] p-8 text-center bg-surfaceContainerLowest">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <span className="material-symbols-outlined text-3xl">receipt_long</span>
+            </div>
+            <p className="text-sm font-bold text-slate-800">Belum Ada Transaksi</p>
+            <p className="mt-1 text-xs leading-relaxed text-textSecondary">
+              Data transaksi tidak ditemukan. Ketuk tombol <span className="font-bold text-primary">+</span> di navigasi bawah untuk mencatat transaksi baru.
+            </p>
+          </div>
         ) : (
           <div className="-mx-4 flex flex-col gap-3 px-4 pb-4 pt-1 hide-scrollbar">
             {pageItems.map((t) => (

@@ -96,19 +96,20 @@ export default function RekeningPanel({ uid }) {
   }
 
   const handleTouchEnd = (e) => {
-    if (touchStartY.current === null) return
+    if (touchStartX.current === null || touchStartY.current === null) return
     const diffY = e.changedTouches[0].clientY - touchStartY.current
     const diffX = e.changedTouches[0].clientX - touchStartX.current
     touchStartY.current = null
     touchStartX.current = null
 
-    // Swipe ke atas / kiri -> kartu berikutnya
-    if (diffY < -35 || diffX < -35) {
-      setHalaman((h) => (h < totalCards ? h + 1 : 1))
-    }
-    // Swipe ke bawah / kanan -> kartu sebelumnya
-    else if (diffY > 35 || diffX > 35) {
-      setHalaman((h) => (h > 1 ? h - 1 : totalCards))
+    // Hanya ganti kartu bila gesture benar-benar horizontal yang disengaja.
+    // Jika pergerakan vertikal lebih dominan, biarkan layar scroll bebas (tidak intercept).
+    if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+      if (diffX < 0) {
+        setHalaman((h) => (h < totalCards ? h + 1 : 1))
+      } else {
+        setHalaman((h) => (h > 1 ? h - 1 : totalCards))
+      }
     }
   }
 
@@ -221,6 +222,7 @@ export default function RekeningPanel({ uid }) {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         className="rekening-stack-wrap relative mt-2 min-h-[225px] md:hidden"
+        style={{ touchAction: 'pan-y' }}
       >
         {akunList.length === 0 ? (
           <div className="clay-card-soft flex flex-col items-center px-6 py-12 text-center">
@@ -352,7 +354,7 @@ export default function RekeningPanel({ uid }) {
                       </span>
                       <span className="mt-1 flex items-center gap-1 text-[10px] text-blue-700/50">
                         <span className="material-symbols-outlined icon-2xs">touch_app</span>
-                        Geser kartu utk ganti rekening
+                        <sup className="mt-1 flex items-center gap-1 text-[10px] text-blue-700/60 font-medium"><span className="material-symbols-outlined icon-2xs">touch_app</span>Ketuk riwayat • Geser ganti kartu</sup>
                       </span>
                     </>
                   ) : (

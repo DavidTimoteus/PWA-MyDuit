@@ -32,7 +32,7 @@ export default function BudgetPanel({
 
   return (
     <div>
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {budgets.length === 0 ? (
           <div className="clay-card-soft flex flex-col items-center px-6 py-12 text-center lg:col-span-2">
             <span className="material-symbols-outlined mb-3 text-5xl text-blue-400/50" style={{ fontVariationSettings: "'FILL' 0" }}>savings</span>
@@ -58,7 +58,7 @@ export default function BudgetPanel({
             const ikonStatus = status === 'lewat' ? 'error' : status === 'waspada' ? 'warning' : 'check_circle'
             const labelStatus = status === 'lewat' ? 'Lewat' : status === 'waspada' ? 'Waspada' : 'Aman'
             return (
-              <div key={b.id} className="clay-card relative overflow-hidden p-4 pl-5">
+              <div key={b.id} className="clay-card bg-white rounded-[24px] border border-white/60 relative overflow-hidden p-4 pl-5">
                 <span className={`absolute inset-y-0 left-0 w-1.5 ${warnaBar}`} aria-hidden="true" />
                 <div className="flex min-w-0 items-start justify-between gap-2">
                   <div className="min-w-0">

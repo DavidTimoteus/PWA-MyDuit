@@ -62,7 +62,7 @@ function KartuUtangMobile({ t, onBayar, onLunasin, onEdit, onHapus }) {
   const persen = t.total > 0 ? Math.round((terbayar / t.total) * 100) : 0
 
   return (
-    <div className={`clay-card bg-white ${st.lunas ? 'clay-key-primary' : st.terlambat ? 'clay-key-danger' : 'clay-key-neutral'} relative flex w-full flex-1 flex-col overflow-hidden p-4 pl-5`}>
+    <div className="clay-card bg-white rounded-[24px] border border-white/60 relative flex w-full flex-1 flex-col overflow-hidden p-4 pl-5">
       <span className={`absolute inset-y-0 left-0 w-1.5 ${st.aksen}`} aria-hidden="true" />
 
       <div className="flex min-w-0 shrink-0 items-start justify-between gap-2">
@@ -165,6 +165,8 @@ export default function UtangMobile({
 }) {
   const [halaman, setHalaman] = useState(0)
   const areaRef = useRef(null)
+const touchStartX = useRef(null)
+const touchStartY = useRef(null)
 
   const total = terurut.length
   const jumlahHalaman = Math.max(1, total)
@@ -201,8 +203,7 @@ export default function UtangMobile({
   return (
     <div
       className="flex flex-col overflow-hidden md:hidden"
-      style={{ height: `calc(100dvh - ${TINGGI_NAV}px)` }}
-    >
+style={{ height: `calc(100dvh - ${TINGGI_NAV}px)`, touchAction: 'pan-y' }}    >
       {/* Header ringkas */}
       <header className="utang-m-header flex shrink-0 items-center gap-2 px-5 pt-3 pb-2">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white">
@@ -217,7 +218,7 @@ export default function UtangMobile({
       {/* Hero ringkas — dua baris saja (label + nominal). Jumlah aktif sudah
           ada di badge header, dan jatuh tempo terdekat ada di kartu, jadi
           tidak diulang di sini: menghemat tinggi agar kartu tetap utuh. */}
-      <div className="hero-card hero-danger utang-m-hero mx-5 mb-3 shrink-0 px-5 py-4">
+      <div className="rounded-xl bg-white/80 border border-white/20 shadow-md p-6">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Total Sisa Utang Aktif</p>
         <p className="utang-m-hero-nilai mt-1 font-mono text-[28px] font-extrabold leading-none tracking-tight text-slate-900 tabular-nums">
           {formatRupiah(ringkasan.totalSisa)}
@@ -239,7 +240,7 @@ export default function UtangMobile({
       </div>
 
       {/* Filter — satu baris, tidak membungkus */}
-      <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto px-5 pb-2 hide-scrollbar">
+      <div className="flex items-center gap-2 px-3 py-2">
         {FILTERS.map((f) => (
           <button
             key={f.id}

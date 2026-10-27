@@ -70,12 +70,12 @@
 
 :root {
   /* Clay radius tokens */
-  --clay-r-card: 22px;
-  --clay-r-card-sm: 18px;
-  --clay-r-button: 18px;
+  --clay-r-card: 26px;
+  --clay-r-card-sm: 22px;
+  --clay-r-button: 20px;
   --clay-r-chip: 999px;
-  --clay-r-input: 16px;
-  --clay-r-icon: 20px;
+  --clay-r-input: 18px;
+  --clay-r-icon: 22px;
 
   /* Hue shadows (RGB triples) */
   --clay-h-primary: 38, 90, 67;
@@ -101,7 +101,15 @@
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
+}
+
+@media (min-width: 768px) {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
 }
 
 /* ===== SCROLL HALUS (smooth) ===== */
@@ -118,8 +126,9 @@ html {
 .main-scroll {
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 /* ===== SCROLLBAR TIPIS & ESTETIK (GAS style — pakai brand color) ===== */
@@ -379,32 +388,26 @@ button:active {
    (declaration-nya menang dari clay-key-* krn urutan stylesheet) — hue wajib
    lewat fallback var(--clay-h, <default>) supaya clay-key-* selalu menang. */
 .clay-card {
-  --clay-r: 7px;
-  --clay-blur: 14px;
-  /* FIX BUG SISTEMIK: sebelumnya .clay-card HANYA mendefinisikan box-shadow,
-     tanpa background-color & border-radius. Akibatnya 23 pemakaian
-     `.clay-card` (yang tidak menambahkan utility bg-* / rounded-*) tampil
-     sebagai kartu TRANSPARAN tanpa sudut — hanya bayangan mengambang.
-     Sekarang kartu punya bidang putih + radius clay sebagai default;
-     varian .solid-* (spesifisitas 2 kelas) tetap menimpanya. */
   border-radius: var(--clay-r-card);
   background-color: var(--color-surfaceContainerLowest);
   box-shadow:
-    var(--clay-r) var(--clay-r) var(--clay-blur) rgba(var(--clay-h, var(--clay-h-neutral)), 0.16),
-    inset calc(var(--clay-r) * -0.7) calc(var(--clay-r) * -0.7) var(--clay-blur)
-      rgba(var(--clay-h, var(--clay-h-neutral)), 0.1),
-    inset calc(var(--clay-r) * 0.55) calc(var(--clay-r) * 0.55) var(--clay-blur)
-      rgba(255, 255, 255, 0.9);
+    8px 8px 20px rgba(var(--clay-h, var(--clay-h-neutral)), 0.10),
+    -6px -6px 16px rgba(255, 255, 255, 0.95),
+    inset 2px 2px 3px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 6px rgba(var(--clay-h, var(--clay-h-neutral)), 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
 }
 
-/* Kartu lembut (empty state, info) — setengah kekuatan */
+/* Kartu lembut (empty state, info) */
 .clay-card-soft {
-  border-radius: var(--clay-r-card-sm);
+  border-radius: var(--clay-r-card);
   background-color: #ffffff;
   box-shadow:
-    3px 3px 9px rgba(var(--clay-h, var(--clay-h-neutral)), 0.12),
-    -3px -3px 9px rgba(255, 255, 255, 0.6),
-    inset 1px 1px 3px rgba(255, 255, 255, 0.5);
+    6px 6px 16px rgba(var(--clay-h, var(--clay-h-neutral)), 0.07),
+    -5px -5px 14px rgba(255, 255, 255, 0.95),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 /* Rekening card (budget) — softer shadow */
@@ -618,12 +621,14 @@ button:active {
 
 /* ===== NAV BAWAH MOBILE (clay bar mengambang + notch memeluk FAB) ===== */
 .clay-nav {
-  background-color: #ffffff;
-  border-radius: 20px 20px 0 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 28px 28px 0 0;
   box-shadow:
-    0 -8px 24px rgba(var(--clay-h, var(--clay-h-neutral)), 0.14),
-    0 -1px 3px rgba(var(--clay-h, var(--clay-h-neutral)), 0.08),
-    inset 1px 1px 3px rgba(255, 255, 255, 0.7);
+    0 -10px 30px rgba(0, 0, 0, 0.08),
+    0 -1px 3px rgba(0, 0, 0, 0.04),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
   /* Notch: lubang setengah-lingkaran di tengah-atas tempat FAB "duduk".
      Radius disesuaikan dengan FAB 56px + celah 8px agar tepinya pas. */
   --notch-r: 36px;
@@ -646,18 +651,16 @@ button:active {
   transform: scale(0.92);
 }
 .nav-icon-wrap.nav-icon-inactive {
-  background: #ffffff;
+  background: #f8fafc;
   box-shadow:
-    3px 3px 9px rgba(var(--clay-h), 0.18),
-    -3px -3px 9px rgba(255, 255, 255, 0.6),
-    inset 1px 1px 3px rgba(255, 255, 255, 0.5),
-    inset -2px -2px 4px rgba(var(--clay-h), 0.12);
+    2px 2px 5px rgba(0, 0, 0, 0.06),
+    -2px -2px 5px rgba(255, 255, 255, 0.9);
 }
 .nav-icon-wrap.nav-icon-active {
-  background: #ffffff;
+  background: #e2e8f0;
   box-shadow:
-    inset 3px 3px 9px rgba(var(--clay-h), 0.22),
-    inset -3px -3px 9px rgba(255, 255, 255, 0.7);
+    inset 2px 2px 5px rgba(0, 0, 0, 0.12),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.85);
 }
 /* Layar sangat sempit (<=360px): rapatkan sedikit agar 4 tab + FAB muat */
 @media (max-width: 360px) {
@@ -801,13 +804,23 @@ button:active {
     4px 4px 13px rgba(var(--clay-h), 0.26),
     -3px -3px 10px rgba(255, 255, 255, 0.85);
 }
-/* Aksen warna: strip tipis di tepi atas, penanda status tanpa menyamakan
-   seluruh bidang warna dengan teks. */
+/* Aksen warna: kartu clay premium dengan gradien halus & bayangan lembut */
+.hero-card {
+  position: relative;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow:
+    6px 6px 18px rgba(0, 0, 0, 0.08),
+    -6px -6px 18px rgba(255, 255, 255, 0.95),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
 .hero-card::before {
   content: '';
   position: absolute;
   inset: 0 0 auto 0;
-  height: 4px;
+  height: 5px;
   background-color: var(--clay-h);
   pointer-events: none;
 }
@@ -852,14 +865,16 @@ button:active {
   border-radius: var(--clay-r-input) !important;
   border-color: transparent !important;
   box-shadow:
-    inset 3px 3px 8px rgba(var(--clay-h-primary), 0.14),
-    inset -3px -3px 8px rgba(255, 255, 255, 0.8);
-  background: var(--color-surface) !important;
+    inset 2px 2px 5px rgba(var(--clay-h-neutral), 0.12),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+  background: #f1f5f9 !important;
+  transition: all 0.2s ease;
 }
 .clay-input:focus {
+  background: #ffffff !important;
   box-shadow:
-    inset 3px 3px 8px rgba(var(--clay-h-primary), 0.2),
-    inset -3px -3px 8px rgba(255, 255, 255, 0.85),
+    inset 1px 1px 3px rgba(var(--clay-h-primary), 0.15),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.9),
     0 0 0 3px rgba(45, 106, 79, 0.15);
 }
 
@@ -1520,10 +1535,9 @@ button:active {
   overflow: visible;
   isolation: isolate;
   padding-bottom: 30px;
-  /* min-height:0 menOverride min-h-[225px] utility agar tinggi benar-benar
-     mengikuti isi kartu (yang sekarang position:relative / in-flow). */
   min-height: 0;
   height: auto;
+  touch-action: pan-y;
 }
 
 /* ===== PAGER UTANG (mobile) =====
