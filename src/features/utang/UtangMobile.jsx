@@ -200,8 +200,6 @@ export default function UtangMobile({
     if (areaRef.current) areaRef.current.scrollTop = 0
   }, [filter, total])
 
-  const item = terurut[idx] ?? null
-
   // Titik halaman dibatasi maksimal 7 agar tidak meluber di layar sempit.
   // Bila lebih, jendela bergeser mengikuti halaman aktif.
   const MAKS_TITIK = 7
@@ -291,20 +289,29 @@ style={{ height: `calc(100dvh - ${TINGGI_NAV}px)`, touchAction: 'pan-y' }}    >
           </div>
         ) : (
           <div
-            className="flex min-h-full w-full flex-col"
+            className="flex min-h-full w-full flex-col overflow-hidden"
             role="group"
             aria-label={`Utang halaman ${idx + 1} dari ${jumlahHalaman}`}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             style={{ touchAction: 'pan-y' }}
           >
-            <KartuUtangMobile
-              t={item}
-              onBayar={() => onBayar(item)}
-              onLunasin={() => onLunasin(item)}
-              onEdit={() => onEdit(item)}
-              onHapus={() => onHapus(item)}
-            />
+            <div
+              className="flex w-full transition-transform duration-300 ease-out"
+              style={{ transform: `translateX(-${idx * 100}%)` }}
+            >
+              {terurut.map((t) => (
+                <div key={t.id} className="w-full shrink-0">
+                  <KartuUtangMobile
+                    t={t}
+                    onBayar={() => onBayar(t)}
+                    onLunasin={() => onLunasin(t)}
+                    onEdit={() => onEdit(t)}
+                    onHapus={() => onHapus(t)}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
