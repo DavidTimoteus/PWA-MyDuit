@@ -180,7 +180,9 @@ async function konfirmHapus() {
       <div className="view-section active min-w-0">
 
         {/* Toolbar: responsif mobile — di layar kecil input search baris 1, filter baris 2 */}
-        <div className="sticky top-[58px] md:top-0 z-20 bg-surfaceContainerLowest/95 backdrop-blur-md mb-4 mt-2 flex flex-col gap-2.5 sm:flex-row sm:items-center md:mt-4">
+        {/* Sticky Toolbar & Pagination Wrapper — anti-scroll dan background rapi menyatu */}
+        <div className="sticky top-[58px] md:top-0 z-20 bg-surface/95 backdrop-blur-md pt-2 pb-3 mb-3 border-b border-slate-200/60 shadow-[0_4px_12px_rgba(0,0,0,0.03)] transition-all">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
           {/* Kartu pencarian & filter */}
           <div className="clay clay-card clay-key-primary w-full rounded-[24px] bg-surfaceContainerLowest p-2.5 sm:p-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -259,30 +261,31 @@ async function konfirmHapus() {
           </button>
         </div>
 
-        {/* Pagination — di ATAS list, teks "Halaman x/y" + panah clay (persis GAS) */}
-        {totalPages > 1 && (
-          <div className="mb-3 mt-3 flex items-center justify-center gap-2">
-            <button
-              type="button"
-              aria-label="Halaman sebelumnya"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-              className="clay-pagination-arrow flex h-9 w-9 items-center justify-center rounded-full bg-surfaceContainerLowest text-slate-600"
-            >
-              <span className="material-symbols-outlined icon-md">chevron_left</span>
-            </button>
-            <span className="text-[11px] font-medium text-slate-500">Halaman {page}/{totalPages}</span>
-            <button
-              type="button"
-              aria-label="Halaman berikutnya"
-              disabled={page >= totalPages && !hasMore}
-              onClick={nextPage}
-              className="clay-pagination-arrow flex h-9 w-9 items-center justify-center rounded-full bg-surfaceContainerLowest text-slate-600"
-            >
-              <span className="material-symbols-outlined icon-md">{loadingMore && page >= totalPages ? 'progress_activity' : 'chevron_right'}</span>
-            </button>
-          </div>
-        )}
+          {/* Pagination — ikut sticky bersama toolbar sehingga tidak ter-scroll */}
+          {totalPages > 1 && (
+            <div className="mt-2.5 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                aria-label="Halaman sebelumnya"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+                className="clay-pagination-arrow flex h-9 w-9 items-center justify-center rounded-full bg-surfaceContainerLowest text-slate-600 shadow-sm"
+              >
+                <span className="material-symbols-outlined icon-md">chevron_left</span>
+              </button>
+              <span className="text-[11px] font-bold text-slate-700 tracking-tight">Halaman {page}/{totalPages}</span>
+              <button
+                type="button"
+                aria-label="Halaman berikutnya"
+                disabled={page >= totalPages && !hasMore}
+                onClick={nextPage}
+                className="clay-pagination-arrow flex h-9 w-9 items-center justify-center rounded-full bg-surfaceContainerLowest text-slate-600 shadow-sm"
+              >
+                <span className="material-symbols-outlined icon-md">{loadingMore && page >= totalPages ? 'progress_activity' : 'chevron_right'}</span>
+              </button>
+            </div>
+          )}
+        </div>
 
         {error && (
           <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-600">
