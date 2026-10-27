@@ -512,9 +512,9 @@ export default function Shell({ user }) {
           100dvh - bottom-nav dan TIDAK boleh scroll. Tampilan utang mobile
           memakai pager satu-kartu-per-halaman supaya semua muat. Di luar itu
           (dan di desktop) tetap bisa scroll normal. */}
-            <main className={`flex-1 min-w-0 md:flex md:flex-col md:h-full md:overflow-hidden md:pb-6 md:px-6 ${pasLayar ? 'h-[calc(100dvh-76px)] overflow-hidden pb-0' : 'pb-24'}`}>
-        <div className={`min-w-0 md:h-full md:overflow-hidden md:pr-2 md:rounded-[28px] ${pasLayar ? 'h-full' : ''}`}>
-          <div ref={mainScrollRef} className={`main-scroll max-w-3xl mx-auto relative w-full min-w-0 overflow-x-hidden px-4 md:max-w-none md:px-6 md:mx-0 md:bg-transparent md:h-full md:overflow-y-auto ${pasLayar ? 'h-full overflow-hidden' : 'min-h-screen'}`}>
+            <main className={`flex-1 min-w-0 md:flex md:flex-col md:h-full md:overflow-hidden md:pb-6 md:px-6 ${pasLayar ? 'pb-24' : 'pb-24'}`}>
+        <div className={`min-w-0 md:h-full md:overflow-y-auto md:pr-2 md:rounded-[28px] ${pasLayar ? 'h-full' : ''}`}>
+          <div ref={mainScrollRef} className={`main-scroll max-w-3xl mx-auto relative w-full min-w-0 overflow-x-hidden px-4 md:max-w-none md:px-6 md:mx-0 md:bg-transparent md:h-full md:overflow-y-auto ${pasLayar ? 'h-full overflow-y-auto' : 'overflow-y-auto'}`} style={{ touchAction: 'pan-y' }}>
         {!online && (
           <div className="sticky top-0 z-10 flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-[11px] font-bold text-amber-900">
             <span className="material-symbols-outlined icon-xs">wifi_off</span>
@@ -549,7 +549,7 @@ export default function Shell({ user }) {
                 className="clay-chip flex min-w-0 h-9 shrink-0 items-center gap-1 rounded-full bg-surfaceContainerLowest px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:scale-95"
               >
                 <span className="material-symbols-outlined icon-md text-incomeText">tune</span>
-                <span className="truncate max-w-[70px]">{filterLabel}</span>
+                <span className="truncate max-w-[85px] sm:max-w-none">{filterLabel}</span>
               </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('myduit:export-pdf'))}
