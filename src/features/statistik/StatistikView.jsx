@@ -515,23 +515,23 @@ export default function StatistikView({ user }) {
           periode baris-2 (tidak berdesakan; header tak terpotong).
           Desktop: sebaris (segmented kiri, stepper kanan). */}
       <div className="flex flex-col gap-2.5 pb-4 md:flex-row md:items-center md:justify-between md:gap-3 md:pt-5">
-        <div className="flex items-center rounded-xl bg-white/80 p-2.5 shadow-md">
+        <div className="flex items-center rounded-2xl bg-surface p-1 shadow-inner">
           <button
             onClick={() => setMode('bulanan')}
-            className={`stat-pill-tab flex flex-1 items-center justify-center py-2.5 px-4 text-xs font-bold transition-all duration-200 md:flex-none ${
+            className={`stat-pill-tab flex flex-1 items-center justify-center py-2 px-4 text-xs font-bold transition-all duration-200 md:flex-none rounded-xl touch-manipulation ${
               mode === 'bulanan'
-                ? 'rounded-[9999px] bg-white text-blue-700 shadow-[3px_3px_8px_rgba(0,0,0,0.12),_-2px_-2px_6px_rgba(255,255,255,0.9)]'
-                : 'text-textSecondary hover:text-textPrimary'
+                ? 'bg-white text-primary shadow-[2px_2px_6px_rgba(0,0,0,0.1),_-1px_-1px_4px_rgba(255,255,255,0.9)]'
+                : 'bg-transparent text-slate-500 hover:text-slate-800 active:scale-95'
             }`}
           >
             Bulanan
           </button>
           <button
             onClick={() => setMode('tahunan')}
-            className={`stat-pill-tab flex flex-1 items-center justify-center py-2.5 px-4 text-xs font-bold transition-all duration-200 md:flex-none ${
+            className={`stat-pill-tab flex flex-1 items-center justify-center py-2 px-4 text-xs font-bold transition-all duration-200 md:flex-none rounded-xl touch-manipulation ${
               mode === 'tahunan'
-                ? 'rounded-[9999px] bg-white text-blue-700 shadow-[3px_3px_8px_rgba(0,0,0,0.12),_-2px_-2px_6px_rgba(255,255,255,0.9)]'
-                : 'text-textSecondary hover:text-textPrimary'
+                ? 'bg-white text-primary shadow-[2px_2px_6px_rgba(0,0,0,0.1),_-1px_-1px_4px_rgba(255,255,255,0.9)]'
+                : 'bg-transparent text-slate-500 hover:text-slate-800 active:scale-95'
             }`}
           >
             Tahunan

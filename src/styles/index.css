@@ -592,8 +592,7 @@ button:active {
    `clay-chip` -> saat TIDAK aktif tombol tampil PERSEGI LANCIP (keluhan user).
    Sekarang .stat-pill-tab sendiri punya radius pill + bidang. */
 .stat-pill-tab {
-  border-radius: var(--clay-r-chip);
-  background-color: var(--color-surfaceContainerLowest);
+  background-color: transparent;
   transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
 }
 .stat-pill-tab:active { transform: scale(0.96); }
