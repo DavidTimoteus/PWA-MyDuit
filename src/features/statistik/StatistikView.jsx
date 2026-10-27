@@ -795,7 +795,10 @@ function KategoriCard({ icon, iconColor, title, items, total, jenis, onDblClick 
       {empty ? (
         <p className="py-8 text-center text-sm text-slate-500">Belum ada data {jenis === 'in' ? 'pemasukan' : 'pengeluaran'} untuk periode ini.</p>
       ) : (
-        <div className="space-y-2">
+        <div 
+          className="space-y-1 max-h-[380px] overflow-y-auto overscroll-contain pr-1 -mr-1"
+          style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
+        >
           {items.map((it) => {
             const pct = Math.round((it.total / max) * 100)
             const pctTotal = total > 0 ? Math.round((it.total / total) * 100) : 0
@@ -803,9 +806,10 @@ function KategoriCard({ icon, iconColor, title, items, total, jenis, onDblClick 
             return (
               <div
                 key={it.id}
+                onClick={() => onDblClick(jenis, it)}
                 onDoubleClick={() => onDblClick(jenis, it)}
-                className="cursor-pointer rounded-lg px-2 py-1 transition-colors hover:bg-slate-50"
-                title="Klik 2x untuk melihat detail transaksi"
+                className="cursor-pointer rounded-xl px-2.5 py-1.5 transition-all active:scale-[0.98] active:bg-blue-50/80 hover:bg-slate-50 select-none touch-manipulation"
+                title="Ketuk kategori untuk melihat rincian transaksi"
               >
                 <div className="flex min-w-0 items-center justify-between text-[11px] font-semibold">
                   <span className="truncate text-slate-700">{it.nama}</span>

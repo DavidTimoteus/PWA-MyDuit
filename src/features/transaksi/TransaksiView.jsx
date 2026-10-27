@@ -185,20 +185,20 @@ async function konfirmHapus() {
           <div className="clay clay-card clay-key-primary w-full rounded-[24px] bg-surfaceContainerLowest p-2.5 sm:p-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative min-w-0 flex-1">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 icon-lg text-textSecondary">search</span>
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 icon-lg text-textSecondary pointer-events-none select-none">search</span>
                 <input
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Cari transaksi..."
                   type="text"
-                  className="clay-input w-full border-none bg-surface py-2.5 pl-10 pr-10 text-sm outline-none transition-all placeholder:text-textSecondary focus:bg-white focus:ring-1 focus:ring-primary rounded-[16px]"
+                  className="clay-input w-full border-none bg-surface py-2.5 pl-10 pr-10 text-base sm:text-sm outline-none transition-all placeholder:text-textSecondary focus:bg-white focus:ring-1 focus:ring-primary rounded-[16px] touch-manipulation"
                 />
                 {keyword && (
                   <button
                     type="button"
                     onClick={() => setKeyword('')}
                     aria-label="Hapus pencarian"
-                    className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-slate-500 transition-all hover:!scale-[1.18] hover:!bg-red-100 hover:!text-red-500"
+                    className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-slate-500 transition-all active:scale-90 active:bg-slate-200/60 hover:bg-red-100 hover:text-red-500 touch-manipulation"
                     style={{
                       background: '#ffffff',
                       boxShadow: '2px 2px 5px rgba(100,116,139,.25), -2px -2px 5px rgba(255,255,255,.9), inset 1px 1px 2px rgba(255,255,255,.6)',
@@ -217,7 +217,7 @@ async function konfirmHapus() {
                       onClick={() => setJenis(j.id)}
                       aria-label={j.title}
                       title={j.title}
-                      className={`chip-btn clay-chip flex h-10 w-10 sm:h-11 sm:w-11 rounded-full shrink-0 items-center justify-center transition-all active:scale-95 ${
+                      className={`chip-btn clay-chip flex h-10 w-10 sm:h-11 sm:w-11 rounded-full shrink-0 items-center justify-center transition-all active:scale-95 touch-manipulation ${
                         jenis === j.id
                           ? 'clay-key-blue bg-blue-700 text-white shadow-md'
                           : 'clay-key-neutral bg-surface text-textSecondary hover:bg-gray-100 hover:text-slate-800'
@@ -231,7 +231,7 @@ async function konfirmHapus() {
                   onClick={toggleBulk}
                   aria-label="Pilih banyak transaksi"
                   title="Pilih banyak transaksi"
-                  className={`chip-btn clay-chip flex h-10 w-10 sm:h-11 sm:w-11 rounded-full shrink-0 items-center justify-center transition-all active:scale-95 ${
+                  className={`chip-btn clay-chip flex h-10 w-10 sm:h-11 sm:w-11 rounded-full shrink-0 items-center justify-center transition-all active:scale-95 touch-manipulation ${
                     bulkMode
                       ? 'clay-key-blue bg-blue-700 text-white shadow-md'
                       : 'clay-key-neutral bg-surface text-textSecondary hover:bg-gray-100 hover:text-slate-800'
