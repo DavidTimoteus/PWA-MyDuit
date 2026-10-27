@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 
-// Splash screen ala GAS MyDuit — gradient hijau + logo clay savings +
-// judul MyDuit animasi huruf + tagline + sub + 6 dot spinner.
+// Splash screen MyDuit — claymorphism modern biru.
+// Background: gradien lembut #F0F4F8 → #DBEAFE → #EFF6FF (selaras tema app).
+// Logo: kotak clay biru (gradient #3b82f6 → #1e3a8a) + ikon savings filled putih.
+// Judul + tagline memakai teks gelap (#1e293b / #1e3a8a) agar kontras di background terang.
+// Dot spinner biru (rgba 37,99,235).
 // Ditampilkan di atas segalanya (z-99999), lalu fade-out & dihapus dari DOM
 // setelah ~1.4 detik (min waktu agar animasi masuk terasa) atau setelah
 // aplikasi siap dipakai (mana yang lebih akhir).

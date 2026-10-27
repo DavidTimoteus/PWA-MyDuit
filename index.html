@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>MyDuit — Catatan Keuangan</title>
     <meta name="description" content="Catat, pantau, dan kendalikan keuangan pribadi. Offline-first." />
-    <meta name="theme-color" content="#2D6A4F" />
+    <meta name="theme-color" content="#2563EB" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -45,7 +45,104 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!--
+        Inline loading placeholder — ditampilkan saat cold start PWA di HP,
+        sebelum bundel React selesai dieksekusi. Mencegah jarring white flash.
+        React akan mount dan menggantikan seluruh konten ini secara otomatis.
+      -->
+      <style>
+        #root-placeholder {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #F0F4F8;
+          font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+          z-index: 1;
+        }
+        #root-placeholder-card {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          text-align: center;
+          padding: 36px 32px;
+          border-radius: 28px;
+          background: #ffffff;
+          box-shadow:
+            8px 8px 22px rgba(37, 99, 235, 0.12),
+            -6px -6px 18px rgba(255, 255, 255, 0.95),
+            inset 2px 2px 4px rgba(255, 255, 255, 0.85),
+            inset -2px -2px 6px rgba(37, 99, 235, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        #root-placeholder-logo {
+          width: 72px;
+          height: 72px;
+          border-radius: 22px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(145deg, #3b82f6 0%, #2563eb 55%, #1e3a8a 100%);
+          box-shadow:
+            6px 6px 16px rgba(37, 99, 235, 0.35),
+            inset -3px -3px 8px rgba(0, 0, 0, 0.2),
+            inset 3px 3px 8px rgba(255, 255, 255, 0.28);
+        }
+        #root-placeholder-logo img {
+          width: 40px;
+          height: 40px;
+          object-fit: contain;
+        }
+        #root-placeholder-title {
+          font-size: 26px;
+          font-weight: 800;
+          color: #1e293b;
+          letter-spacing: -0.02em;
+          margin: 0;
+        }
+        #root-placeholder-tagline {
+          font-size: 12px;
+          font-weight: 600;
+          color: #64748b;
+          letter-spacing: 0.04em;
+          margin: 0;
+        }
+        #root-placeholder-dots {
+          display: flex;
+          gap: 6px;
+          margin-top: 4px;
+        }
+        #root-placeholder-dots span {
+          width: 7px;
+          height: 7px;
+          border-radius: 999px;
+          background: #2563eb;
+          opacity: 0.35;
+          animation: ph-dot-pulse 1.2s ease-in-out infinite;
+        }
+        #root-placeholder-dots span:nth-child(2) { animation-delay: 0.2s; }
+        #root-placeholder-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes ph-dot-pulse {
+          0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+          40%            { opacity: 1;   transform: scale(1.15); }
+        }
+      </style>
+      <div id="root-placeholder" aria-hidden="true">
+        <div id="root-placeholder-card">
+          <div id="root-placeholder-logo">
+            <img src="/favicon.svg" alt="MyDuit logo" width="40" height="40" />
+          </div>
+          <p id="root-placeholder-title">MyDuit</p>
+          <p id="root-placeholder-tagline">Catat. Pantau. Kendalikan.</p>
+          <div id="root-placeholder-dots" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
