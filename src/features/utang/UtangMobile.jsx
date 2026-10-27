@@ -180,8 +180,7 @@ export default function UtangMobile({
       touchStartY.current = null
       touchStartX.current = null
 
-      // Hanya trigger swipe jika pergerakan horizontal disengaja (> 40px)
-      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+    if (Math.abs(diffX) > 32 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
         if (diffX < 0) {
           pindah(idx + 1)
         } else {
@@ -297,8 +296,12 @@ style={{ height: `calc(100dvh - ${TINGGI_NAV}px)`, touchAction: 'pan-y' }}    >
             style={{ touchAction: 'pan-y' }}
           >
             <div
-              className="flex w-full transition-transform duration-300 ease-out"
-              style={{ transform: `translateX(-${idx * 100}%)` }}
+              className="flex w-full"
+              style={{
+                transform: `translateX(-${idx * 100}%)`,
+                willChange: 'transform',
+                transition: 'transform 400ms cubic-bezier(0.22, 1, 0.36, 1)',
+              }}
             >
               {terurut.map((t) => (
                 <div key={t.id} className="w-full shrink-0">

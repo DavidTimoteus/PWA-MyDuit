@@ -104,7 +104,7 @@ export default function RekeningPanel({ uid }) {
 
     // Hanya ganti kartu bila gesture benar-benar horizontal yang disengaja.
     // Jika pergerakan vertikal lebih dominan, biarkan layar scroll bebas (tidak intercept).
-    if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+    if (Math.abs(diffX) > 32 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
       if (diffX < 0) {
         setHalaman((h) => (h < totalCards ? h + 1 : 1))
       } else {
@@ -248,23 +248,23 @@ export default function RekeningPanel({ uid }) {
             let pointerEvents = 'none'
 
             if (delta < 0) {
-              transform = 'translateY(-115%) scale(0.96)'
-              opacity = 0
-              zIndex = 10
-            } else if (delta === 0) {
-              transform = 'translateY(0px) scale(1)'
-              opacity = 1
-              zIndex = 30
-              pointerEvents = 'auto'
-            } else if (delta <= 3) {
-              transform = `translateY(${delta * 12}px) scale(${1 - delta * 0.035})`
-              opacity = 1
-              zIndex = 30 - delta
-            } else {
-              transform = `translateY(${3 * 12}px) scale(${1 - 3 * 0.035})`
-              opacity = 0
-              zIndex = 1
-            }
+                      transform = 'translateX(-110%) rotate(-3deg) scale(0.95)'
+                      opacity = 0
+                      zIndex = 10
+                    } else if (delta === 0) {
+                      transform = 'translateX(0px) translateY(0px) rotate(0deg) scale(1)'
+                      opacity = 1
+                      zIndex = 30
+                      pointerEvents = 'auto'
+                    } else if (delta <= 3) {
+                      transform = `translateY(${delta * 12}px) scale(${1 - delta * 0.035})`
+                      opacity = 1
+                      zIndex = 30 - delta
+                    } else {
+                      transform = `translateY(${3 * 12}px) scale(${1 - 3 * 0.035})`
+                      opacity = 0
+                      zIndex = 1
+                    }
 
             const negatif = (Number(a.saldo) || 0) < 0
             const log = a.mutasiTerakhir ? logMutasi(a.mutasiTerakhir) : null
@@ -274,12 +274,14 @@ export default function RekeningPanel({ uid }) {
                 key={a.id}
                 className={`rekening-stack-card clay clay-card ${
                   negatif ? 'clay-key-danger' : 'clay-key-blue'
-                } ${delta === 0 ? 'relative' : 'absolute'} inset-x-1.5 top-1.5 rounded-[22px] bg-white p-3.5 select-none transition-all duration-300 ease-out min-h-[195px]`}
+                } ${delta === 0 ? 'relative' : 'absolute'} inset-x-1.5 top-1.5 rounded-[22px] bg-white p-3.5 select-none min-h-[195px]`}
                 style={{
                   transform,
                   opacity,
                   zIndex,
                   pointerEvents,
+                  willChange: 'transform, opacity',
+                  transition: 'transform 380ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 300ms ease',
                   boxShadow:
                     delta === 0
                       ? '0 10px 25px -5px rgba(29, 78, 216, 0.16), 0 8px 10px -6px rgba(29, 78, 216, 0.1)'
