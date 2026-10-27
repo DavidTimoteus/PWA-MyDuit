@@ -165,10 +165,32 @@ export default function UtangMobile({
 }) {
   const [halaman, setHalaman] = useState(0)
   const areaRef = useRef(null)
-const touchStartX = useRef(null)
-const touchStartY = useRef(null)
+  const touchStartX = useRef(null)
+  const touchStartY = useRef(null)
 
-  const total = terurut.length
+    const handleTouchStart = (e) => {
+      touchStartY.current = e.touches[0].clientY
+      touchStartX.current = e.touches[0].clientX
+    }
+
+    const handleTouchEnd = (e) => {
+      if (touchStartX.current === null || touchStartY.current === null) return
+      const diffY = e.changedTouches[0].clientY - touchStartY.current
+      const diffX = e.changedTouches[0].clientX - touchStartX.current
+      touchStartY.current = null
+      touchStartX.current = null
+
+      // Hanya trigger swipe jika pergerakan horizontal disengaja (> 40px)
+      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+        if (diffX < 0) {
+          pindah(idx + 1)
+        } else {
+          pindah(idx - 1)
+        }
+      }
+    }
+
+    const total = terurut.length
   const jumlahHalaman = Math.max(1, total)
   // Jaga indeks tetap valid saat filter berubah atau data menyusut.
   const idx = Math.min(halaman, jumlahHalaman - 1)
