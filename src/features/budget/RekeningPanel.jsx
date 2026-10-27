@@ -274,7 +274,7 @@ export default function RekeningPanel({ uid }) {
                 key={a.id}
                 className={`rekening-stack-card clay clay-card ${
                   negatif ? 'clay-key-danger' : 'clay-key-blue'
-                } ${delta === 0 ? 'relative' : 'absolute'} inset-x-1.5 top-1.5 rounded-[22px] bg-white p-3.5 select-none transition-all duration-300 ease-out`}
+                } ${delta === 0 ? 'relative' : 'absolute'} inset-x-1.5 top-1.5 rounded-[22px] bg-white p-3.5 select-none transition-all duration-300 ease-out min-h-[195px]`}
                 style={{
                   transform,
                   opacity,
@@ -350,21 +350,24 @@ export default function RekeningPanel({ uid }) {
                       {log ? (
                         <>
                           <span className={`block text-xs ${log.warna} font-mono truncate`}>{log.teks}</span>
-                          <span className="mt-1 flex items-center gap-1 text-[10px] text-blue-700/70 font-medium"><span className="material-symbols-outlined icon-2xs">touch_app</span>Ketuk riwayat • Geser ganti kartu</span>
+                          <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px] text-blue-700/80 font-medium">
+                            <span className="flex items-center gap-0.5 truncate"><span className="material-symbols-outlined icon-2xs">touch_app</span>Ketuk riwayat</span>
+                            <span className="flex items-center gap-0.5 shrink-0 text-slate-400"><span className="material-symbols-outlined icon-2xs">swipe</span>Geser kartu</span>
+                          </div>
                         </>
                       ) : (
                         <>
                           <span className="block text-[10px] text-slate-500">Belum ada riwayat</span>
-                          <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-700/70">
-                            <span className="material-symbols-outlined icon-2xs">history</span>
-                            Ketuk utk lihat detail rekening
-                          </span>
+                          <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px] text-blue-700/80 font-medium">
+                            <span className="flex items-center gap-0.5 truncate"><span className="material-symbols-outlined icon-2xs">history</span>Ketuk utk lihat detail rekening</span>
+                            <span className="flex items-center gap-0.5 shrink-0 text-slate-400"><span className="material-symbols-outlined icon-2xs">swipe</span>Geser kartu</span>
+                          </div>
                         </>
                       )}
                     </button>
                   </>
                 ) : (
-                  <div className="h-full w-full opacity-0 pointer-events-none select-none" aria-hidden="true" />
+                  <div className="h-full min-h-[160px] w-full select-none" aria-hidden="true" />
                 )}
               </div>
             )
