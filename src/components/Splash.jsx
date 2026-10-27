@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 
-// Splash screen MyDuit — claymorphism modern biru.
-// Background: gradien lembut #F0F4F8 → #DBEAFE → #EFF6FF (selaras tema app).
-// Logo: kotak clay biru (gradient #3b82f6 → #1e3a8a) + ikon savings filled putih.
-// Judul + tagline memakai teks gelap (#1e293b / #1e3a8a) agar kontras di background terang.
-// Dot spinner biru (rgba 37,99,235).
-// Ditampilkan di atas segalanya (z-99999), lalu fade-out & dihapus dari DOM
+// Splash screen MyDuit — tema hijau signature.
+// Background: gradien hijau gelap #1b4332 → #2d6a4f → #40916c.
+// Logo: kotak squircle clay hijau + favicon SVG (anti-flash, tanpa webfont).
+// Judul + tagline memakai teks putih/krem kontras tinggi di atas hijau.
+// Dot spinner putih semi-transparan (rgba 255,255,255,0.7).
+// Ditampilkan di atas segalanya (z-99999), lalu fade-out smooth & dihapus dari DOM
 // setelah ~1.4 detik (min waktu agar animasi masuk terasa) atau setelah
 // aplikasi siap dipakai (mana yang lebih akhir).
 export default function Splash({ ready }) {
@@ -14,7 +14,7 @@ export default function Splash({ ready }) {
 
   useEffect(() => {
     const minTime = 1400
-    const fadeMs = 550
+    const fadeMs = 450
     let timer
     const dismiss = () => {
       setLeaving(true)
@@ -33,7 +33,7 @@ export default function Splash({ ready }) {
     <div id="splashScreen" className={`splash-screen${leaving ? ' is-leaving' : ''}`} aria-hidden={leaving}>
       <div className="splash-inner">
         <div className="splash-logo">
-          <span className="material-symbols-outlined">savings</span>
+          <img src="/favicon.svg" alt="MyDuit" className="w-14 h-14" width="56" height="56" />
         </div>
         <div className="splash-title">
           <span className="splash-title-letter">M</span>
