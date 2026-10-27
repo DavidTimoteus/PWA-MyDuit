@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { onSnapshot, query, where, orderBy, collection } from 'firebase/firestore'
+import { getFirebase } from '../../lib/firebase.js'
 import { formatRupiah } from '../../lib/format.js'
 import { enrichTransaksi } from '../../lib/db.js'
 import { useAkunKategori } from '../../lib/useAkunKategori.js'
-import { useTransaksi } from '../transaksi/useTransaksi.js'
 import { useBudgetBulan } from './useBudgetBulan.js'
 import BudgetPanel from './BudgetPanel.jsx'
 import FormBudgetModal from './FormBudgetModal.jsx'
@@ -39,10 +40,29 @@ export default function BudgetView({ user }) {
   // Data bersama
   const range = useMemo(() => rangeBulan(tahun, bulan), [bulan, tahun])
   const budgets = useBudgetBulan(uid, bulan, tahun)
-  // Jenis 'semua' -> satu langganan dipakai untuk DUA kebutuhan: terpakai per
-  // budget (hanya pengeluaran, difilter saat agregasi) dan kartu
-  // "Pemasukan/Pengeluaran bulan ini" (sebelumnya cuma placeholder '—').
-  const { docs: transBulan } = useTransaksi(uid, { jenis: 'semua', range })
+
+  // Query transaksi bulanan TANPA batas pageSize — identik dengan pola StatistikView
+  // sehingga totalPengeluaran/totalPemasukan di menu Budget selalu identik 100%
+  // dengan angka "Total Pengeluaran/Pemasukan" di menu Statistik.
+  const [transBulan, setTransBulan] = useState([])
+  useEffect(() => {
+    if (!uid) return
+    const { db } = getFirebase()
+    const q = query(
+      collection(db, 'users', uid, 'transaksi'),
+      where('deleted', '==', false),
+      where('tanggal', '>=', range.start),
+      where('tanggal', '<=', range.end),
+      orderBy('tanggal', 'desc'),
+    )
+    const unsub = onSnapshot(
+      q,
+      (snap) => setTransBulan(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      () => setTransBulan([]),
+    )
+    return () => unsub()
+  }, [uid, range.start, range.end])
+
   const { akunList, kategoriList } = useAkunKategori(uid)
   const akunById = useMemo(() => Object.fromEntries(akunList.map((a) => [a.id, a])), [akunList])
   const katById = useMemo(() => Object.fromEntries(kategoriList.map((k) => [k.id, k.nama])), [kategoriList])
