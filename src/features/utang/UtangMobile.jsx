@@ -290,7 +290,14 @@ style={{ height: `calc(100dvh - ${TINGGI_NAV}px)`, touchAction: 'pan-y' }}    >
             <p className="mt-1 text-xs text-slate-500">Tekan tombol + untuk mencatat yang pertama.</p>
           </div>
         ) : (
-          <div className="flex min-h-full w-full flex-col" role="group" aria-label={`Utang halaman ${idx + 1} dari ${jumlahHalaman}`}>
+          <div
+            className="flex min-h-full w-full flex-col"
+            role="group"
+            aria-label={`Utang halaman ${idx + 1} dari ${jumlahHalaman}`}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            style={{ touchAction: 'pan-y' }}
+          >
             <KartuUtangMobile
               t={item}
               onBayar={() => onBayar(item)}

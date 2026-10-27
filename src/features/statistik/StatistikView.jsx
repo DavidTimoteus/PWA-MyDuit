@@ -515,12 +515,12 @@ export default function StatistikView({ user }) {
           periode baris-2 (tidak berdesakan; header tak terpotong).
           Desktop: sebaris (segmented kiri, stepper kanan). */}
       <div className="flex flex-col gap-2.5 pb-4 md:flex-row md:items-center md:justify-between md:gap-3 md:pt-5">
-        <div className="flex items-center gap-1.5 rounded-[9999px] bg-slate-200/70 p-1 shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1),_inset_-2px_-2px_4px_rgba(255,255,255,0.9)]">
+        <div className="flex items-center rounded-xl bg-white/80 p-2.5 shadow-md">
           <button
             onClick={() => setMode('bulanan')}
-            className={`stat-pill-tab flex h-9 flex-1 items-center justify-center rounded-[9999px] px-4 text-xs font-bold transition-all duration-200 md:flex-none ${
+            className={`stat-pill-tab flex flex-1 items-center justify-center py-2.5 px-4 text-xs font-bold transition-all duration-200 md:flex-none ${
               mode === 'bulanan'
-                ? 'bg-primary text-white shadow-[2px_2px_6px_rgba(38,90,67,0.35)]'
+                ? 'rounded-[9999px] bg-white text-blue-700 shadow-[3px_3px_8px_rgba(0,0,0,0.12),_-2px_-2px_6px_rgba(255,255,255,0.9)]'
                 : 'text-textSecondary hover:text-textPrimary'
             }`}
           >
@@ -528,9 +528,9 @@ export default function StatistikView({ user }) {
           </button>
           <button
             onClick={() => setMode('tahunan')}
-            className={`stat-pill-tab flex h-9 flex-1 items-center justify-center rounded-[9999px] px-4 text-xs font-bold transition-all duration-200 md:flex-none ${
+            className={`stat-pill-tab flex flex-1 items-center justify-center py-2.5 px-4 text-xs font-bold transition-all duration-200 md:flex-none ${
               mode === 'tahunan'
-                ? 'bg-primary text-white shadow-[2px_2px_6px_rgba(38,90,67,0.35)]'
+                ? 'rounded-[9999px] bg-white text-blue-700 shadow-[3px_3px_8px_rgba(0,0,0,0.12),_-2px_-2px_6px_rgba(255,255,255,0.9)]'
                 : 'text-textSecondary hover:text-textPrimary'
             }`}
           >

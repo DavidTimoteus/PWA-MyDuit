@@ -286,80 +286,86 @@ export default function RekeningPanel({ uid }) {
                       : '0 4px 6px -1px rgba(0, 0, 0, 0.08)',
                 }}
               >
-                {/* Header Kartu — Ikon bank kecil bulat biru + nama + badge tipe + aksi */}
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center shrink-0 shadow-none">
-                      <span className="material-symbols-outlined text-blue-700 icon-xs">account_balance</span>
+                {delta === 0 ? (
+                  <>
+                    {/* Header Kartu — Ikon bank kecil bulat biru + nama + badge tipe + aksi */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center shrink-0 shadow-none">
+                          <span className="material-symbols-outlined text-blue-700 icon-xs">account_balance</span>
+                        </div>
+                        <span className="font-bold text-base text-slate-800 truncate">{a.nama}</span>
+                      </div>
+                      {a.tipe && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium shrink-0 whitespace-nowrap ml-auto">
+                          {a.tipe}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setRiwayatId(a.id) }}
+                        title="Detail perubahan rekening"
+                        aria-label={`Detail perubahan ${a.nama}`}
+                        className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors shrink-0"
+                      >
+                        <span className="material-symbols-outlined icon-xs">history</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setModal({ open: true, edit: a }) }}
+                        title="Edit rekening"
+                        aria-label="Edit rekening"
+                        className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-600 transition-colors shrink-0"
+                      >
+                        <span className="material-symbols-outlined icon-xs">edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setHapusTarget(a) }}
+                        title="Hapus rekening"
+                        aria-label="Hapus rekening"
+                        className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
+                      >
+                        <span className="material-symbols-outlined icon-xs">delete</span>
+                      </button>
                     </div>
-                    <span className="font-bold text-base text-slate-800 truncate">{a.nama}</span>
-                  </div>
-                  {a.tipe && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium shrink-0 whitespace-nowrap ml-auto">
-                      {a.tipe}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setRiwayatId(a.id) }}
-                    title="Detail perubahan rekening"
-                    aria-label={`Detail perubahan ${a.nama}`}
-                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors shrink-0"
-                  >
-                    <span className="material-symbols-outlined icon-xs">history</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setModal({ open: true, edit: a }) }}
-                    title="Edit rekening"
-                    aria-label="Edit rekening"
-                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-600 transition-colors shrink-0"
-                  >
-                    <span className="material-symbols-outlined icon-xs">edit</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setHapusTarget(a) }}
-                    title="Hapus rekening"
-                    aria-label="Hapus rekening"
-                    className="clay-chip clay-key-neutral w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
-                  >
-                    <span className="material-symbols-outlined icon-xs">delete</span>
-                  </button>
-                </div>
 
-                {/* Saldo Akhir */}
-                <div className="mb-2">
-                  <p className="text-xs text-slate-500">Saldo Akhir</p>
-                  <p className={`font-mono text-lg font-bold ${negatif ? 'text-expenseText' : 'text-slate-800'}`}>
-                    {formatRupiah(a.saldo)}
-                  </p>
-                </div>
+                    {/* Saldo Akhir */}
+                    <div className="mb-2">
+                      <p className="text-xs text-slate-500">Saldo Akhir</p>
+                      <p className={`font-mono text-lg font-bold ${negatif ? 'text-expenseText' : 'text-slate-800'}`}>
+                        {formatRupiah(a.saldo)}
+                      </p>
+                    </div>
 
-                {/* Perubahan Terakhir (full width box persis GAS rek-last-change-box).
-                    Kotak ini sekaligus tombol -> buka detail riwayat mutasi rekening. */}
-                <button
-                  type="button"
-                  onClick={() => setRiwayatId(a.id)}
-                  aria-label={`Lihat detail perubahan ${a.nama}`}
-                  className="block w-full rounded-lg bg-slate-50 px-2.5 py-2 text-left transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                >
-                  <span className="block text-xs font-semibold text-slate-500 mb-1">Perubahan Terakhir</span>
-                  {log ? (
-                                      <>
-                                        <span className={`block text-xs ${log.warna} font-mono truncate`}>{log.teks}</span>
-                                        <span className="mt-1 flex items-center gap-1 text-[10px] text-blue-700/70 font-medium"><span className="material-symbols-outlined icon-2xs">touch_app</span>Ketuk riwayat • Geser ganti kartu</span>
-                                      </>
-                                    ) : (
-                    <>
-                      <span className="block text-[10px] text-slate-500">Belum ada riwayat</span>
-                      <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-700/70">
-                        <span className="material-symbols-outlined icon-2xs">history</span>
-                        Ketuk utk lihat detail rekening
-                      </span>
-                    </>
-                  )}
-                </button>
+                    {/* Perubahan Terakhir (full width box persis GAS rek-last-change-box).
+                        Kotak ini sekaligus tombol -> buka detail riwayat mutasi rekening. */}
+                    <button
+                      type="button"
+                      onClick={() => setRiwayatId(a.id)}
+                      aria-label={`Lihat detail perubahan ${a.nama}`}
+                      className="block w-full rounded-lg bg-slate-50 px-2.5 py-2 text-left transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    >
+                      <span className="block text-xs font-semibold text-slate-500 mb-1">Perubahan Terakhir</span>
+                      {log ? (
+                        <>
+                          <span className={`block text-xs ${log.warna} font-mono truncate`}>{log.teks}</span>
+                          <span className="mt-1 flex items-center gap-1 text-[10px] text-blue-700/70 font-medium"><span className="material-symbols-outlined icon-2xs">touch_app</span>Ketuk riwayat • Geser ganti kartu</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="block text-[10px] text-slate-500">Belum ada riwayat</span>
+                          <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-blue-700/70">
+                            <span className="material-symbols-outlined icon-2xs">history</span>
+                            Ketuk utk lihat detail rekening
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <div className="h-full w-full opacity-0 pointer-events-none select-none" aria-hidden="true" />
+                )}
               </div>
             )
           })

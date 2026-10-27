@@ -180,7 +180,7 @@ async function konfirmHapus() {
       <div className="view-section active min-w-0">
 
         {/* Toolbar: responsif mobile — di layar kecil input search baris 1, filter baris 2 */}
-        <div className="mb-4 mt-2 flex flex-col gap-2.5 sm:flex-row sm:items-center md:mt-4">
+        <div className="sticky top-0 z-20 bg-surfaceContainerLowest/95 backdrop-blur-md mb-4 mt-2 flex flex-col gap-2.5 sm:flex-row sm:items-center md:mt-4">
           {/* Kartu pencarian & filter */}
           <div className="clay clay-card clay-key-primary w-full rounded-[24px] bg-surfaceContainerLowest p-2.5 sm:p-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

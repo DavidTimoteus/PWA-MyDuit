@@ -3,6 +3,17 @@
 PWA catatan keuangan (React 19 + Vite + Firebase Hosting `myduit001`, live: https://myduit001.web.app/).
 Repo: folder ini. Detail operasional singkat supaya sesi berikutnya tidak nebak.
 
+## Indeks Dokumentasi Arsitektur
+- **[PRD.md](./PRD.md)**: Product Requirements Document (Visi, Scope, Target Pengguna, Kontrak Data Finansial, Offline-first sync).
+- **[DESIGN.md](./DESIGN.md)**: Design System Specification (Token Claymorphism 3-layer, Skala Warna, Tipografi, Responsif Breakpoint, Anti-Shape Overload).
+- **[TEST_MOBILE_REPORT.md](./TEST_MOBILE_REPORT.md)**: Laporan Audit Verifikasi Multi-Breakpoint & Perbaikan Scrolling Mobile.
+- **[AGENTS.md](./AGENTS.md)**: Arsip pedoman historis agen & catatan modul legacy.
+
+## Status Validasi Mobile (Update 27 Okt 2026)
+- **Scrolling Lockup**: TERSELESAIKAN (Shell.jsx line 515 & 517 beralih ke `min-h-[calc(100dvh-76px)]` + `overflow-y-auto` + `touch-action: pan-y`).
+- **Shape Overload**: TERSELESAIKAN (Proteksi FAB notch via `#navShell` `overflow-x: clip`, kartu hug-content, `.rekening-stack-wrap` padding 30px, dan tombol pill utuh).
+- **Hasil npm run check**: 10 suite pengujian + lint + build 100% HIJAU tanpa regresi.
+
 ## Perintah wajib
 
 - `npm run check` = format + uji OCR (28) + struk (34) + offline (offlineSync) + **filter transaksi (11)** + **riwayat mutasi rekening (24)** + **render panel budget & modal riwayat (22)** + **kontrak event bus (4)** + **kontrak kelas CSS (7)** + **prefill utang (11)** + lint `--max-warnings=0` + build. Hijau = layak deploy.
