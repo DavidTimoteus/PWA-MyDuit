@@ -35,8 +35,10 @@ export default function Splash({ ready }) {
         <div className="splash-logo">
           <img src="/favicon.svg" alt="MyDuit" className="w-12 h-12" width="48" height="48" />
         </div>
-        <div className="splash-title font-display font-extrabold tracking-tight text-white text-3xl">
-          MyDuit
+        <div className="splash-title font-display font-extrabold tracking-tight text-white text-3xl" aria-label="MyDuit">
+          {'MyDuit'.split('').map((ch, i) => (
+            <span key={i} className="splash-title-letter">{ch}</span>
+          ))}
         </div>
         <div className="splash-tagline">Catat. Pantau. Kendalikan.</div>
         <div className="splash-sub">Pemasukan dan pengeluaranmu dalam satu tempat.</div>
