@@ -181,7 +181,7 @@ async function konfirmHapus() {
 
         {/* Toolbar: responsif mobile — di layar kecil input search baris 1, filter baris 2 */}
         {/* Sticky Toolbar & Pagination Wrapper — anti-scroll dan background rapi menyatu */}
-        <div className="sticky top-[52px] md:top-0 z-20 bg-[var(--clay-bg)]/95 backdrop-blur-md pt-2.5 pb-2.5 mb-3 border-b border-slate-200/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-all -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="sticky top-[52px] md:top-0 z-20 bg-[var(--clay-bg)]/40 backdrop-blur-md pt-2.5 pb-2.5 mb-3 transition-all -mx-4 px-4 md:mx-0 md:px-0">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
           {/* Kartu pencarian & filter */}
           <div className="clay clay-card clay-key-neutral w-full rounded-[22px] bg-white/90 p-2.5 sm:p-3 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-white/60">
