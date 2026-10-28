@@ -212,7 +212,7 @@ body {
 /* Global button hover/active — sama persis GAS (ViewCSS.html:461) */
 button {
   cursor: pointer;
-  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.12s ease, background-color 0.2s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 /* Base ukuran tombol (GAS ViewCSS.html gobal button rule): tinggi pre-set 48px +
    padding 0 16px supaya CTA tanpa token ukuran TIDAK lonjong kesamping (tinggi
@@ -408,7 +408,8 @@ button:active {
     inset 2px 2px 3px rgba(255, 255, 255, 0.8),
     inset -2px -2px 6px rgba(var(--clay-h, var(--clay-h-neutral)), 0.05);
   border: 1px solid rgba(255, 255, 255, 0.6);
-  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
+    overflow-x: hidden;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
 }
 
 /* Kartu lembut (empty state, info) */
@@ -995,7 +996,7 @@ button:active {
     -5px -5px 14px rgba(255, 255, 255, 0.55),
     inset 2px 2px 4px rgba(255, 255, 255, 0.4),
     inset -3px -3px 7px rgba(var(--clay-h), 0.3);
-  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.12s ease, background-color 0.2s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .delete-btn-action:active {
   transform: scale(0.88);
@@ -1527,7 +1528,10 @@ button:active {
 
 /* Kartu utang mobile: tinggi mengikuti ISI (hug content), tidak melar
    memenuhi layar. Kalau melar, layar tinggi menyisakan rongga kosong besar. */
-.utang-m-card { align-self: center; }
+.utang-m-card {
+  align-self: center;
+  overflow-x: hidden;
+}
 
 /* Area kartu: boleh menyusut (min-h-0) tapi tidak pernah di bawah 232px,
    supaya kartu tetap utuh dan tidak terpotong. */
