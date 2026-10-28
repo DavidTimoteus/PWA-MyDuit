@@ -184,7 +184,7 @@ async function konfirmHapus() {
         <div className="sticky top-[52px] md:top-0 z-20 bg-[var(--clay-bg)]/95 backdrop-blur-md pt-2.5 pb-2.5 mb-3 border-b border-slate-200/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-all -mx-4 px-4 md:mx-0 md:px-0">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
           {/* Kartu pencarian & filter */}
-          <div className="clay clay-card clay-key-primary w-full rounded-[24px] bg-surfaceContainerLowest p-2.5 sm:p-3">
+          <div className="clay clay-card clay-key-neutral w-full rounded-[22px] bg-white/90 p-2.5 sm:p-3 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-white/60">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative min-w-0 flex-1">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 icon-lg text-textSecondary pointer-events-none select-none">search</span>
@@ -320,7 +320,7 @@ async function konfirmHapus() {
             </p>
           </div>
         ) : (
-          <div className="-mx-4 flex flex-col gap-3 px-4 pb-4 pt-1 hide-scrollbar">
+          <div className="-mx-4 flex flex-col gap-3 px-4 pb-4 pt-3 hide-scrollbar">
             {pageItems.map((t) => (
               <TransaksiRow
                 key={t.id}

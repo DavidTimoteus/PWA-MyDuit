@@ -39,7 +39,7 @@ function logMutasi(m) {
   return { teks, warna }
 }
 
-export default function RekeningPanel({ uid }) {
+export default function RekeningPanel({ uid, transBulan: propTransBulan }) {
   const { akunList, kategoriList } = useAkunKategori(uid)
   const katById = useMemo(() => Object.fromEntries(kategoriList.map((k) => [k.id, k.nama])), [kategoriList])
   const rangeBulan = useMemo(rangeBulanIni, [])

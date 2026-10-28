@@ -74,7 +74,7 @@ export default defineConfig({
         description: 'Catat, pantau, dan kendalikan keuangan pribadi. Offline-first.',
         lang: 'id',
         dir: 'ltr',
-        theme_color: '#2D6A4F',
+        theme_color: '#f8faf9',
         background_color: '#1B4332',
         display: 'standalone',
         orientation: 'portrait',
