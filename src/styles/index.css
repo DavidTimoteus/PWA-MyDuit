@@ -44,6 +44,30 @@
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Hallmark Floor: Focus-visible instan untuk seluruh elemen interaktif */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.clay-btn:focus-visible,
+.clay-chip:focus-visible,
+.clay-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ==========================================================================
    LAPISAN KOMPONEN
    --------------------------------------------------------------------------
@@ -109,7 +133,7 @@ body,
   body,
   #root {
     height: 100dvh;
-    overflow: hidden;
+    overflow: clip;
   }
   .main-scroll {
     height: calc(100dvh - 76px) !important;
@@ -408,7 +432,7 @@ button:active {
     inset 2px 2px 3px rgba(255, 255, 255, 0.8),
     inset -2px -2px 6px rgba(var(--clay-h, var(--clay-h-neutral)), 0.05);
   border: 1px solid rgba(255, 255, 255, 0.6);
-    overflow-x: hidden;
+    overflow-x: clip;
     transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
 }
 
@@ -880,7 +904,7 @@ button:active {
     inset 2px 2px 5px rgba(var(--clay-h-neutral), 0.12),
     inset -2px -2px 5px rgba(255, 255, 255, 0.9);
   background: #f1f5f9 !important;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 .clay-input:focus {
   background: #ffffff !important;
@@ -921,7 +945,7 @@ button:active {
   z-index: 10050;
   max-height: 15rem;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: clip;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
@@ -1530,7 +1554,7 @@ button:active {
    memenuhi layar. Kalau melar, layar tinggi menyisakan rongga kosong besar. */
 .utang-m-card {
   align-self: center;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Area kartu: boleh menyusut (min-h-0) tapi tidak pernah di bawah 232px,
