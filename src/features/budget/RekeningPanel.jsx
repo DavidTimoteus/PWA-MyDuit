@@ -44,8 +44,9 @@ export default function RekeningPanel({ uid }) {
   const katById = useMemo(() => Object.fromEntries(kategoriList.map((k) => [k.id, k.nama])), [kategoriList])
   const rangeBulan = useMemo(rangeBulanIni, [])
 
-  // Arus kas bulan berjalan (untuk hero)
-  const { docs: transBulan } = useTransaksi(uid, { range: rangeBulan, jenis: 'semua' })
+  // Arus kas bulan berjalan — pakai propTransBulan dari BudgetView jika ada agar sinkron penuh dengan Statistik
+    const { docs: fallbackTrans } = useTransaksi(uid, propTransBulan ? {} : { range: rangeBulan, jenis: 'semua' })
+    const transBulan = propTransBulan || fallbackTrans
   const arusBulan = useMemo(() => {
     let masuk = 0, keluar = 0
     for (const t of transBulan) {
