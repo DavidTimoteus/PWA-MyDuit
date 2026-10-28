@@ -260,7 +260,7 @@ export default function BudgetView({ user }) {
       </div>
 
       {sub === 'rekening' ? (
-        <RekeningPanel uid={uid} />
+        <RekeningPanel uid={uid} transBulan={transBulan} />
       ) : (
         <>
           {/* Period Navigator (bulan/tahun) */}
