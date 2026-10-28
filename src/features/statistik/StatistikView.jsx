@@ -502,41 +502,43 @@ export default function StatistikView({ user }) {
       {/* Header mobile-only (logo + judul) — navigator periode ada di baris
           terpisah di bawah (pola sama dengan BudgetView) supaya judul tidak
           pernah terpotong. Di desktop header ini tersembunyi. */}
-      <header className="stat-header-mobile pt-4 pb-3 md:hidden">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className="clay-icon-tile clay-key-primary solid-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white">
-            <span className="material-symbols-outlined icon-lg" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
+      {/* Sticky Header & Toolbar Periode — anti-scroll di mobile/desktop */}
+      <div className="sticky top-0 z-20 bg-[var(--clay-bg)]/95 backdrop-blur-md pt-3 pb-2 mb-2 border-b border-slate-200/50 shadow-[0_2px_8px_rgba(0,0,0,0.03)] -mx-4 px-4 md:mx-0 md:px-0">
+        <header className="stat-header-mobile pb-2 md:hidden">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="clay-icon-tile clay-key-primary solid-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white">
+              <span className="material-symbols-outlined icon-lg" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
+            </div>
+            <h2 className="font-display text-2xl font-extrabold leading-tight">Statistik</h2>
           </div>
-          <h2 className="font-display text-2xl font-extrabold leading-tight">Statistik</h2>
-        </div>
-      </header>
+        </header>
 
-      {/* Periode bar — mobile: segmented (Bulanan|Tahunan) baris-1, stepper
-          periode baris-2 (tidak berdesakan; header tak terpotong).
-          Desktop: sebaris (segmented kiri, stepper kanan). */}
-      <div className="flex flex-col gap-2.5 pb-4 md:flex-row md:items-center md:justify-between md:gap-3 md:pt-5">
-        <div className="flex items-center rounded-2xl bg-surface p-1 shadow-inner">
-          <button
-            onClick={() => setMode('bulanan')}
-            className={`stat-pill-tab flex flex-1 items-center justify-center py-2 px-4 text-xs font-bold transition-all duration-200 md:flex-none rounded-xl touch-manipulation ${
-              mode === 'bulanan'
-                ? 'bg-white text-primary shadow-[2px_2px_6px_rgba(0,0,0,0.1),_-1px_-1px_4px_rgba(255,255,255,0.9)]'
-                : 'bg-transparent text-slate-500 hover:text-slate-800 active:scale-95'
-            }`}
-          >
-            Bulanan
-          </button>
-          <button
-            onClick={() => setMode('tahunan')}
-            className={`stat-pill-tab flex flex-1 items-center justify-center py-2 px-4 text-xs font-bold transition-all duration-200 md:flex-none rounded-xl touch-manipulation ${
-              mode === 'tahunan'
-                ? 'bg-white text-primary shadow-[2px_2px_6px_rgba(0,0,0,0.1),_-1px_-1px_4px_rgba(255,255,255,0.9)]'
-                : 'bg-transparent text-slate-500 hover:text-slate-800 active:scale-95'
-            }`}
-          >
-            Tahunan
-          </button>
-        </div>
+        {/* Periode bar — segmented (Bulanan|Tahunan) + stepper */}
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <div className="flex items-center rounded-2xl bg-surface p-1 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setMode('bulanan')}
+              className={`stat-pill-tab flex flex-1 items-center justify-center py-2 px-4 text-xs font-bold transition-all duration-200 md:flex-none rounded-xl touch-manipulation ${
+                mode === 'bulanan'
+                  ? 'is-active bg-white text-primary shadow-[2px_2px_6px_rgba(0,0,0,0.1),_-1px_-1px_4px_rgba(255,255,255,0.9)]'
+                  : 'bg-transparent text-slate-500 hover:text-slate-800 active:scale-95'
+              }`}
+            >
+              Bulanan
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('tahunan')}
+              className={`stat-pill-tab flex flex-1 items-center justify-center py-2 px-4 text-xs font-bold transition-all duration-200 md:flex-none rounded-xl touch-manipulation ${
+                mode === 'tahunan'
+                  ? 'is-active bg-white text-primary shadow-[2px_2px_6px_rgba(0,0,0,0.1),_-1px_-1px_4px_rgba(255,255,255,0.9)]'
+                  : 'bg-transparent text-slate-500 hover:text-slate-800 active:scale-95'
+              }`}
+            >
+              Tahunan
+            </button>
+          </div>
         <div className="flex items-center justify-center gap-3 md:justify-end">
           <button
             onClick={() => navigate(-1)}
@@ -555,6 +557,7 @@ export default function StatistikView({ user }) {
           >
             <span className="material-symbols-outlined icon-md text-slate-600">chevron_right</span>
           </button>
+        </div>
         </div>
       </div>
 
