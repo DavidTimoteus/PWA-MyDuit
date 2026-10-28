@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <!-- Background squircle gradient: biru indigo modern -->
+    <!-- Background squircle gradient: signature emerald forest green -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1E3A8A"/>
-      <stop offset="60%" stop-color="#2563EB"/>
-      <stop offset="100%" stop-color="#3B82F6"/>
+      <stop offset="0%" stop-color="#1B4332"/>
+      <stop offset="55%" stop-color="#2D6A4F"/>
+      <stop offset="100%" stop-color="#40916C"/>
     </linearGradient>
 
     <!-- Wallet body gradient: coklat leather modern -->
