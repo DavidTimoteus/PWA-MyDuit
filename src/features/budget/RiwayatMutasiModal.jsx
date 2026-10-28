@@ -57,7 +57,7 @@ export default function RiwayatMutasiModal({ uid, akun, kategoriById = {}, onClo
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[10000] flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
