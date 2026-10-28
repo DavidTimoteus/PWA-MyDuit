@@ -35,13 +35,8 @@ export default function Splash({ ready }) {
         <div className="splash-logo">
           <img src="/favicon.svg" alt="MyDuit" className="w-14 h-14" width="56" height="56" />
         </div>
-        <div className="splash-title">
-          <span className="splash-title-letter">M</span>
-          <span className="splash-title-letter">y</span>
-          <span className="splash-title-letter">D</span>
-          <span className="splash-title-letter">u</span>
-          <span className="splash-title-letter">i</span>
-          <span className="splash-title-letter">t</span>
+        <div className="splash-title font-display font-extrabold tracking-tight text-white text-3xl">
+          MyDuit
         </div>
         <div className="splash-tagline">Catat. Pantau. Kendalikan.</div>
         <div className="splash-sub">Pemasukan dan pengeluaranmu dalam satu tempat.</div>
