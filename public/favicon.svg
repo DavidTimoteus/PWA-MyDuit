@@ -52,15 +52,15 @@
 
     <!-- Clip for squircle background -->
     <clipPath id="squircleClip">
-      <rect width="512" height="512" rx="112" ry="112"/>
+      <rect width="512" height="512" rx="150" ry="150"/>
     </clipPath>
   </defs>
 
   <!-- === LAYER 1: Background squircle dengan claymorphism 3-shadow === -->
-  <rect width="512" height="512" rx="112" ry="112" fill="url(#bgGrad)"/>
+  <rect width="512" height="512" rx="150" ry="150" fill="url(#bgGrad)"/>
 
   <!-- Inset highlight atas-kiri (clay inset terang) -->
-  <rect width="512" height="512" rx="112" ry="112"
+  <rect width="512" height="512" rx="150" ry="150"
         fill="none"
         stroke="rgba(255,255,255,0.22)"
         stroke-width="32"
