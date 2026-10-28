@@ -503,7 +503,7 @@ export default function StatistikView({ user }) {
           terpisah di bawah (pola sama dengan BudgetView) supaya judul tidak
           pernah terpotong. Di desktop header ini tersembunyi. */}
       {/* Sticky Header & Toolbar Periode — anti-scroll di mobile/desktop */}
-      <div className="sticky top-0 z-20 bg-[var(--clay-bg)]/40 backdrop-blur-md pt-3 pb-2 mb-2 -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="sticky top-0 z-20 bg-transparent pt-3 pb-2 mb-2 -mx-4 px-4 md:mx-0 md:px-0">
         <header className="stat-header-mobile pb-2 md:hidden">
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="clay-icon-tile clay-key-primary solid-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white">
