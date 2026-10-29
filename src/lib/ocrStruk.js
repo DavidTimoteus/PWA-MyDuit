@@ -28,16 +28,58 @@ import { cariBarang, petakanKategori, cariPembayar, cariTunai } from './strukMet
 // ===================== PRA-PROSES GAMBAR =====================
 
 /**
- * Hitung skala agar lebar minimal `targetW` TAPI total piksel tidak melebihi
- * `maksPiksel`. Foto struk dari kamera HP bisa 9–12 MP; men-OCR sebesar itu
- * sangat lambat dan boros memori tanpa menambah akurasi. Dibatasi ~2,5 MP.
+ * Batas resolusi aman di mobile RAM hemat:
+ * - Batas resolusi diset ~1.6 MP agar Android Webview / Chrome tidak OOM (Out Of Memory)
+ *   saat memuat canvas berukuran besar bersamaan dengan Tesseract WASM.
  */
-const MAKS_PIKSEL = 2_500_000
+const MAKS_PIKSEL = 1_600_000
 function hitungSkala(w0, h0, targetW) {
   let s = Math.max(1, targetW / (w0 || targetW))
   const totalPiksel = (w0 * s) * (h0 * s)
   if (totalPiksel > MAKS_PIKSEL) s *= Math.sqrt(MAKS_PIKSEL / totalPiksel)
   return s
+}
+
+/**
+ * Kompresi citra kamera HP sebelum masuk ke memory canvas Tesseract.
+ * Mencegah error 'Unable to complete previous operation due to low memory' pada Android Chrome.
+ */
+export async function kompresCitraAman(file, maxDim = 1600, quality = 0.85) {
+  if (!file || !file.type.startsWith('image/')) return file
+  // Jika ukuran file sudah di bawah 1.5MB, langsung lolos
+  if (file.size < 1_500_000) return file
+
+  try {
+    const img = await muatGambar(file)
+    const w0 = img.naturalWidth || img.width
+    const h0 = img.naturalHeight || img.height
+    if (w0 <= maxDim && h0 <= maxDim) return file
+
+    const skala = Math.min(maxDim / w0, maxDim / h0)
+    const w = Math.round(w0 * skala)
+    const h = Math.round(h0 * skala)
+
+    const cv = document.createElement('canvas')
+    cv.width = w
+    cv.height = h
+    const ctx = cv.getContext('2d')
+    ctx.drawImage(img, 0, 0, w, h)
+
+    return await new Promise((resolve) => {
+      cv.toBlob(
+        (blob) => {
+          if (!blob) return resolve(file)
+          const nama = file.name ? file.name.replace(/\.[^.]+$/, '.jpg') : 'struk-opt.jpg'
+          resolve(new File([blob], nama, { type: 'image/jpeg' }))
+        },
+        'image/jpeg',
+        quality,
+      )
+    })
+  } catch (err) {
+    console.warn('[kompres-citra] fallback file asli:', err)
+    return file
+  }
 }
 
 /** Muat File/Blob menjadi HTMLImageElement. */
@@ -723,17 +765,20 @@ export function cariMerchant(teks) {
  * @returns {Promise<{teks, total, tanggal, jenis, merchant, confidence}>}
  */
 export async function bacaStruk(file, onProgress) {
-  const img = await muatGambar(file)
+  // Kompres citra terlebih dahulu jika berasal dari jepretan kamera beresolusi tinggi (48MP/12MP)
+  // guna menghemat alokasi memori RAM HP Android
+  const fileAman = await kompresCitraAman(file, 1600, 0.85)
+  const img = await muatGambar(fileAman)
   // Multi-perspektif preprocessing mutakhir:
   //  - crop+Sauvola: foto HP berlatar ramai/gelap/miring
   //  - Sauvola adaptif: pencahayaan tidak merata
   //  - Otsu binarization: teks struk termal pudar/kontras rendah
   //  - kontras global: struk digital/scan bersih
   const varian = [
-    praProsesCrop(img, 2000),
-    praProsesAdaptif(img, 2000),
-    praProsesOtsu(img, 2000),
-    praProses(img, 1800),
+    praProsesCrop(img, 1600),
+    praProsesAdaptif(img, 1600),
+    praProsesOtsu(img, 1600),
+    praProses(img, 1500),
   ]
   const hasil = await jalankanOcr(varian, onProgress)
   const teks = hasil.teks || ''
@@ -750,8 +795,26 @@ export async function bacaStruk(file, onProgress) {
   const pembayar = cariPembayar(teks)
   const tunai = cariTunai(teks)
 
+  // Evaluasi kejernihan foto struk secara objektif:
+  // Jika total tidak terbaca, periksa apakah teks yang tertangkap sangat minim (< 15 karakter)
+  const alnumTotal = (teks.match(/[a-zA-Z0-9]/g) || []).length
+  const fotoBuram = alnumTotal < 15
+
+  // Susun representasi teks ke format Markdown terstruktur
+  const markdownStruk = susunMarkdownStruk({
+    merchant,
+    tanggal: cariTanggal(teks),
+    total,
+    sumber,
+    barang,
+    pembayar,
+    tunai,
+    teksMentah: teks,
+  })
+
   return {
     teks,
+    markdown: markdownStruk,
     total,
     totalSumber: sumber,
     tanggal: cariTanggal(teks),
@@ -767,7 +830,31 @@ export async function bacaStruk(file, onProgress) {
     bayarTunai: tunai,
     confidence: hasil.conf,
     psm: hasil.psm,
+    fotoBuram,
   }
+}
+
+/**
+ * Konversi teks hasil ekstraksi struk menjadi format Markdown terstruktur offline.
+ * Menghasilkan representasi dokumen yang mudah dibaca, rapi, dan konsisten.
+ */
+export function susunMarkdownStruk({ merchant, tanggal, total, sumber, barang, pembayar, tunai, teksMentah }) {
+  const lines = []
+  lines.push('### 🧾 Ringkasan Struk Transaksi')
+  if (merchant) lines.push(`- **Merchant / Toko:** ${merchant}`)
+  if (tanggal) lines.push(`- **Tanggal:** ${tanggal}`)
+  if (total) lines.push(`- **Total Nominal:** Rp ${Number(total).toLocaleString('id-ID')}`)
+  if (sumber) lines.push(`- **Baris Deteksi:** \`${sumber}\``)
+  if (barang) lines.push(`- **Item / Keterangan:** ${barang}`)
+  if (pembayar) lines.push(`- **Metode Pembayaran:** ${pembayar.nama} (${pembayar.jenis})`)
+  else if (tunai) lines.push(`- **Metode Pembayaran:** Tunai / Cash`)
+  
+  lines.push('')
+  lines.push('#### 📄 Teks Ekstraksi Struk')
+  lines.push('```text')
+  lines.push(teksMentah ? teksMentah.trim() : '(tidak ada teks)')
+  lines.push('```')
+  return lines.join('\n')
 }
 
 /** Lepas worker Tesseract (panggil saat komponen dilepas, hemat memori). */

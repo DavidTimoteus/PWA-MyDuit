@@ -169,9 +169,13 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, onAkun
       if (hasil.bayarTunai) bagian.push('Dibayar tunai, jadi tidak perlu pilih rekening? Tetap pilih rekening yang dipakai Receive.')
 
       if (!hasil.total || hasil.total <= 0) {
-        setScanPesan('Total belum terbaca sempurna oleh mesin cepat. Anda dapat mengisi nominal manual di bawah atau merujuk ke Blueprint AI Vision Lokal (docs/OCR_LOCAL_VLM_BLUEPRINT.md).')
+        if (hasil.fotoBuram) {
+          setScanPesan('Foto struk terlihat buram atau gelap sehingga teks tidak tertangkap. Silakan foto ulang dengan pencahayaan lebih terang dan posisi tegak lurus.')
+        } else {
+          setScanPesan('Teks struk terbaca, tetapi baris total pembayaran tidak teridentifikasi. Silakan masukkan nominal secara manual di bawah (teks struk telah dicatat).')
+        }
       } else if ((hasil.confidence ?? 0) < 55) {
-        setScanPesan(`${bagian.join(' ')} Keyakinan OCR rendah — mohon periksa sebelum simpan.`)
+        setScanPesan(`${bagian.join(' ')} Catatan: Keyakinan pembacaan sedang — silakan periksa nominal sebelum disimpan.`)
       } else if (bagian.length) {
         setScanPesan(bagian.join(' '))
       }
@@ -373,7 +377,10 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, onAkun
               )}
 
               <input type="file" accept="image/*" ref={fileUploadRef} style={{ display: 'none' }} onChange={prosesStruk} />
-              <input type="file" accept="image/*" capture="environment" ref={fileCameraRef} style={{ display: 'none' }} onChange={prosesStruk} />
+              {/* Di Android Chrome, input capture="environment" sering memicu 'Unable to complete previous operation due to low memory'
+                  karena kamera native 50MP/108MP menguras RAM sistem saat browser berada di background. Menghilangkan atribut capture
+                  memberikan pengguna opsi memilih kamera langsung ATAU galeri file tanpa crash OOM. */}
+              <input type="file" accept="image/*" ref={fileCameraRef} style={{ display: 'none' }} onChange={prosesStruk} />
             </div>
           )}
 
