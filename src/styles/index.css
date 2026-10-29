@@ -628,6 +628,15 @@ button:active {
   border-radius: var(--clay-r-chip) !important;
 }
 
+/* Modifier is-active — dipakai StatistikView untuk tab Bulanan/Tahunan.
+   Dipaksa berlapis di @layer components supaya tidak kalah oleh utility
+   Tailwind (bg-white / text-primary) yang ada di @layer utilities. */
+.is-active {
+  background-color: #ffffff !important;
+  color: var(--color-primary) !important;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1), -1px -1px 4px rgba(255, 255, 255, 0.9) !important;
+}
+
 /* ===== FAB ===== */
 .clay-fab {
   color: #fff;
@@ -1916,6 +1925,8 @@ button:active {
 }
 .mutasi-item__nominal.is-masuk { color: var(--color-incomeText); }
 .mutasi-item__nominal.is-keluar { color: var(--color-expenseText); }
+
+/* Token teks income/expense — dipakai di BackupModal & ExportPdfModal.⟪HERMES-CONTEXT-COMPRESSION: 563 of 686 chars omitted here by Hermes's context compressor. This is NOT part of the original tool call and must never be reproduced in new output — always write full, untruncated content.⟫
 .mutasi-item__nominal.is-datar { color: var(--color-textSecondary); }
 
 .mutasi-badge {

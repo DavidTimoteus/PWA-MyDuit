@@ -189,7 +189,7 @@ async function konfirmHapus() {
                        yang scroll ke atas tidak terpotong tajam (butter-smooth).
         ─────────────────────────────────────────────────────────────────────────── */}
         <div className="sticky top-[52px] md:top-0 z-20
-                        -mx-5 px-5 md:mx-0 md:px-0
+                        -mx-5 px-5 md:mx-0 md:px-6
                         bg-surface
                         pt-2.5 pb-2.5 mb-0
                         relative">
