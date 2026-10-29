@@ -24,18 +24,40 @@ const FILTERS = [
 // Tinggi bottom-nav di Shell.jsx. Dipakai untuk menghitung sisa tinggi layar.
 const TINGGI_NAV = 76
 
-function selisihHari(iso) {
+function hitungJatuhTempoBulanan(iso) {
   if (!iso) return null
-  const target = new Date(`${iso}T00:00:00`)
+  const tglRef = new Date(`${iso}T00:00:00`)
+  if (isNaN(tglRef.getTime())) return null
+  const hariTgl = tglRef.getDate()
   const now = new Date()
   now.setHours(0, 0, 0, 0)
+  
+  let target = new Date(now.getFullYear(), now.getMonth(), hariTgl)
+  if (target.getMonth() !== now.getMonth()) {
+    target = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  }
+  return target
+}
+
+function selisihHari(iso, tipe) {
+  if (!iso) return null
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+
+  if (tipe === 'Cicilan') {
+    const targetBulanan = hitungJatuhTempoBulanan(iso)
+    if (!targetBulanan) return null
+    return Math.round((targetBulanan - now) / 86400000)
+  }
+
+  const target = new Date(`${iso}T00:00:00`)
   return Math.round((target - now) / 86400000)
 }
 
 // Status + warna aksen kartu. Satu sinyal kuat (bar tepi), bukan tumpukan badge.
 function statusKartu(t) {
   const lunas = t.status === 'Lunas' || (t.sisa || 0) <= 0
-  const hari = lunas ? null : selisihHari(t.tglJatuhTempo)
+  const hari = lunas ? null : selisihHari(t.tglJatuhTempo, t.tipe)
   const terlambat = hari !== null && hari < 0
   const mendekati = hari !== null && hari >= 0 && hari <= 7
   if (lunas) return { label: 'Lunas', cls: 'bg-emerald-50 text-emerald-700', aksen: 'bg-primary', lunas, terlambat, hari }
@@ -48,10 +70,14 @@ function teksJatuhTempo(t, st) {
   if (st.lunas) return 'Sudah lunas'
   if (!t.tglJatuhTempo) return 'Tanpa jatuh tempo'
   const d = st.hari
-  if (d < 0) return `Terlambat ${-d} hari`
-  if (d === 0) return 'Jatuh tempo hari ini'
-  if (d <= 7) return `Jatuh tempo ${tanggalPendek(t.tglJatuhTempo)} (H-${d})`
-  return `Jatuh tempo ${tanggalPendek(t.tglJatuhTempo)} (${d} hari lagi)`
+  const tglRef = new Date(`${t.tglJatuhTempo}T00:00:00`)
+  const hariTgl = !isNaN(tglRef.getTime()) ? tglRef.getDate() : ''
+  const awalan = t.tipe === 'Cicilan' ? `Tempo bulanan tgl ${hariTgl}` : `Jatuh tempo ${tanggalPendek(t.tglJatuhTempo)}`
+
+  if (d < 0) return `${awalan} (Telat ${-d} hari)`
+  if (d === 0) return `${awalan} (Hari ini!)`
+  if (d <= 7) return `${awalan} (H-${d})`
+  return `${awalan} (${d} hari lagi)`
 }
 
 // Kartu RINGKAS untuk mobile — sengaja lebih pendek dari versi desktop supaya

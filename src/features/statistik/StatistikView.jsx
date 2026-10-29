@@ -675,10 +675,8 @@ export default function StatistikView({ user }) {
       ─────────────────────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20
                       -mx-5 px-5 md:mx-0 md:px-0
-                      bg-[var(--clay-bg)]
+                      bg-transparent
                       pt-3 pb-2 mb-0
-                      after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4
-                      after:bg-gradient-to-b after:from-[var(--clay-bg)] after:to-transparent
                       relative">
         <header className="stat-header-mobile pb-2 md:hidden">
           <div className="flex min-w-0 items-center gap-2.5">

@@ -143,7 +143,9 @@ export function FormUtangModal({ open, onClose, uid, edit, mode = 'utang' }) {
           </>
         )}
 
-        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Jatuh tempo</label>
+        <label className="mb-0.5 block text-[11px] font-bold uppercase tracking-wide text-slate-500">
+          {tipe === 'Cicilan' ? 'Tanggal Jatuh Tempo Tiap Bulan' : 'Jatuh tempo'}
+        </label>
         <div className="mb-3">
           <ClayDateInput value={tgl} onChange={setTgl} />
         </div>

@@ -1035,6 +1035,14 @@ button:active {
 /* ===== PANAH PAGINATION CLAY ===== */
 .clay-pagination-arrow {
   --clay-h: var(--clay-h-neutral);
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 9999px !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   box-shadow:
     3px 3px 8px rgba(var(--clay-h), 0.18),
     -3px -3px 8px rgba(255, 255, 255, 0.6),

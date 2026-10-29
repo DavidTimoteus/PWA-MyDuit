@@ -29,21 +29,50 @@ function useUtangList(uid) {
   return list
 }
 
-function selisihHari(iso) {
+function hitungJatuhTempoBulanan(iso) {
   if (!iso) return null
-  const target = new Date(`${iso}T00:00:00`)
+  const tglRef = new Date(`${iso}T00:00:00`)
+  if (isNaN(tglRef.getTime())) return null
+  const hariTgl = tglRef.getDate()
   const now = new Date()
   now.setHours(0, 0, 0, 0)
+  
+  // Jatuh tempo bulan berjalan
+  let target = new Date(now.getFullYear(), now.getMonth(), hariTgl)
+  // Tangani overflow hari (misal 31 di bulan Februari)
+  if (target.getMonth() !== now.getMonth()) {
+    target = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  }
+  
+  return target
+}
+
+function selisihHari(iso, tipe) {
+  if (!iso) return null
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+
+  if (tipe === 'Cicilan') {
+    const targetBulanan = hitungJatuhTempoBulanan(iso)
+    if (!targetBulanan) return null
+    return Math.round((targetBulanan - now) / 86400000)
+  }
+
+  const target = new Date(`${iso}T00:00:00`)
   return Math.round((target - now) / 86400000)
 }
 
-function infoJatuhTempo(iso) {
+function infoJatuhTempo(iso, tipe) {
   if (!iso) return { teks: 'Tanpa jatuh tempo', cls: 'text-slate-500', hari: null }
-  const d = selisihHari(iso)
-  if (d < 0) return { teks: `Terlambat ${-d} hari`, cls: 'text-expenseText font-bold', hari: d }
-  if (d === 0) return { teks: 'Jatuh tempo hari ini!', cls: 'text-expenseText font-bold', hari: d }
-  if (d <= 7) return { teks: `Jatuh tempo ${tanggalPendek(iso)} (H-${d})`, cls: 'text-warning font-bold', hari: d }
-  return { teks: `Jatuh tempo ${tanggalPendek(iso)} (${d} hari lagi)`, cls: 'text-slate-500', hari: d }
+  const d = selisihHari(iso, tipe)
+  const tglRef = new Date(`${iso}T00:00:00`)
+  const hariTgl = !isNaN(tglRef.getTime()) ? tglRef.getDate() : ''
+  const awalan = tipe === 'Cicilan' ? `Tempo bulanan tgl ${hariTgl}` : `Jatuh tempo ${tanggalPendek(iso)}`
+
+  if (d < 0) return { teks: `${awalan} (Telat ${-d} hari)`, cls: 'text-expenseText font-bold', hari: d }
+  if (d === 0) return { teks: `${awalan} (Hari ini!)`, cls: 'text-expenseText font-bold', hari: d }
+  if (d <= 7) return { teks: `${awalan} (H-${d})`, cls: 'text-warning font-bold', hari: d }
+  return { teks: `${awalan} (${d} hari lagi)`, cls: 'text-slate-500', hari: d }
 }
 
 export function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
@@ -53,10 +82,10 @@ export function KartuUtang({ t, onBayar, onLunasin, onEdit, onHapus }) {
   // BUG LAMA: utang yang sudah LUNAS tetap dihitung telat karena selisihHari
   // dijalankan tanpa memandang status → muncul "Terlambat 61 hari" di kartu lunas.
   // Jatuh tempo hanya relevan untuk utang yang belum lunas.
-  const hari = lunas ? null : selisihHari(t.tglJatuhTempo)
+  const hari = lunas ? null : selisihHari(t.tglJatuhTempo, t.tipe)
   const terlambat = hari !== null && hari < 0
   const mendekati = hari !== null && hari >= 0 && hari <= 7
-  const jatuh = lunas ? { teks: 'Sudah lunas', cls: 'text-slate-500' } : infoJatuhTempo(t.tglJatuhTempo)
+  const jatuh = lunas ? { teks: 'Sudah lunas', cls: 'text-slate-500' } : infoJatuhTempo(t.tglJatuhTempo, t.tipe)
   const clayKey = lunas ? 'clay-key-primary' : terlambat ? 'clay-key-danger' : 'clay-key-neutral'
   // Warna aksen kiri sebagai penanda status utama (satu sinyal kuat, bukan
   // tumpukan badge). Terlambat=merah, mendekati=amber, aktif=netral, lunas=hijau.

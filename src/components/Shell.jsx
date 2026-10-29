@@ -712,9 +712,7 @@ export default function Shell({ user }) {
             {tab === "transaksi" && (
               <header className="sticky top-0 z-30 flex items-center justify-between gap-2
                                  -mx-4 px-4 md:hidden
-                                 py-2 bg-[var(--clay-bg)]
-                                 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-3
-                                 after:bg-gradient-to-b after:from-[var(--clay-bg)] after:to-transparent
+                                 py-2 bg-transparent
                                  relative">
                 <button
                   type="button"

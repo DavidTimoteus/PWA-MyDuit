@@ -195,7 +195,7 @@ export default function RekeningPanel({ uid, transBulan: propTransBulan }) {
             type="button"
             onClick={() => setHalaman((h) => (h > 1 ? h - 1 : totalCards))}
             aria-label="Halaman sebelumnya"
-            className="clay-pagination-arrow flex h-8 w-9 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition-all active:scale-95"
+            className="clay-pagination-arrow flex h-9 w-9 items-center justify-center rounded-full shrink-0 aspect-square bg-surfaceContainerLowest text-blue-700 shadow-sm transition-all active:scale-95"
           >
             <span className="material-symbols-outlined icon-md">chevron_left</span>
           </button>
@@ -204,7 +204,7 @@ export default function RekeningPanel({ uid, transBulan: propTransBulan }) {
             type="button"
             onClick={() => setHalaman((h) => (h < totalCards ? h + 1 : 1))}
             aria-label="Halaman berikutnya"
-            className="clay-pagination-arrow flex h-8 w-9 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition-all active:scale-95"
+            className="clay-pagination-arrow flex h-9 w-9 items-center justify-center rounded-full shrink-0 aspect-square bg-surfaceContainerLowest text-blue-700 shadow-sm transition-all active:scale-95"
           >
             <span className="material-symbols-outlined icon-md">chevron_right</span>
           </button>

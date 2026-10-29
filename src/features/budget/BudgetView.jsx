@@ -269,7 +269,7 @@ export default function BudgetView({ user }) {
               onClick={() => navigatePeriode(-1)}
               disabled={!bisaMundur}
               aria-label="Periode sebelumnya"
-              className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full bg-white"
+              className="clay-pagination-arrow clay-key-neutral flex h-9 w-9 items-center justify-center rounded-full shrink-0 aspect-square bg-surfaceContainerLowest"
             >
               <span className="material-symbols-outlined icon-md text-slate-600">chevron_left</span>
             </button>
@@ -278,7 +278,7 @@ export default function BudgetView({ user }) {
               onClick={() => navigatePeriode(1)}
               disabled={!bisaMaju}
               aria-label="Periode berikutnya"
-              className="clay-pagination-arrow clay-key-neutral flex h-8 w-8 items-center justify-center rounded-full bg-white"
+              className="clay-pagination-arrow clay-key-neutral flex h-9 w-9 items-center justify-center rounded-full shrink-0 aspect-square bg-surfaceContainerLowest"
             >
               <span className="material-symbols-outlined icon-md text-slate-600">chevron_right</span>
             </button>
