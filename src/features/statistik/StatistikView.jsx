@@ -674,7 +674,7 @@ export default function StatistikView({ user }) {
           Soft fade: ::after strip gradient di bawah agar konten scroll halus.
       ─────────────────────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20
-                      -mx-5 px-5 md:mx-0 md:px-0
+                      -mx-5 px-5 md:-mx-6 md:px-6
                       bg-surface
                       pt-3 pb-2 mb-0
                       relative">

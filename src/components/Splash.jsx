@@ -33,7 +33,7 @@ export default function Splash({ ready }) {
     <div id="splashScreen" className={`splash-screen${leaving ? ' is-leaving' : ''}`} aria-hidden={leaving}>
       <div className="splash-inner">
         <div className="splash-logo">
-          <img src="/favicon.svg" alt="MyDuit" className="w-12 h-12" width="48" height="48" />
+          <img src="/favicon.svg" alt="MyDuit" className="w-20 h-20" width="80" height="80" />
         </div>
         <div className="splash-title font-display font-extrabold tracking-tight text-white text-3xl" aria-label="MyDuit">
           {'MyDuit'.split('').map((ch, i) => (

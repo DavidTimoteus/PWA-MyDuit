@@ -181,15 +181,14 @@ async function konfirmHapus() {
 
         {/* Toolbar: responsif mobile — di layar kecil input search baris 1, filter baris 2 */}
         {/* ─── STICKY TOOLBAR WRAPPER ────────────────────────────────────────────────
-            Mobile  (<md): bleed ke tepi layar penuh dengan -mx-5 px-5 agar backdrop
-                           mencakup keseluruhan lebar viewport, tidak ada gap kiri/kanan.
-                           top-[52px] = tinggi header mobile Shell (52px).
-            Desktop (md+): margin normal mengikuti container max-w-3xl, top-0.
-            Soft fade: ::after pseudo strip gradient di bawah toolbar agar konten
-                       yang scroll ke atas tidak terpotong tajam (butter-smooth).
+            Mobile  (<md): bleed ke tepi layar penuh dengan -mx-5 px-5 agar background
+                           mencakup keseluruhan lebar viewport. top-[52px] = header mobile.
+            Desktop (md+): bleed ke tepi container scroll dengan md:-mx-6 md:px-6
+                           agar saat kartu transaksi di-scroll, bayangannya di sisi
+                           kiri-kanan tidak bocor melintasi toolbar.
         ─────────────────────────────────────────────────────────────────────────── */}
         <div className="sticky top-[52px] md:top-0 z-20
-                        -mx-5 px-5 md:mx-0 md:px-6
+                        -mx-5 px-5 md:-mx-6 md:px-6
                         bg-surface
                         pt-2.5 pb-2.5 mb-0
                         relative">
