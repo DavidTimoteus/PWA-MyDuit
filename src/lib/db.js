@@ -505,6 +505,7 @@ export async function bayarUtang(uid, { utang, jumlah, tanggal, akun }) {
   batch.update(utangRef(uid, utang.id), {
     sisa: sisaBaru,
     status: sisaBaru <= 0 ? 'Lunas' : 'Belum Lunas',
+    terakhirBayar: tanggal,
     updatedAt: serverTimestamp(),
   })
   batch.update(akunRef(uid, akun.id), {

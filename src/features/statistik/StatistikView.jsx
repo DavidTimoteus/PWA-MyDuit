@@ -675,7 +675,7 @@ export default function StatistikView({ user }) {
       ─────────────────────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20
                       -mx-5 px-5 md:mx-0 md:px-0
-                      bg-transparent
+                      bg-surface
                       pt-3 pb-2 mb-0
                       relative">
         <header className="stat-header-mobile pb-2 md:hidden">

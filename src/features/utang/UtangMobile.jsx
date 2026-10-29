@@ -24,7 +24,7 @@ const FILTERS = [
 // Tinggi bottom-nav di Shell.jsx. Dipakai untuk menghitung sisa tinggi layar.
 const TINGGI_NAV = 76
 
-function hitungJatuhTempoBulanan(iso) {
+function hitungJatuhTempoBulanan(iso, terakhirBayar) {
   if (!iso) return null
   const tglRef = new Date(`${iso}T00:00:00`)
   if (isNaN(tglRef.getTime())) return null
@@ -32,22 +32,33 @@ function hitungJatuhTempoBulanan(iso) {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   
-  let target = new Date(now.getFullYear(), now.getMonth(), hariTgl)
-  if (target.getMonth() !== now.getMonth()) {
-    target = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  let sudahBayarBulanIni = false
+  if (terakhirBayar) {
+    const tglBayar = new Date(`${terakhirBayar}T00:00:00`)
+    if (!isNaN(tglBayar.getTime())) {
+      sudahBayarBulanIni = tglBayar.getFullYear() === now.getFullYear() && tglBayar.getMonth() === now.getMonth()
+    }
   }
-  return target
+
+  const targetMonth = sudahBayarBulanIni ? now.getMonth() + 1 : now.getMonth()
+  const targetYear = now.getFullYear()
+  
+  let target = new Date(targetYear, targetMonth, hariTgl)
+  if (target.getMonth() !== (targetMonth % 12)) {
+    target = new Date(targetYear, targetMonth + 1, 0)
+  }
+  return { target, sudahBayarBulanIni }
 }
 
-function selisihHari(iso, tipe) {
+function selisihHari(iso, tipe, terakhirBayar) {
   if (!iso) return null
   const now = new Date()
   now.setHours(0, 0, 0, 0)
 
   if (tipe === 'Cicilan') {
-    const targetBulanan = hitungJatuhTempoBulanan(iso)
-    if (!targetBulanan) return null
-    return Math.round((targetBulanan - now) / 86400000)
+    const info = hitungJatuhTempoBulanan(iso, terakhirBayar)
+    if (!info?.target) return null
+    return Math.round((info.target - now) / 86400000)
   }
 
   const target = new Date(`${iso}T00:00:00`)
@@ -57,7 +68,7 @@ function selisihHari(iso, tipe) {
 // Status + warna aksen kartu. Satu sinyal kuat (bar tepi), bukan tumpukan badge.
 function statusKartu(t) {
   const lunas = t.status === 'Lunas' || (t.sisa || 0) <= 0
-  const hari = lunas ? null : selisihHari(t.tglJatuhTempo, t.tipe)
+  const hari = lunas ? null : selisihHari(t.tglJatuhTempo, t.tipe, t.terakhirBayar)
   const terlambat = hari !== null && hari < 0
   const mendekati = hari !== null && hari >= 0 && hari <= 7
   if (lunas) return { label: 'Lunas', cls: 'bg-emerald-50 text-emerald-700', aksen: 'bg-primary', lunas, terlambat, hari }
@@ -72,8 +83,20 @@ function teksJatuhTempo(t, st) {
   const d = st.hari
   const tglRef = new Date(`${t.tglJatuhTempo}T00:00:00`)
   const hariTgl = !isNaN(tglRef.getTime()) ? tglRef.getDate() : ''
-  const awalan = t.tipe === 'Cicilan' ? `Tempo bulanan tgl ${hariTgl}` : `Jatuh tempo ${tanggalPendek(t.tglJatuhTempo)}`
 
+  if (t.tipe === 'Cicilan') {
+    const info = hitungJatuhTempoBulanan(t.tglJatuhTempo, t.terakhirBayar)
+    if (info?.sudahBayarBulanIni) {
+      return `Bulan ini lunas • Tempo brikutnya tgl ${hariTgl} (${d} hr lagi)`
+    }
+    const awalan = `Tempo bulanan tgl ${hariTgl}`
+    if (d < 0) return `${awalan} (Telat ${-d} hari)`
+    if (d === 0) return `${awalan} (Hari ini!)`
+    if (d <= 7) return `${awalan} (H-${d})`
+    return `${awalan} (${d} hari lagi)`
+  }
+
+  const awalan = `Jatuh tempo ${tanggalPendek(t.tglJatuhTempo)}`
   if (d < 0) return `${awalan} (Telat ${-d} hari)`
   if (d === 0) return `${awalan} (Hari ini!)`
   if (d <= 7) return `${awalan} (H-${d})`

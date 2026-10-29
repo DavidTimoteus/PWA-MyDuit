@@ -190,7 +190,7 @@ async function konfirmHapus() {
         ─────────────────────────────────────────────────────────────────────────── */}
         <div className="sticky top-[52px] md:top-0 z-20
                         -mx-5 px-5 md:mx-0 md:px-0
-                        bg-transparent
+                        bg-surface
                         pt-2.5 pb-2.5 mb-0
                         relative">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
