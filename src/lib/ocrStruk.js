@@ -245,6 +245,54 @@ export function praProsesCrop(img, targetW = 2000) {
 }
 
 /**
+ * Pra-proses Otsu Binarization murni dengan normalisasi kontras tinggi.
+ * Sangat unggul membaca teks struk termal yang pudar atau kontras rendah.
+ */
+export function praProsesOtsu(img, targetW = 2000) {
+  const w0 = img.naturalWidth || img.width || targetW
+  const h0 = img.naturalHeight || img.height || targetW
+  const skala = hitungSkala(w0, h0, targetW)
+  const w = Math.round(w0 * skala)
+  const h = Math.round(h0 * skala)
+  const cv = document.createElement('canvas')
+  cv.width = w
+  cv.height = h
+  const ctx = cv.getContext('2d', { willReadFrequently: true })
+  ctx.drawImage(img, 0, 0, w, h)
+  const d = ctx.getImageData(0, 0, w, h)
+  const p = d.data
+  const n = w * h
+  const g = new Uint8ClampedArray(n)
+  const hist = new Uint32Array(256)
+  for (let i = 0, j = 0; i < p.length; i += 4, j++) {
+    const v = (p[i] * 0.299 + p[i + 1] * 0.587 + p[i + 2] * 0.114) | 0
+    g[j] = v
+    hist[v]++
+  }
+  let sum = 0
+  for (let v = 0; v < 256; v++) sum += v * hist[v]
+  let sumB = 0, wB = 0, maks = 0, thr = 128
+  for (let v = 0; v < 256; v++) {
+    wB += hist[v]
+    if (!wB) continue
+    const wF = n - wB
+    if (!wF) break
+    sumB += v * hist[v]
+    const mB = sumB / wB, mF = (sum - sumB) / wF
+    const antara = wB * wF * (mB - mF) ** 2
+    if (antara > maks) { maks = antara; thr = v }
+  }
+  for (let j = 0; j < n; j++) {
+    const val = g[j] > thr ? 255 : 0
+    const k = j * 4
+    p[k] = p[k + 1] = p[k + 2] = val
+    p[k + 3] = 255
+  }
+  ctx.putImageData(d, 0, 0)
+  return cv
+}
+
+/**
  * Threshold adaptif Sauvola di atas canvas grayscale yang sudah tergambar.
  * Dipisah agar bisa dipakai ulang oleh praProsesAdaptif & praProsesCrop.
  */
@@ -480,15 +528,15 @@ function pad(n) {
 // Kata kunci total BERTINGKAT: makin tinggi level, makin yakin itu total akhir.
 // Level 3 = paling diutamakan (grand total). Level 1 = cadangan.
 const KATA_TOTAL_TIER = [
-  { level: 3, kata: ['grand total', 'total bayar', 'total belanja', 'total tagihan', 'total akhir', 'total harga', 'jumlah bayar', 'total'] },
-  { level: 2, kata: ['jumlah', 'tagihan', 'harus bayar', 'dibayar', 'amount', 'netto', 'subtotal'] },
-  { level: 1, kata: ['bayar', 'tunai', 'cash'] },
+  { level: 3, kata: ['grand total', 'total bayar', 'total belanja', 'total tagihan', 'total akhir', 'total harga', 'jumlah bayar', 'total transaksi', 'total penjualan', 'total bayar rp', 'total netto', 'total'] },
+  { level: 2, kata: ['jumlah', 'tagihan', 'harus bayar', 'dibayar', 'amount', 'netto', 'subtotal', 'sales total', 'balance due', 'nominal'] },
+  { level: 1, kata: ['bayar', 'tunai', 'cash', 'transfer', 'debit', 'kredit', 'qris', 'gopay', 'ovo', 'shopeepay'] },
 ]
 const KATA_ABAIKAN = [
   'npwp', 'telp', 'telpon', 'telepon', 'hp', 'wa', 'no.', 'no ', 'invoice',
-  'struk', 'kasir', 'poin', 'point', 'kembali', 'kembalian',
+  'struk', 'kasir', 'poin', 'point', 'kembali', 'kembalian', 'change',
   'diskon', 'disc', 'ppn', 'pajak', 'tax', 'kode', 'ref', 'member', 'card',
-  'debit', 'kredit', 'qris', 'bank', 'id pelanggan', 'meter', 'tarif',
+  'id pelanggan', 'meter', 'tarif', 'antrian', 'meja',
 ]
 
 /**
@@ -526,8 +574,13 @@ function adaKataFuzzy(teks, frasa) {
   if (kata.length < 4) return adaKata(teks, frasa)
   for (const w of norm.split(' ')) {
     if (w === kata) return true
-    // jarak edit <= 1 (substitusi/penyisipan/hilang satu huruf)
+    // Jangan cocokkan "total" jika kata aslinya adalah "subtotal"
+    if (kata === 'total' && w.includes('sub')) continue
+    // Toleransi OCR rOTAl / T0T4L / T0TAL / TOTL
     if (Math.abs(w.length - kata.length) <= 1 && jarakEdit(w, kata) <= 1) return true
+    if (kata === 'total' && !w.includes('sub') && (w.startsWith('tot') || w.endsWith('tal'))) return true
+    if (kata === 'jumlah' && (w.startsWith('jum') || w.endsWith('lah'))) return true
+    if (kata === 'bayar' && (w.startsWith('bay') || w.endsWith('yar'))) return true
   }
   return false
 }
@@ -622,16 +675,19 @@ export function cariTotal(teks) {
         .filter((x) => x.n != null && x.n > 0 && x.i > posKata)
       if (setelah.length) nilai = Math.max(...setelah.map((x) => x.n))
     }
-    kandidat.push({ nilai, lvl, sumber: b.trim() })
+    // Bobot penilaian (scoring):
+    // Nilai rupiah wajar struk ritel biasanya >= 1000 dan kelipatan 100/500/1000
+    let bobot = lvl * 100
+    if (nilai >= 1000) bobot += 20
+    if (nilai % 100 === 0) bobot += 10
+    if (lvl === 3) bobot += 50
+    kandidat.push({ nilai, lvl, bobot, sumber: b.trim() })
   }
 
   if (!kandidat.length) return { total: null, sumber: null, lvl: 0 }
 
-  // Prioritas: level tertinggi. Pada level yang sama, total akhir sebuah struk
-  // hampir selalu nominal TERBESAR (subtotal/service/coupon selalu lebih kecil),
-  // jadi ambil nilai terbesar di antara kandidat level tertinggi — bukan yang
-  // pertama muncul (dulu bisa mengambil service charge).
-  kandidat.sort((a, b) => b.lvl - a.lvl || b.nilai - a.nilai)
+  // Prioritas kandidat: bobot tertinggi -> level -> nominal terbesar
+  kandidat.sort((a, b) => (b.bobot || 0) - (a.bobot || 0) || b.lvl - a.lvl || b.nilai - a.nilai)
 
   // Buang nilai tak masuk akal sebagai total (nomor panjang > 9 digit / >= 1 miliar)
   const wajar = kandidat.filter((k) => k.nilai < 1e9 && String(k.nilai).length <= 9)
@@ -668,12 +724,17 @@ export function cariMerchant(teks) {
  */
 export async function bacaStruk(file, onProgress) {
   const img = await muatGambar(file)
-  // Tiga pra-proses berbeda memberi sudut pandang berbeda:
-  //  - crop+Sauvola: paling kuat untuk foto HP berlatar ramai/gelap,
-  //  - Sauvola: adaptif lokal untuk pencahayaan tidak rata,
-  //  - kontras global: andal untuk struk bersih/scan.
-  // Semua di-OCR lalu pemilih memakai hasil terbaik (bukan confidence mentah).
-  const varian = [praProsesCrop(img, 2000), praProsesAdaptif(img, 2000), praProses(img, 1800)]
+  // Multi-perspektif preprocessing mutakhir:
+  //  - crop+Sauvola: foto HP berlatar ramai/gelap/miring
+  //  - Sauvola adaptif: pencahayaan tidak merata
+  //  - Otsu binarization: teks struk termal pudar/kontras rendah
+  //  - kontras global: struk digital/scan bersih
+  const varian = [
+    praProsesCrop(img, 2000),
+    praProsesAdaptif(img, 2000),
+    praProsesOtsu(img, 2000),
+    praProses(img, 1800),
+  ]
   const hasil = await jalankanOcr(varian, onProgress)
   const teks = hasil.teks || ''
 
