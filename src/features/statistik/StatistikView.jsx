@@ -666,8 +666,20 @@ export default function StatistikView({ user }) {
       {/* Header mobile-only (logo + judul) — navigator periode ada di baris
           terpisah di bawah (pola sama dengan BudgetView) supaya judul tidak
           pernah terpotong. Di desktop header ini tersembunyi. */}
-      {/* Sticky Header & Toolbar Periode — anti-scroll di mobile/desktop */}
-      <div className="sticky top-0 z-20 bg-[var(--clay-bg)] pt-3 pb-2 mb-2">
+      {/* ─── STICKY HEADER & TOOLBAR PERIODE ─────────────────────────────────────
+          Mobile  (<md): bleed ke tepi layar penuh dengan -mx-5 px-5.
+                         top-0 karena StatistikView tidak ada header Shell di atas
+                         (header mobile ada di dalam div ini sendiri).
+          Desktop (md+): margin normal mengikuti container max-w-3xl, top-0.
+          Soft fade: ::after strip gradient di bawah agar konten scroll halus.
+      ─────────────────────────────────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-20
+                      -mx-5 px-5 md:mx-0 md:px-0
+                      bg-[var(--clay-bg)]
+                      pt-3 pb-2 mb-0
+                      after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4
+                      after:bg-gradient-to-b after:from-[var(--clay-bg)] after:to-transparent
+                      relative">
         <header className="stat-header-mobile pb-2 md:hidden">
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="clay-icon-tile clay-key-primary solid-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white">
@@ -737,6 +749,9 @@ export default function StatistikView({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Spacer untuk mengimbangi after:h-4 fade strip di bawah sticky header */}
+      <div className="h-5 md:h-3" aria-hidden="true" />
 
       <div className="space-y-5 pb-20 md:pb-4 md:pr-3">
         {/* SUMMARY CARDS (gradient) */}

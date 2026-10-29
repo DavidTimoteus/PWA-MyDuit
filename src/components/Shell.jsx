@@ -707,9 +707,15 @@ export default function Shell({ user }) {
               </div>
             )}
             {/* Header mobile — HANYA di tab transaksi (persis GAS ViewTransaksi.html).
-            Di tab lain (Budget/Rekening, Utang, Statistik), modul memiliki header mobile sendiri. */}
+            Di tab lain (Budget/Rekening, Utang, Statistik), modul memiliki header mobile sendiri.
+            -mx-4 px-4: bleed ke tepi layar penuh karena parent main-scroll punya px-4. */}
             {tab === "transaksi" && (
-              <header className="sticky top-0 z-30 flex items-center justify-between gap-2 px-4 py-2 md:hidden bg-[var(--clay-bg)]">
+              <header className="sticky top-0 z-30 flex items-center justify-between gap-2
+                                 -mx-4 px-4 md:hidden
+                                 py-2 bg-[var(--clay-bg)]
+                                 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-3
+                                 after:bg-gradient-to-b after:from-[var(--clay-bg)] after:to-transparent
+                                 relative">
                 <button
                   type="button"
                   onClick={() => setLokasiOpen(true)}

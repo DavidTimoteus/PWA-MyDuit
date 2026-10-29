@@ -180,8 +180,21 @@ async function konfirmHapus() {
       <div className="view-section active min-w-0">
 
         {/* Toolbar: responsif mobile — di layar kecil input search baris 1, filter baris 2 */}
-        {/* Sticky Toolbar & Pagination Wrapper — anti-scroll dan background rapi menyatu */}
-        <div className="sticky top-[52px] md:top-0 z-20 bg-[var(--clay-bg)] pt-2.5 pb-2.5 mb-3">
+        {/* ─── STICKY TOOLBAR WRAPPER ────────────────────────────────────────────────
+            Mobile  (<md): bleed ke tepi layar penuh dengan -mx-5 px-5 agar backdrop
+                           mencakup keseluruhan lebar viewport, tidak ada gap kiri/kanan.
+                           top-[52px] = tinggi header mobile Shell (52px).
+            Desktop (md+): margin normal mengikuti container max-w-3xl, top-0.
+            Soft fade: ::after pseudo strip gradient di bawah toolbar agar konten
+                       yang scroll ke atas tidak terpotong tajam (butter-smooth).
+        ─────────────────────────────────────────────────────────────────────────── */}
+        <div className="sticky top-[52px] md:top-0 z-20
+                        -mx-5 px-5 md:mx-0 md:px-0
+                        bg-[var(--clay-bg)]
+                        pt-2.5 pb-2.5 mb-0
+                        after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4
+                        after:bg-gradient-to-b after:from-[var(--clay-bg)] after:to-transparent
+                        relative">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
           {/* Kartu pencarian & filter */}
           <div className="clay clay-card clay-key-neutral w-full rounded-[22px] bg-white/90 p-2.5 sm:p-3 shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-white/60">
@@ -286,6 +299,9 @@ async function konfirmHapus() {
             </div>
           )}
         </div>
+
+        {/* Spacer untuk mengimbangi after:h-4 fade strip di bawah sticky toolbar */}
+        <div className="h-5 md:h-3" aria-hidden="true" />
 
         {error && (
           <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-600">
