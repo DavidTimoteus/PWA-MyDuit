@@ -37,6 +37,15 @@ bridge.out.log
 *.bak_*
 src/.sentrux/
 
+# Internal documentation & APK binaries
+AGENTS.md
+NOTES.md
+PRD.md
+MyDuitApp.md
+TEST_FULL_APP_MOBILE.md
+TEST_MOBILE_REPORT.md
+*.apk
+
 # Jejak harness uji render (screenshot + harness versi lama) — bukan bagian aplikasi
 snapshots/
 node_modules/.myduit-test/

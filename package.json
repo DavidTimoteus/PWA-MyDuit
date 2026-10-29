@@ -1,9 +1,15 @@
 {
-  "name": "pwa-myduit",
-  "private": true,
-  "version": "0.1.0",
+  "name": "myduit",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Progressive Web App pencatatan keuangan pribadi offline-first dengan antarmuka Claymorphism modern.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DavidTimoteus/PWA-MyDuit.git"
+  },
+  "author": "David Timoteus",
   "type": "module",
-  "description": "MyDuit - PWA catatan keuangan pribadi (offline-first)",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
