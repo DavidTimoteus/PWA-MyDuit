@@ -709,7 +709,7 @@ export default function Shell({ user }) {
             {/* Header mobile — HANYA di tab transaksi (persis GAS ViewTransaksi.html).
             Di tab lain (Budget/Rekening, Utang, Statistik), modul memiliki header mobile sendiri. */}
             {tab === "transaksi" && (
-              <header className="relative z-30 flex items-center justify-between gap-2 px-4 py-2 md:hidden">
+              <header className="sticky top-0 z-30 flex items-center justify-between gap-2 px-4 py-2 md:hidden bg-[var(--clay-bg)]">
                 <button
                   type="button"
                   onClick={() => setLokasiOpen(true)}
