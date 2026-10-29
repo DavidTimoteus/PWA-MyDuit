@@ -42,10 +42,10 @@ for (const file of semuaFile(SRC)) {
   const isi = fs.readFileSync(file, 'utf8')
   const rel = path.relative(SRC, file)
   isi.split('\n').forEach((baris, i) => {
-    for (const m of baris.matchAll(/new CustomEvent\(\s*'([^']+)'/g)) {
+    for (const m of baris.matchAll(/new CustomEvent\(\s*['"]([^'"]+)['"]/g)) {
       dispatch.set(m[1], [...(dispatch.get(m[1]) ?? []), `${rel}:${i + 1}`])
     }
-    for (const m of baris.matchAll(/addEventListener\(\s*'([^']+)'/g)) {
+    for (const m of baris.matchAll(/addEventListener\(\s*['"]([^'"]+)['"]/g)) {
       listen.set(m[1], [...(listen.get(m[1]) ?? []), `${rel}:${i + 1}`])
     }
   })
@@ -55,14 +55,8 @@ const namaMyDuit = [...new Set([...dispatch.keys(), ...listen.keys()])].filter((
 
 cek('minimal satu event myduit:* dipakai di codebase', namaMyDuit.length > 0)
 
-// Event yang diizinkan sengaja belum dipasang pendengar (misal fitur ekspor PDF masa depan
-// atau telemetri internal opsional) agar tidak memblokir uji kontrak pokok.
-const EVENT_DIECUALIKAN = new Set([
-  'myduit:export-pdf',
-  'myduit:filter-label',
-  'myduit:sidebar-insight-budget',
-  'myduit:sidebar-utang-update',
-])
+// Event yang sengaja diizinkan belum dipasang pendengar (misal ekspor PDF masa depan).
+const EVENT_DIECUALIKAN = new Set(['myduit:export-pdf'])
 
 const mati = namaMyDuit.filter((n) => dispatch.has(n) && !listen.has(n) && !EVENT_DIECUALIKAN.has(n))
 cek(
