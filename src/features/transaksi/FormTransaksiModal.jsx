@@ -169,7 +169,7 @@ export default function FormTransaksiModal({ uid, open, onClose, onSalin, onAkun
       if (hasil.bayarTunai) bagian.push('Dibayar tunai, jadi tidak perlu pilih rekening? Tetap pilih rekening yang dipakai Receive.')
 
       if (!hasil.total || hasil.total <= 0) {
-        setScanPesan('Total tidak terbaca otomatis. Isi nominal manual di bawah — teks struk tetap tersimpan untuk diperiksa.')
+        setScanPesan('Total belum terbaca sempurna oleh mesin cepat. Anda dapat mengisi nominal manual di bawah atau merujuk ke Blueprint AI Vision Lokal (docs/OCR_LOCAL_VLM_BLUEPRINT.md).')
       } else if ((hasil.confidence ?? 0) < 55) {
         setScanPesan(`${bagian.join(' ')} Keyakinan OCR rendah — mohon periksa sebelum simpan.`)
       } else if (bagian.length) {

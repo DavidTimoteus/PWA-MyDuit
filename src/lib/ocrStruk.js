@@ -428,9 +428,17 @@ function normalisasiOcr(teks) {
     // OCR sering menyisipkan spasi di dalam satu angka ("38. 000", "20, 00").
     // Rapatkan spasi di sekitar pemisah ribuan/desimal agar terbaca satu angka.
     .replace(/(\d)\s*([.,])\s*(\d)/g, '$1$2$3')
-    // 'O'/'o' di antara digit sering harus '0'
-    .replace(/(?<=\d)[oO](?=\d)/g, '0')
-    .replace(/(?<=\d)[lI](?=\d)/g, '1')
+    // Perbaikan karakter huruf yang terselip di angka nominal (kesalahan klasik struk pudar):
+    // 'O'/'o'/'D' di tengah atau akhir digit -> '0'
+    .replace(/(?<=\d)[oODd](?=\d|$)/g, '0')
+    .replace(/(^|\s|\d)[oODd](?=\d{2,})/g, '0')
+    // 'l'/'I'/'!' di tengah atau akhir digit -> '1'
+    .replace(/(?<=\d)[lI!](?=\d|$)/g, '1')
+    .replace(/(^|\s)[lI!](?=\d{2,})/g, '1')
+    // 'S'/'s' di tengah digit nominal -> '5'
+    .replace(/(?<=\d)[Ss](?=\d)/g, '5')
+    // 'B' di tengah digit nominal -> '8'
+    .replace(/(?<=\d)B(?=\d)/g, '8')
 }
 
 /** Ekstrak tanggal dari teks → 'YYYY-MM-DD' atau null. */
